@@ -200,6 +200,55 @@ letter-spacing: 1px;
 .btn-primary:hover { box-shadow: 0 6px 24px rgba(108,53,222,0.6); }
 
 /* ===== HISTORY FILTER ===== */
+
+/* ===== NOTICE ===== */
+.notice-card {
+background: linear-gradient(135deg, rgba(108,53,222,0.2), rgba(255,107,157,0.15));
+border: 1px solid rgba(255,215,0,0.3);
+border-radius: 16px;
+padding: 14px 16px;
+margin: 12px 16px 0;
+}
+.notice-title {
+font-family: ‘Jua’, cursive;
+font-size: 14px;
+color: var(–gold);
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.notice-row {
+display: flex;
+align-items: flex-start;
+gap: 8px;
+padding: 6px 0;
+border-bottom: 1px solid rgba(255,255,255,0.07);
+font-size: 13px;
+color: rgba(255,255,255,0.85);
+line-height: 1.5;
+}
+.notice-row:last-child { border-bottom: none; }
+.notice-badge {
+background: linear-gradient(135deg, #6C35DE, #FF6B9D);
+color: white;
+font-family: ‘Jua’, cursive;
+font-size: 12px;
+padding: 2px 8px;
+border-radius: 20px;
+white-space: nowrap;
+flex-shrink: 0;
+margin-top: 1px;
+}
+.notice-badge.gold {
+background: linear-gradient(135deg, #F7B731, #FD9644);
+}
+.notice-sub {
+font-size: 11px;
+color: rgba(255,255,255,0.45);
+margin-top: 2px;
+}
+
 .filter-tabs {
 display: flex;
 gap: 6px;
@@ -725,7 +774,7 @@ animation: slideUp 0.3s ease;
   <div id="app">
     <!-- Header -->
     <div class="header">
-      <div class="header-title">🎡 가챠뽑기</div>
+      <div class="header-title" style="font-size:16px;line-height:1.2">🎡 가챠뽑기<br><span style="font-size:11px;opacity:0.7;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0">(주) 떠리원</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <div id="headerPrizesWrap" style="display:none">
           <span class="header-prizes-label">내 당첨</span>
@@ -766,21 +815,23 @@ animation: slideUp 0.3s ease;
     <div class="notice-title">📢 주식 지급 기준</div>
     <div class="notice-row">
       <span class="notice-badge">+1주</span>
-      <div>
-        초대
-      </div>
+      <div>초대</div>
     </div>
     <div class="notice-row">
       <span class="notice-badge">+2주</span>
-      <div>
-        한달 풀참
-      </div>
+      <div>한달 풀참</div>
     </div>
     <div class="notice-row">
       <span class="notice-badge gold">+1주</span>
       <div>
         <div>영업건 건당</div>
-        <div class="notice-sub">하루 선착순 3명 · 1일~말일 최다 영업자 보너스 +2~3주</div>
+        <div class="notice-sub">하루 선착순 3명</div>
+      </div>
+    </div>
+    <div class="notice-row">
+      <span class="notice-badge gold">+3주</span>
+      <div>
+        <div>🏆 월말 영업왕 성과금</div>
       </div>
     </div>
   </div>
