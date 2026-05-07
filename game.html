@@ -1630,6 +1630,7 @@ async function loadMembers() {
         <div class="member-stock">💰 ${m.stock || 0}주</div>
       </div>
       <div class="member-actions">
+        <button class="btn-sm btn-edit" onclick="editMemberName('${k}', '${m.name}')">수정</button>
         <button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button>
       </div>
     </div>
@@ -1654,6 +1655,17 @@ async function deleteMember(key) {
   if (!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`)) return;
   await fbDelete(`members/${key}`);
   showToast('🗑️ 삭제됨');
+  loadMembers();
+}
+
+async function editMemberName(key, currentName) {
+  const newName = prompt(`새 이름을 입력하세요`, currentName);
+  if (!newName || newName.trim() === '') return;
+  if (newName.trim() === currentName) return;
+  const exists = Object.entries(allMembers).some(([k, m]) => m.name === newName.trim() && k !== key);
+  if (exists) { showToast('이미 존재하는 이름입니다'); return; }
+  await fbSet(`members/${key}/name`, newName.trim());
+  showToast(`✅ ${currentName} → ${newName.trim()} 변경됨`);
   loadMembers();
 }
 
