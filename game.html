@@ -585,6 +585,22 @@ transition: all 0.15s;
 }
 .btn-confirm:active { transform: scale(0.95); }
 
+/* ===== PRIZE BADGES IN HEADER ===== */
+.header-prizes {
+font-size: 18px;
+letter-spacing: 2px;
+max-width: 140px;
+overflow: hidden;
+white-space: nowrap;
+text-overflow: ellipsis;
+line-height: 1.2;
+}
+.header-prizes-label {
+font-size: 9px;
+color: rgba(255,255,255,0.5);
+display: block;
+margin-bottom: 1px;
+}
 /* ===== SETTINGS ===== */
 .setting-row {
 display: flex;
@@ -710,6 +726,10 @@ animation: slideUp 0.3s ease;
     <div class="header">
       <div class="header-title">🎡 가챠뽑기</div>
       <div style="display:flex;align-items:center;gap:10px">
+        <div id="headerPrizesWrap" style="display:none">
+          <span class="header-prizes-label">내 당첨</span>
+          <div class="header-prizes" id="headerPrizes">-</div>
+        </div>
         <div class="header-user">
           <strong id="headerName">-</strong>
           <span id="headerRole">-</span>
@@ -843,6 +863,22 @@ animation: slideUp 0.3s ease;
       <input type="number" id="giveStockAmount" placeholder="주식 수 입력" min="1" max="100">
     </div>
     <button class="btn-primary" onclick="giveStock()">주식 지급하기</button>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
+  <div class="card">
+    <div class="input-group">
+      <label>멤버 선택</label>
+      <select id="managePrizeMember" onchange="loadMemberPrizes()">
+        <option value="">멤버를 선택하세요</option>
+      </select>
+    </div>
+    <div id="memberPrizeList" style="margin-top:8px"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
+      <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
+    </div>
   </div>
 </div>
 ```
@@ -1020,13 +1056,38 @@ function enterApp() {
   document.getElementById('headerName').textContent = currentUser.name;
   document.getElementById('headerRole').textContent = currentUser.role === 'admin' ? '관리자' : '참여자';
 
-  // show admin tabs
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
 
+  // Show prize badge for members
+  if (!isAdmin) {
+    document.getElementById('headerPrizesWrap').style.display = '';
+    refreshHeaderPrizes();
+  } else {
+    document.getElementById('headerPrizesWrap').style.display = 'none';
+  }
+
   showPage('gacha');
+}
+
+async function refreshHeaderPrizes() {
+  if (!currentUser || currentUser.role === 'admin') return;
+  const prizes = await fbGet(`memberPrizes/${currentUser.key}`);
+  const el = document.getElementById('headerPrizes');
+  if (!prizes || prizes.length === 0) {
+    el.textContent = '없음';
+  } else {
+    // 이모지별로 묶어서 카운트
+    const counts = {};
+    prizes.forEach(p => {
+      const key = p.emoji + '|' + p.name;
+      counts[key] = (counts[key] || { emoji: p.emoji, name: p.name, count: 0 });
+      counts[key].count++;
+    });
+    el.textContent = Object.values(counts).map(p => `${p.emoji}×${p.count}`).join('  ');
+  }
 }
 
 function logout() {
@@ -1228,11 +1289,19 @@ function refreshStockDisplay(enableBtns) {
   }
 }
 
-function showPrizeModal(prize) {
+async function showPrizeModal(prize) {
   document.getElementById('modalEmoji').textContent = prize.emoji;
   document.getElementById('modalPrize').textContent = prize.name;
   document.getElementById('modalMsg').textContent = `${currentUser.name}님 축하합니다! 🎉`;
   document.getElementById('resultModal').classList.add('active');
+
+  // Save prize to member's prize list (members only)
+  if (currentUser && currentUser.role === 'member') {
+    const current = await fbGet(`memberPrizes/${currentUser.key}`) || [];
+    current.push({ emoji: prize.emoji, name: prize.name, time: Date.now() });
+    await fbSet(`memberPrizes/${currentUser.key}`, current);
+    refreshHeaderPrizes();
+  }
 }
 
 // ===== ROULETTE SPIN =====
@@ -1563,6 +1632,63 @@ async function loadSettings() {
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
   document.getElementById('newCostInput').value = costPerRoll;
   populateGiveStockSelect();
+  populateManagePrizeSelect();
+}
+
+function populateManagePrizeSelect() {
+  const sel = document.getElementById('managePrizeMember');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
+  Object.entries(allMembers).forEach(([k, m]) => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadMemberPrizes() {
+  const key = document.getElementById('managePrizeMember').value;
+  const container = document.getElementById('memberPrizeList');
+  if (!key) { container.innerHTML = ''; return; }
+
+  const prizes = await fbGet(`memberPrizes/${key}`);
+  if (!prizes || prizes.length === 0) {
+    container.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';
+    return;
+  }
+  container.innerHTML = prizes.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:24px">${p.emoji}</span>
+      <span style="flex:1;font-size:14px">${escHtml(p.name)}</span>
+      <button class="btn-sm btn-del" onclick="removeMemberPrize('${key}', ${i})">차감</button>
+    </div>
+  `).join('');
+}
+
+async function addMemberPrize() {
+  const key = document.getElementById('managePrizeMember').value;
+  const emoji = document.getElementById('addPrizeEmoji').value.trim();
+  const name = document.getElementById('addPrizeName').value.trim();
+  if (!key) { showToast('멤버를 선택하세요'); return; }
+  if (!emoji || !name) { showToast('이모지와 경품명을 입력하세요'); return; }
+
+  const current = await fbGet(`memberPrizes/${key}`) || [];
+  current.push({ emoji, name, time: Date.now() });
+  await fbSet(`memberPrizes/${key}`, current);
+
+  document.getElementById('addPrizeEmoji').value = '';
+  document.getElementById('addPrizeName').value = '';
+  showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);
+  loadMemberPrizes();
+}
+
+async function removeMemberPrize(key, index) {
+  const current = await fbGet(`memberPrizes/${key}`) || [];
+  current.splice(index, 1);
+  await fbSet(`memberPrizes/${key}`, current);
+  showToast('🗑️ 경품 차감됨');
+  loadMemberPrizes();
 }
 
 function populateGiveStockSelect() {
