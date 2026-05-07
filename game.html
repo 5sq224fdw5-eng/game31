@@ -136,10 +136,12 @@ z-index: 1;
 .login-card {
 width: 100%;
 max-width: 360px;
-background: var(–card);
-border: 1px solid var(–border);
+background: rgba(255,255,255,0.07);
+background-color: rgba(30,15,60,0.7);
+border: 1px solid rgba(255,255,255,0.12);
 border-radius: 24px;
 padding: 28px;
+-webkit-backdrop-filter: blur(20px);
 backdrop-filter: blur(20px);
 }
 .login-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
@@ -156,7 +158,8 @@ cursor: pointer;
 transition: all 0.2s;
 }
 .login-tab.active {
-background: linear-gradient(135deg, var(–purple), var(–pink));
+background: -webkit-linear-gradient(135deg, #6C35DE, #FF6B9D);
+background: linear-gradient(135deg, #6C35DE, #FF6B9D);
 color: white;
 border-color: transparent;
 }
@@ -180,7 +183,8 @@ transition: border-color 0.2s;
 .btn-primary {
 width: 100%;
 padding: 14px;
-background: linear-gradient(135deg, var(–purple), var(–pink));
+background: -webkit-linear-gradient(135deg, #6C35DE, #FF6B9D);
+background: linear-gradient(135deg, #6C35DE, #FF6B9D);
 border: none;
 border-radius: 14px;
 color: white;
@@ -190,6 +194,7 @@ cursor: pointer;
 transition: transform 0.15s, box-shadow 0.15s;
 box-shadow: 0 4px 20px rgba(108,53,222,0.4);
 letter-spacing: 1px;
+-webkit-appearance: none;
 }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:hover { box-shadow: 0 6px 24px rgba(108,53,222,0.6); }
