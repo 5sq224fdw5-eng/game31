@@ -1245,18 +1245,18 @@ async function refreshHeaderPrizes() {
 
   const counts = {};
   (prizes || []).forEach(p => {
-    const key = p.emoji + '|' + p.name;
+    // 이름 기준으로 합산 (이모지 달라도 같은 이름이면 하나로)
+    const key = p.name;
     if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
     counts[key].count++;
   });
 
-  // 수동 연차 추가 (연차 경품이 이미 있으면 합산, 없으면 새로 추가)
+  // 수동 연차 - 이름 기준으로 합산
   if (manualLeave > 0) {
-    const leaveKey = '🏖️|연차';
-    if (counts[leaveKey]) {
-      counts[leaveKey].count += manualLeave;
+    if (counts['연차']) {
+      counts['연차'].count += manualLeave;
     } else {
-      counts[leaveKey] = { emoji: '🏖️', name: '연차', count: manualLeave };
+      counts['연차'] = { emoji: '🏖️', name: '연차', count: manualLeave };
     }
   }
 
