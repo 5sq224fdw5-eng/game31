@@ -866,6 +866,21 @@ animation: slideUp 0.3s ease;
     <button class="btn-primary" onclick="giveStock()">주식 지급하기</button>
   </div>
 
+  <div class="section-title" style="margin-top:20px">📉 주식 차감</div>
+  <div class="card">
+    <div class="input-group">
+      <label>멤버 선택</label>
+      <select id="deductStockMember">
+        <option value="">멤버를 선택하세요</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>차감할 주식 (1~100주)</label>
+      <input type="number" id="deductStockAmount" placeholder="주식 수 입력" min="1" max="100">
+    </div>
+    <button class="btn-primary" style="background:-webkit-linear-gradient(135deg,#FC5C65,#fd9644);background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">주식 차감하기</button>
+  </div>
+
   <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
   <div class="card">
     <div class="input-group">
@@ -1647,6 +1662,7 @@ async function loadSettings() {
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
   document.getElementById('newCostInput').value = costPerRoll;
   populateGiveStockSelect();
+  populateDeductStockSelect();
   populateManagePrizeSelect();
 }
 
@@ -1738,11 +1754,43 @@ async function giveStock() {
   const newStock = current + amount;
   await fbSet(`members/${memberKey}/stock`, newStock);
   
-  // refresh members data
   allMembers = (await fbGet('members')) || {};
   document.getElementById('giveStockAmount').value = '';
   showToast(`✅ ${allMembers[memberKey].name}에게 ${amount}주 지급! (총 ${newStock}주)`);
   populateGiveStockSelect();
+  populateDeductStockSelect();
+}
+
+async function deductStock() {
+  const memberKey = document.getElementById('deductStockMember').value;
+  const amount = parseInt(document.getElementById('deductStockAmount').value);
+  if (!memberKey) { showToast('멤버를 선택하세요'); return; }
+  if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
+
+  const member = await fbGet(`members/${memberKey}`);
+  const current = member ? (member.stock || 0) : 0;
+  if (amount > current) { showToast(`보유 주식(${current}주)보다 많이 차감할 수 없어요`); return; }
+
+  const newStock = current - amount;
+  await fbSet(`members/${memberKey}/stock`, newStock);
+
+  allMembers = (await fbGet('members')) || {};
+  document.getElementById('deductStockAmount').value = '';
+  showToast(`📉 ${allMembers[memberKey].name} ${amount}주 차감 (잔여 ${newStock}주)`);
+  populateGiveStockSelect();
+  populateDeductStockSelect();
+}
+
+function populateDeductStockSelect() {
+  const sel = document.getElementById('deductStockMember');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
+  Object.entries(allMembers).forEach(([k, m]) => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = `${m.name} (${m.stock || 0}주)`;
+    sel.appendChild(opt);
+  });
 }
 
 // ===== Helpers =====
