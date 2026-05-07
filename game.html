@@ -637,16 +637,13 @@ transition: all 0.15s;
 
 /* ===== PRIZE BADGES IN HEADER ===== */
 .header-prizes {
-font-size: 13px;
-max-width: 200px;
-overflow: hidden;
-white-space: nowrap;
-line-height: 1.4;
-display: flex;
-flex-wrap: nowrap;
-overflow-x: auto;
+display: grid;
+grid-template-columns: repeat(2, auto);
+gap: 3px;
+max-width: 180px;
+max-height: 72px;
+overflow-y: auto;
 scrollbar-width: none;
-gap: 2px;
 }
 .header-prizes::-webkit-scrollbar { display: none; }
 .header-prizes-label {
@@ -1259,10 +1256,10 @@ async function refreshHeaderPrizes() {
       counts[key].count++;
     });
     el.innerHTML = Object.values(counts).map(p =>
-      `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:6px;background:rgba(255,255,255,0.08);border-radius:12px;padding:2px 7px;font-size:12px">
-        <span style="font-size:15px">${p.emoji}</span>
-        <span style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:rgba(255,255,255,0.9)">${escHtml(p.name)}</span>
-        <span style="font-family:'Jua',cursive;color:var(--gold);font-size:12px">×${p.count}</span>
+      `<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;">
+        <span style="font-size:14px">${p.emoji}</span>
+        <span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span>
+        <span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span>
       </span>`
     ).join('');
   }
