@@ -1074,16 +1074,30 @@ function enterApp() {
 
 async function refreshHeaderPrizes() {
   if (!currentUser || currentUser.role === 'admin') return;
-  const prizes = await fbGet(`memberPrizes/${currentUser.key}`);
   const el = document.getElementById('headerPrizes');
+
+  // memberPrizes 없으면 history에서 자동 마이그레이션
+  let prizes = await fbGet(`memberPrizes/${currentUser.key}`);
+  if (!prizes || prizes.length === 0) {
+    const history = await fbGet('history');
+    if (history) {
+      const myItems = Object.values(history)
+        .filter(h => h.name === currentUser.name)
+        .map(h => ({ emoji: h.emoji, name: h.prize, time: h.time || 0 }));
+      if (myItems.length > 0) {
+        await fbSet(`memberPrizes/${currentUser.key}`, myItems);
+        prizes = myItems;
+      }
+    }
+  }
+
   if (!prizes || prizes.length === 0) {
     el.textContent = '없음';
   } else {
-    // 이모지별로 묶어서 카운트
     const counts = {};
     prizes.forEach(p => {
       const key = p.emoji + '|' + p.name;
-      counts[key] = (counts[key] || { emoji: p.emoji, name: p.name, count: 0 });
+      if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
       counts[key].count++;
     });
     el.textContent = Object.values(counts).map(p => `${p.emoji}×${p.count}`).join('  ');
