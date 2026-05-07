@@ -811,30 +811,7 @@ animation: slideUp 0.3s ease;
 <!-- GACHA PAGE -->
 <div class="page active" id="pageGacha">
   <!-- Notice -->
-  <div class="notice-card">
-    <div class="notice-title">📢 주식 지급 기준</div>
-    <div class="notice-row">
-      <span class="notice-badge">+1주</span>
-      <div>초대</div>
-    </div>
-    <div class="notice-row">
-      <span class="notice-badge">+2주</span>
-      <div>한달 풀참</div>
-    </div>
-    <div class="notice-row">
-      <span class="notice-badge gold">+1주</span>
-      <div>
-        <div>영업건 건당</div>
-        <div class="notice-sub">하루 선착순 3명</div>
-      </div>
-    </div>
-    <div class="notice-row">
-      <span class="notice-badge gold">+3주</span>
-      <div>
-        <div>🏆 월말 영업왕 성과금</div>
-      </div>
-    </div>
-  </div>
+  <div class="notice-card" id="noticeCard"></div>
 
   <!-- Stock badge (shared) -->
   <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
@@ -954,6 +931,17 @@ animation: slideUp 0.3s ease;
       <input type="number" id="deductStockAmount" placeholder="주식 수 입력" min="1" max="100">
     </div>
     <button class="btn-primary" style="background:-webkit-linear-gradient(135deg,#FC5C65,#fd9644);background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">주식 차감하기</button>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
+  <div class="card" id="noticeEditorCard">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
+    <div id="noticeEditorList"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="text" id="newNoticeBadge" placeholder="+1주" style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive;">
+      <input type="text" id="newNoticeText" placeholder="내용 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
+    </div>
   </div>
 
   <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
@@ -1160,6 +1148,7 @@ function enterApp() {
     document.getElementById('headerPrizesWrap').style.display = 'none';
   }
 
+  loadNotice();
   showPage('gacha');
 }
 
@@ -1212,7 +1201,7 @@ function showPage(page) {
   const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
   if (btn) btn.classList.add('active');
 
-  if (page === 'gacha') refreshGachaPage();
+  if (page === 'gacha') { refreshGachaPage(); loadNotice(); }
   if (page === 'history') loadHistory();
   if (page === 'members') loadMembers();
   if (page === 'prizes') loadPrizes();
@@ -1732,6 +1721,7 @@ async function deletePrize(key) {
 
 // ===== Settings =====
 async function loadSettings() {
+  loadNoticeEditor();
   const cost = await fbGet('costPerRoll');
   costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
@@ -1866,6 +1856,95 @@ function populateDeductStockSelect() {
     opt.textContent = `${m.name} (${m.stock || 0}주)`;
     sel.appendChild(opt);
   });
+}
+
+// ===== Notice =====
+const DEFAULT_NOTICE = [
+  { badge: '+1주', badgeType: 'purple', text: '초대', sub: '' },
+  { badge: '+2주', badgeType: 'purple', text: '한달 풀참', sub: '' },
+  { badge: '+1주', badgeType: 'gold', text: '영업건 건당', sub: '하루 선착순 3명' },
+  { badge: '+3주', badgeType: 'gold', text: '🏆 월말 영업왕 성과금', sub: '' }
+];
+
+async function loadNotice() {
+  const data = await fbGet('notice');
+  const rows = (data && data.length) ? data : DEFAULT_NOTICE;
+  renderNoticeCard(rows);
+  return rows;
+}
+
+function renderNoticeCard(rows) {
+  const card = document.getElementById('noticeCard');
+  if (!card) return;
+  card.innerHTML = `
+    <div class="notice-title">📢 주식 지급 기준</div>
+    ${rows.map(r => `
+      <div class="notice-row">
+        <span class="notice-badge${r.badgeType === 'gold' ? ' gold' : ''}">${escHtml(r.badge)}</span>
+        <div>
+          <div>${escHtml(r.text)}</div>
+          ${r.sub ? `<div class="notice-sub">${escHtml(r.sub)}</div>` : ''}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+async function loadNoticeEditor() {
+  const data = await fbGet('notice');
+  const rows = (data && data.length) ? data : DEFAULT_NOTICE;
+  renderNoticeEditor(rows);
+}
+
+function renderNoticeEditor(rows) {
+  const list = document.getElementById('noticeEditorList');
+  if (!list) return;
+  list.innerHTML = rows.map((r, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span class="notice-badge${r.badgeType === 'gold' ? ' gold' : ''}" style="cursor:pointer" onclick="toggleNoticeBadgeType(${i})">${escHtml(r.badge)}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px">${escHtml(r.text)}</div>
+        ${r.sub ? `<div class="notice-sub">${escHtml(r.sub)}</div>` : ''}
+      </div>
+      <button class="btn-sm btn-del" onclick="deleteNoticeRow(${i})">삭제</button>
+    </div>
+  `).join('');
+}
+
+async function addNoticeRow() {
+  const badge = document.getElementById('newNoticeBadge').value.trim();
+  const text = document.getElementById('newNoticeText').value.trim();
+  if (!badge || !text) { showToast('배지와 내용을 입력하세요'); return; }
+
+  const data = await fbGet('notice');
+  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
+  rows.push({ badge, badgeType: 'purple', text, sub: '' });
+  await fbSet('notice', rows);
+
+  document.getElementById('newNoticeBadge').value = '';
+  document.getElementById('newNoticeText').value = '';
+  showToast('✅ 추가됨');
+  renderNoticeCard(rows);
+  renderNoticeEditor(rows);
+}
+
+async function deleteNoticeRow(index) {
+  const data = await fbGet('notice');
+  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
+  rows.splice(index, 1);
+  await fbSet('notice', rows);
+  showToast('🗑️ 삭제됨');
+  renderNoticeCard(rows);
+  renderNoticeEditor(rows);
+}
+
+async function toggleNoticeBadgeType(index) {
+  const data = await fbGet('notice');
+  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
+  rows[index].badgeType = rows[index].badgeType === 'gold' ? 'purple' : 'gold';
+  await fbSet('notice', rows);
+  renderNoticeCard(rows);
+  renderNoticeEditor(rows);
 }
 
 // ===== Helpers =====
