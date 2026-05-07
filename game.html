@@ -637,14 +637,18 @@ transition: all 0.15s;
 
 /* ===== PRIZE BADGES IN HEADER ===== */
 .header-prizes {
-font-size: 18px;
-letter-spacing: 2px;
-max-width: 140px;
+font-size: 13px;
+max-width: 200px;
 overflow: hidden;
 white-space: nowrap;
-text-overflow: ellipsis;
-line-height: 1.2;
+line-height: 1.4;
+display: flex;
+flex-wrap: nowrap;
+overflow-x: auto;
+scrollbar-width: none;
+gap: 2px;
 }
+.header-prizes::-webkit-scrollbar { display: none; }
 .header-prizes-label {
 font-size: 9px;
 color: rgba(255,255,255,0.5);
@@ -1246,7 +1250,7 @@ async function refreshHeaderPrizes() {
   }
 
   if (!prizes || prizes.length === 0) {
-    el.textContent = '없음';
+    el.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
   } else {
     const counts = {};
     prizes.forEach(p => {
@@ -1254,7 +1258,13 @@ async function refreshHeaderPrizes() {
       if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
       counts[key].count++;
     });
-    el.textContent = Object.values(counts).map(p => `${p.emoji}×${p.count}`).join('  ');
+    el.innerHTML = Object.values(counts).map(p =>
+      `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:6px;background:rgba(255,255,255,0.08);border-radius:12px;padding:2px 7px;font-size:12px">
+        <span style="font-size:15px">${p.emoji}</span>
+        <span style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:rgba(255,255,255,0.9)">${escHtml(p.name)}</span>
+        <span style="font-family:'Jua',cursive;color:var(--gold);font-size:12px">×${p.count}</span>
+      </span>`
+    ).join('');
   }
 }
 
@@ -1797,7 +1807,33 @@ async function savePrize() {
   }
   closePrizeModal();
   showToast('✅ 저장됨');
+  await syncMemberPrizeNames();
   loadPrizes();
+}
+
+async function syncMemberPrizeNames() {
+  // When a prize name/emoji changes, update all memberPrizes entries
+  const freshPrizes = await fbGet('prizes');
+  if (!freshPrizes) return;
+  const members = await fbGet('members');
+  if (!members) return;
+  for (const memberKey of Object.keys(members)) {
+    const mp = await fbGet(`memberPrizes/${memberKey}`);
+    if (!mp || !mp.length) continue;
+    let changed = false;
+    const updated = mp.map(item => {
+      // find matching prize by old name or emoji
+      const match = Object.values(freshPrizes).find(fp =>
+        fp.name === item.name || fp.emoji === item.emoji
+      );
+      if (match && (match.name !== item.name || match.emoji !== item.emoji)) {
+        changed = true;
+        return { ...item, name: match.name, emoji: match.emoji };
+      }
+      return item;
+    });
+    if (changed) await fbSet(`memberPrizes/${memberKey}`, updated);
+  }
 }
 
 async function deletePrize(key) {
