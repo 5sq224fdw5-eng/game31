@@ -822,19 +822,16 @@ animation: slideUp 0.3s ease;
           <span class="header-prizes-label">내 당첨</span>
           <div class="header-prizes" id="headerPrizes">-</div>
         </div>
-        <div id="headerLeaveWrap" style="display:none;text-align:right">
-          <span class="header-prizes-label">잔여 연차</span>
-          <div style="font-family:'Jua',cursive;font-size:15px;color:#00C9A7" id="headerLeave">-</div>
-        </div>
-        <div class="header-user">
-          <strong id="headerName">-</strong>
-          <span id="headerRole">-</span>
-        </div>
-        <button class="btn-logout" onclick="logout()">나가기</button>
-      </div>
-    </div>
 
 ```
+    <div class="header-user">
+      <strong id="headerName">-</strong>
+      <span id="headerRole">-</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">나가기</button>
+  </div>
+</div>
+
 <!-- Nav -->
 <div class="nav" id="mainNav">
   <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha">
@@ -1205,12 +1202,9 @@ function enterApp() {
   // Show prize badge for members
   if (!isAdmin) {
     document.getElementById('headerPrizesWrap').style.display = '';
-    document.getElementById('headerLeaveWrap').style.display = '';
     refreshHeaderPrizes();
-    refreshHeaderLeave();
   } else {
     document.getElementById('headerPrizesWrap').style.display = 'none';
-    document.getElementById('headerLeaveWrap').style.display = 'none';
   }
 
   loadNotice();
@@ -1246,15 +1240,29 @@ async function refreshHeaderPrizes() {
     }
   }
 
-  if (!prizes || prizes.length === 0) {
+  // 수동 연차를 경품 목록에 합산
+  const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
+
+  const counts = {};
+  (prizes || []).forEach(p => {
+    const key = p.emoji + '|' + p.name;
+    if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
+    counts[key].count++;
+  });
+
+  // 수동 연차 추가 (연차 경품이 이미 있으면 합산, 없으면 새로 추가)
+  if (manualLeave > 0) {
+    const leaveKey = '🏖️|연차';
+    if (counts[leaveKey]) {
+      counts[leaveKey].count += manualLeave;
+    } else {
+      counts[leaveKey] = { emoji: '🏖️', name: '연차', count: manualLeave };
+    }
+  }
+
+  if (Object.keys(counts).length === 0) {
     el.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
   } else {
-    const counts = {};
-    prizes.forEach(p => {
-      const key = p.emoji + '|' + p.name;
-      if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
-      counts[key].count++;
-    });
     el.innerHTML = Object.values(counts).map(p =>
       `<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;">
         <span style="font-size:14px">${p.emoji}</span>
