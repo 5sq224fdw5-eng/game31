@@ -950,7 +950,7 @@ animation: slideUp 0.3s ease;
   <div class="card">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
-      <input class="search-select-input" id="giveStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('giveStockSearch','giveStockDropdown','giveStockMemberVal')" onfocus="openDropdown('giveStockDropdown')" onblur="closeDropdownDelay('giveStockDropdown')">
+      <input class="search-select-input" id="giveStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('giveStockSearch','giveStockDropdown')" onfocus="openDropdown('giveStockDropdown')" onblur="closeDropdownDelay('giveStockDropdown')">
       <input type="hidden" id="giveStockMemberVal">
       <div class="search-select-dropdown" id="giveStockDropdown"></div>
     </div>
@@ -965,7 +965,7 @@ animation: slideUp 0.3s ease;
   <div class="card">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
-      <input class="search-select-input" id="deductStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('deductStockSearch','deductStockDropdown','deductStockMemberVal')" onfocus="openDropdown('deductStockDropdown')" onblur="closeDropdownDelay('deductStockDropdown')">
+      <input class="search-select-input" id="deductStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('deductStockSearch','deductStockDropdown')" onfocus="openDropdown('deductStockDropdown')" onblur="closeDropdownDelay('deductStockDropdown')">
       <input type="hidden" id="deductStockMemberVal">
       <div class="search-select-dropdown" id="deductStockDropdown"></div>
     </div>
@@ -980,7 +980,7 @@ animation: slideUp 0.3s ease;
   <div class="card">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
-      <input class="search-select-input" id="leaveSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('leaveSearch','leaveDropdown','leaveManageMemberVal', loadMemberLeave)" onfocus="openDropdown('leaveDropdown')" onblur="closeDropdownDelay('leaveDropdown')">
+      <input class="search-select-input" id="leaveSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('leaveSearch','leaveDropdown')" onfocus="openDropdown('leaveDropdown')" onblur="closeDropdownDelay('leaveDropdown')">
       <input type="hidden" id="leaveManageMemberVal">
       <div class="search-select-dropdown" id="leaveDropdown"></div>
     </div>
@@ -1007,7 +1007,7 @@ animation: slideUp 0.3s ease;
   <div class="card">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
-      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown','managePrizeMemberVal', loadMemberPrizes)" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
+      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
       <input type="hidden" id="managePrizeMemberVal">
       <div class="search-select-dropdown" id="managePrizeDropdown"></div>
     </div>
@@ -1987,67 +1987,58 @@ function populateDeductStockSelect() {
 }
 
 // ===== Searchable Select =====
-function buildSearchDropdown(dropdownId, hiddenId, callback) {
-  const dropdown = document.getElementById(dropdownId);
-  if (!dropdown) return;
-  const sorted = Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'));
-  dropdown.innerHTML = sorted.map(([k, m]) =>
-    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOption('${dropdownId}','${hiddenId}','${k}','${m.name}',${callback ? callback.name : 'null'})">${m.name}</div>`
-  ).join('');
-}
-
-function filterSearchSelect(inputId, dropdownId, hiddenId, callback) {
-  const q = document.getElementById(inputId).value.toLowerCase();
-  const dropdown = document.getElementById(dropdownId);
-  dropdown.classList.add('open');
-  const sorted = Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
-    .filter(([k,m]) => m.name.toLowerCase().includes(q));
-  dropdown.innerHTML = sorted.map(([k, m]) =>
-    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOption('${dropdownId}','${hiddenId}','${k}','${escHtml(m.name)}',${callback ? callback.name : 'null'})">${escHtml(m.name)}</div>`
-  ).join('');
-  if (sorted.length === 0) dropdown.innerHTML = '<div class="search-select-option" style="opacity:0.4">검색 결과 없음</div>';
-}
+// configs: { inputId, dropdownId, hiddenId, onSelect(callback) }
+const ssConfigs = {
+  giveStockDropdown:    { inputId:'giveStockSearch',    hiddenId:'giveStockMemberVal',    onSelect: null },
+  deductStockDropdown:  { inputId:'deductStockSearch',  hiddenId:'deductStockMemberVal',  onSelect: null },
+  leaveDropdown:        { inputId:'leaveSearch',        hiddenId:'leaveManageMemberVal',  onSelect: ()=>loadMemberLeave() },
+  managePrizeDropdown:  { inputId:'managePrizeSearch',  hiddenId:'managePrizeMemberVal',  onSelect: ()=>loadMemberPrizes() },
+};
 
 function openDropdown(dropdownId) {
+  const cfg = ssConfigs[dropdownId];
+  if (!cfg) return;
+  const q = (document.getElementById(cfg.inputId).value || '').toLowerCase();
+  renderDropdown(dropdownId, q);
+  document.getElementById(dropdownId).classList.add('open');
+}
+
+function filterSearchSelect(inputId, dropdownId) {
+  const q = (document.getElementById(inputId).value || '').toLowerCase();
+  renderDropdown(dropdownId, q);
+  document.getElementById(dropdownId).classList.add('open');
+}
+
+function renderDropdown(dropdownId, q) {
   const dropdown = document.getElementById(dropdownId);
   if (!dropdown) return;
-  dropdown.classList.add('open');
-  // populate all members
   const sorted = Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'));
-  const hiddenId = dropdownId.replace('Dropdown','MemberVal').replace('leaveDropdown','leaveManageMemberVal').replace('managePrizeDropdown','managePrizeMemberVal');
-  dropdown.innerHTML = sorted.map(([k, m]) =>
-    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOptionRaw(event,'${dropdownId}','${hiddenId}','${k}','${escHtml(m.name)}')">${escHtml(m.name)}</div>`
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
+    .filter(([k,m]) => !q || m.name.toLowerCase().includes(q));
+  if (sorted.length === 0) {
+    dropdown.innerHTML = '<div class="search-select-option" style="opacity:0.4">검색 결과 없음</div>';
+    return;
+  }
+  dropdown.innerHTML = sorted.map(([k,m]) =>
+    `<div class="search-select-option" data-key="${k}" onmousedown="pickMember(event,'${dropdownId}','${k}','${m.name.replace(/'/g,"\'")}')">${escHtml(m.name)}</div>`
   ).join('');
 }
 
-function selectSearchOptionRaw(e, dropdownId, hiddenId, key, name) {
+function pickMember(e, dropdownId, key, name) {
   e.preventDefault();
-  document.getElementById(hiddenId).value = key;
-  // find search input
-  const wrap = document.getElementById(dropdownId).closest('.search-select-wrap');
-  if (wrap) {
-    const input = wrap.querySelector('.search-select-input');
-    if (input) input.value = name;
-  }
+  const cfg = ssConfigs[dropdownId];
+  if (!cfg) return;
+  document.getElementById(cfg.hiddenId).value = key;
+  document.getElementById(cfg.inputId).value = name;
   document.getElementById(dropdownId).classList.remove('open');
-  // trigger callback based on which dropdown
-  if (dropdownId === 'leaveDropdown') loadMemberLeave();
-  if (dropdownId === 'managePrizeDropdown') loadMemberPrizes();
+  if (cfg.onSelect) cfg.onSelect();
 }
 
 function closeDropdownDelay(dropdownId) {
   setTimeout(() => {
     const el = document.getElementById(dropdownId);
     if (el) el.classList.remove('open');
-  }, 200);
-}
-
-function getSearchSelectVal(hiddenId) {
-  const el = document.getElementById(hiddenId);
-  return el ? el.value : '';
+  }, 150);
 }
 
 // ===== 연차 관리 =====
