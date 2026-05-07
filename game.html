@@ -199,6 +199,30 @@ letter-spacing: 1px;
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:hover { box-shadow: 0 6px 24px rgba(108,53,222,0.6); }
 
+/* ===== HISTORY FILTER ===== */
+.filter-tabs {
+display: flex;
+gap: 6px;
+flex-wrap: wrap;
+margin-bottom: 14px;
+}
+.filter-tab {
+padding: 6px 14px;
+border-radius: 20px;
+border: 1px solid var(–border);
+background: transparent;
+color: rgba(255,255,255,0.5);
+font-family: ‘Noto Sans KR’, sans-serif;
+font-size: 12px;
+cursor: pointer;
+transition: all 0.2s;
+white-space: nowrap;
+}
+.filter-tab.active {
+background: linear-gradient(135deg, #6C35DE, #FF6B9D);
+color: white;
+border-color: transparent;
+}
 /* ===== SECTION TITLE ===== */
 .section-title {
 font-family: ‘Jua’, cursive;
@@ -761,6 +785,7 @@ animation: slideUp 0.3s ease;
 <!-- HISTORY PAGE -->
 <div class="page" id="pageHistory">
   <div class="section-title">📜 당첨 기록</div>
+  <div class="filter-tabs" id="historyFilterTabs"></div>
   <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
 
@@ -1314,11 +1339,18 @@ function closeModal() {
 }
 
 // ===== History =====
+let historyFilter = '전체'; // current filter
+let allHistoryItems = []; // cache
+
 async function loadHistory() {
   const list = document.getElementById('historyList');
   list.innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const history = await fbGet('history');
+
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
   if (!history) {
+    document.getElementById('historyFilterTabs').innerHTML = '';
     list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';
     return;
   }
@@ -1327,16 +1359,43 @@ async function loadHistory() {
     .map(([k, v]) => v)
     .sort((a, b) => (b.time || 0) - (a.time || 0));
 
-  // 참여자는 본인 기록만
-  const isAdmin = currentUser && currentUser.role === 'admin';
   if (!isAdmin) {
     items = items.filter(item => item.name === currentUser.name);
+    document.getElementById('historyFilterTabs').innerHTML = '';
+  } else {
+    // Build member filter tabs
+    const names = ['전체', ...new Set(items.map(i => i.name))];
+    const tabsEl = document.getElementById('historyFilterTabs');
+    tabsEl.innerHTML = names.map(name => `
+      <button class="filter-tab ${name === historyFilter ? 'active' : ''}"
+        onclick="setHistoryFilter('${name}')">${name}</button>
+    `).join('');
+  }
+
+  allHistoryItems = items;
+  renderHistoryList(isAdmin);
+}
+
+function setHistoryFilter(name) {
+  historyFilter = name;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  // update tab active state
+  document.querySelectorAll('.filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === name);
+  });
+  renderHistoryList(isAdmin);
+}
+
+function renderHistoryList(isAdmin) {
+  const list = document.getElementById('historyList');
+  let items = allHistoryItems;
+
+  if (isAdmin && historyFilter !== '전체') {
+    items = items.filter(i => i.name === historyFilter);
   }
 
   if (items.length === 0) {
-    list.innerHTML = isAdmin
-      ? '<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>'
-      : '<div class="empty"><div class="empty-icon">📭</div>아직 뽑기 기록이 없어요</div>';
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';
     return;
   }
 
