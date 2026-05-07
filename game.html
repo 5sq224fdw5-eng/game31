@@ -651,6 +651,47 @@ color: rgba(255,255,255,0.5);
 display: block;
 margin-bottom: 1px;
 }
+
+/* ===== SEARCHABLE SELECT ===== */
+.search-select-wrap { position: relative; margin-bottom: 14px; }
+.search-select-wrap label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
+.search-select-input {
+width: 100%;
+padding: 12px 16px;
+background: rgba(255,255,255,0.08);
+border: 1px solid var(–border);
+border-radius: 12px;
+color: white;
+font-size: 15px;
+font-family: ‘Noto Sans KR’, sans-serif;
+outline: none;
+transition: border-color 0.2s;
+box-sizing: border-box;
+}
+.search-select-input:focus { border-color: var(–purple); }
+.search-select-dropdown {
+display: none;
+position: absolute;
+top: 100%;
+left: 0; right: 0;
+background: #1a0a2e;
+border: 1px solid var(–purple);
+border-radius: 12px;
+max-height: 200px;
+overflow-y: auto;
+z-index: 150;
+margin-top: 4px;
+}
+.search-select-dropdown.open { display: block; }
+.search-select-option {
+padding: 10px 16px;
+font-size: 14px;
+color: white;
+cursor: pointer;
+transition: background 0.15s;
+}
+.search-select-option:hover { background: rgba(108,53,222,0.3); }
+.search-select-option.selected { color: var(–gold); }
 /* ===== SETTINGS ===== */
 .setting-row {
 display: flex;
@@ -909,11 +950,11 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">💰 주식 지급</div>
   <div class="card">
-    <div class="input-group">
-      <label>멤버 선택</label>
-      <select id="giveStockMember">
-        <option value="">멤버를 선택하세요</option>
-      </select>
+    <div class="search-select-wrap">
+      <label>멤버 검색</label>
+      <input class="search-select-input" id="giveStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('giveStockSearch','giveStockDropdown','giveStockMemberVal')" onfocus="openDropdown('giveStockDropdown')" onblur="closeDropdownDelay('giveStockDropdown')">
+      <input type="hidden" id="giveStockMemberVal">
+      <div class="search-select-dropdown" id="giveStockDropdown"></div>
     </div>
     <div class="input-group">
       <label>지급할 주식 (1~100주)</label>
@@ -924,11 +965,11 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">📉 주식 차감</div>
   <div class="card">
-    <div class="input-group">
-      <label>멤버 선택</label>
-      <select id="deductStockMember">
-        <option value="">멤버를 선택하세요</option>
-      </select>
+    <div class="search-select-wrap">
+      <label>멤버 검색</label>
+      <input class="search-select-input" id="deductStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('deductStockSearch','deductStockDropdown','deductStockMemberVal')" onfocus="openDropdown('deductStockDropdown')" onblur="closeDropdownDelay('deductStockDropdown')">
+      <input type="hidden" id="deductStockMemberVal">
+      <div class="search-select-dropdown" id="deductStockDropdown"></div>
     </div>
     <div class="input-group">
       <label>차감할 주식 (1~100주)</label>
@@ -939,11 +980,11 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
   <div class="card">
-    <div class="input-group">
-      <label>멤버 선택</label>
-      <select id="leaveManageMember" onchange="loadMemberLeave()">
-        <option value="">멤버를 선택하세요</option>
-      </select>
+    <div class="search-select-wrap">
+      <label>멤버 검색</label>
+      <input class="search-select-input" id="leaveSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('leaveSearch','leaveDropdown','leaveManageMemberVal', loadMemberLeave)" onfocus="openDropdown('leaveDropdown')" onblur="closeDropdownDelay('leaveDropdown')">
+      <input type="hidden" id="leaveManageMemberVal">
+      <div class="search-select-dropdown" id="leaveDropdown"></div>
     </div>
     <div id="memberLeaveDisplay" style="text-align:center;padding:10px 0;font-family:'Jua',cursive;font-size:22px;color:var(--gold)"></div>
     <div style="display:flex;gap:8px;margin-top:4px">
@@ -966,11 +1007,11 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
   <div class="card">
-    <div class="input-group">
-      <label>멤버 선택</label>
-      <select id="managePrizeMember" onchange="loadMemberPrizes()">
-        <option value="">멤버를 선택하세요</option>
-      </select>
+    <div class="search-select-wrap">
+      <label>멤버 검색</label>
+      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown','managePrizeMemberVal', loadMemberPrizes)" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
+      <input type="hidden" id="managePrizeMemberVal">
+      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
     </div>
     <div id="memberPrizeList" style="margin-top:8px"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
@@ -1177,9 +1218,12 @@ function enterApp() {
 
 async function refreshHeaderLeave() {
   if (!currentUser || currentUser.role === 'admin') return;
-  const leave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
+  const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
+  const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
+  const prizeLeave = prizes.filter(p => p.name === '연차').length;
+  const total = manualLeave + prizeLeave;
   const el = document.getElementById('headerLeave');
-  if (el) el.textContent = `🏖️ ${leave}일`;
+  if (el) el.textContent = `🏖️ ${total}일`;
 }
 
 async function refreshHeaderPrizes() {
@@ -1771,9 +1815,7 @@ async function loadSettings() {
   costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
   document.getElementById('newCostInput').value = costPerRoll;
-  populateGiveStockSelect();
-  populateDeductStockSelect();
-  populateManagePrizeSelect();
+  // searchable dropdowns auto-populate on focus
 }
 
 function populateManagePrizeSelect() {
@@ -1789,7 +1831,7 @@ function populateManagePrizeSelect() {
 }
 
 async function loadMemberPrizes() {
-  const key = document.getElementById('managePrizeMember').value;
+  const key = document.getElementById('managePrizeMemberVal').value;
   const container = document.getElementById('memberPrizeList');
   if (!key) { container.innerHTML = ''; return; }
 
@@ -1808,7 +1850,7 @@ async function loadMemberPrizes() {
 }
 
 async function addMemberPrize() {
-  const key = document.getElementById('managePrizeMember').value;
+  const key = document.getElementById('managePrizeMemberVal').value;
   const emoji = document.getElementById('addPrizeEmoji').value.trim();
   const name = document.getElementById('addPrizeName').value.trim();
   if (!key) { showToast('멤버를 선택하세요'); return; }
@@ -1854,7 +1896,7 @@ async function saveCost() {
 }
 
 async function giveStock() {
-  const memberKey = document.getElementById('giveStockMember').value;
+  const memberKey = document.getElementById('giveStockMemberVal').value;
   const amount = parseInt(document.getElementById('giveStockAmount').value);
   if (!memberKey) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
@@ -1866,13 +1908,13 @@ async function giveStock() {
   
   allMembers = (await fbGet('members')) || {};
   document.getElementById('giveStockAmount').value = '';
+  document.getElementById('giveStockSearch').value = '';
+  document.getElementById('giveStockMemberVal').value = '';
   showToast(`✅ ${allMembers[memberKey].name}에게 ${amount}주 지급! (총 ${newStock}주)`);
-  populateGiveStockSelect();
-  populateDeductStockSelect();
 }
 
 async function deductStock() {
-  const memberKey = document.getElementById('deductStockMember').value;
+  const memberKey = document.getElementById('deductStockMemberVal').value;
   const amount = parseInt(document.getElementById('deductStockAmount').value);
   if (!memberKey) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
@@ -1886,9 +1928,9 @@ async function deductStock() {
 
   allMembers = (await fbGet('members')) || {};
   document.getElementById('deductStockAmount').value = '';
+  document.getElementById('deductStockSearch').value = '';
+  document.getElementById('deductStockMemberVal').value = '';
   showToast(`📉 ${allMembers[memberKey].name} ${amount}주 차감 (잔여 ${newStock}주)`);
-  populateGiveStockSelect();
-  populateDeductStockSelect();
 }
 
 function populateDeductStockSelect() {
@@ -1901,6 +1943,70 @@ function populateDeductStockSelect() {
     opt.textContent = `${m.name} (${m.stock || 0}주)`;
     sel.appendChild(opt);
   });
+}
+
+// ===== Searchable Select =====
+function buildSearchDropdown(dropdownId, hiddenId, callback) {
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+  const sorted = Object.entries(allMembers)
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'));
+  dropdown.innerHTML = sorted.map(([k, m]) =>
+    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOption('${dropdownId}','${hiddenId}','${k}','${m.name}',${callback ? callback.name : 'null'})">${m.name}</div>`
+  ).join('');
+}
+
+function filterSearchSelect(inputId, dropdownId, hiddenId, callback) {
+  const q = document.getElementById(inputId).value.toLowerCase();
+  const dropdown = document.getElementById(dropdownId);
+  dropdown.classList.add('open');
+  const sorted = Object.entries(allMembers)
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
+    .filter(([k,m]) => m.name.toLowerCase().includes(q));
+  dropdown.innerHTML = sorted.map(([k, m]) =>
+    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOption('${dropdownId}','${hiddenId}','${k}','${escHtml(m.name)}',${callback ? callback.name : 'null'})">${escHtml(m.name)}</div>`
+  ).join('');
+  if (sorted.length === 0) dropdown.innerHTML = '<div class="search-select-option" style="opacity:0.4">검색 결과 없음</div>';
+}
+
+function openDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+  dropdown.classList.add('open');
+  // populate all members
+  const sorted = Object.entries(allMembers)
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'));
+  const hiddenId = dropdownId.replace('Dropdown','MemberVal').replace('leaveDropdown','leaveManageMemberVal').replace('managePrizeDropdown','managePrizeMemberVal');
+  dropdown.innerHTML = sorted.map(([k, m]) =>
+    `<div class="search-select-option" data-key="${k}" onmousedown="selectSearchOptionRaw(event,'${dropdownId}','${hiddenId}','${k}','${escHtml(m.name)}')">${escHtml(m.name)}</div>`
+  ).join('');
+}
+
+function selectSearchOptionRaw(e, dropdownId, hiddenId, key, name) {
+  e.preventDefault();
+  document.getElementById(hiddenId).value = key;
+  // find search input
+  const wrap = document.getElementById(dropdownId).closest('.search-select-wrap');
+  if (wrap) {
+    const input = wrap.querySelector('.search-select-input');
+    if (input) input.value = name;
+  }
+  document.getElementById(dropdownId).classList.remove('open');
+  // trigger callback based on which dropdown
+  if (dropdownId === 'leaveDropdown') loadMemberLeave();
+  if (dropdownId === 'managePrizeDropdown') loadMemberPrizes();
+}
+
+function closeDropdownDelay(dropdownId) {
+  setTimeout(() => {
+    const el = document.getElementById(dropdownId);
+    if (el) el.classList.remove('open');
+  }, 200);
+}
+
+function getSearchSelectVal(hiddenId) {
+  const el = document.getElementById(hiddenId);
+  return el ? el.value : '';
 }
 
 // ===== 연차 관리 =====
@@ -1919,15 +2025,19 @@ function populateLeaveSelect() {
 }
 
 async function loadMemberLeave() {
-  const key = document.getElementById('leaveManageMember').value;
+  const key = document.getElementById('leaveManageMemberVal').value;
   const display = document.getElementById('memberLeaveDisplay');
   if (!key) { display.innerHTML = ''; return; }
-  const leave = await fbGet(`memberLeave/${key}`) || 0;
-  display.innerHTML = `🏖️ 잔여 연차 <span style="color:var(--gold)">${leave}일</span>`;
+  // 수동 연차 + 경품 연차 합산
+  const manualLeave = await fbGet(`memberLeave/${key}`) || 0;
+  const prizes = await fbGet(`memberPrizes/${key}`) || [];
+  const prizeLeave = prizes.filter(p => p.name === '연차').length;
+  const total = manualLeave + prizeLeave;
+  display.innerHTML = `🏖️ 잔여 연차 <span style="color:var(--gold)">${total}일</span><div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">수동 ${manualLeave}일 + 경품 ${prizeLeave}일</div>`;
 }
 
 async function adjustLeave(sign) {
-  const key = document.getElementById('leaveManageMember').value;
+  const key = document.getElementById('leaveManageMemberVal').value;
   const amount = parseInt(document.getElementById('leaveAmount').value);
   if (!key) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1) { showToast('일수를 입력하세요'); return; }
