@@ -1413,11 +1413,6 @@ function drawRoulette() {
       ctx.fillStyle = '#fff';
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
-      // White outline for readability without shadow
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-      ctx.lineWidth = 3;
-      ctx.lineJoin = 'round';
-      ctx.strokeText(p.name || '', 0, 10);
       ctx.fillText(p.name || '', 0, 10);
     }
     ctx.restore();
