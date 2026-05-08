@@ -56,19 +56,20 @@ animation: twinkle var(–d, 3s) ease-in-out infinite var(–delay, 0s);
 .header {
 background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9));
 backdrop-filter: blur(20px);
-padding: 8px 14px;
+padding: 18px 20px 14px;
 display: flex;
+flex-direction: column;
 align-items: center;
-justify-content: space-between;
+justify-content: center;
 border-bottom: 1px solid var(–border);
 position: sticky;
 top: 0;
 z-index: 100;
-min-height: 48px;
 }
-.header-title { font-family: ‘Jua’, cursive; font-size: 15px; letter-spacing: 0.5px; white-space: nowrap; }
-.header-user { font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.header-user strong { color: var(–gold); display: inline; font-size: 13px; }
+.header-top-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.header-title { font-family: ‘Jua’, cursive; font-size: 28px; letter-spacing: 1px; text-align: center; }
+.header-user { font-size: 14px; opacity: 0.9; text-align: center; margin-bottom: 8px; }
+.header-user strong { color: white; display: inline; font-size: 16px; font-weight: 700; }
 .btn-logout {
 background: rgba(255,255,255,0.2);
 border: 1px solid rgba(255,255,255,0.3);
@@ -87,7 +88,7 @@ display: flex;
 background: rgba(0,0,0,0.4);
 border-bottom: 1px solid var(–border);
 position: sticky;
-top: 48px;
+top: 0px;
 z-index: 99;
 overflow-x: auto;
 scrollbar-width: none;
@@ -655,7 +656,7 @@ transition: all 0.15s;
 display: flex;
 flex-wrap: nowrap;
 gap: 3px;
-max-width: 120px;
+max-width: 320px;
 overflow-x: auto;
 scrollbar-width: none;
 }
@@ -887,23 +888,26 @@ animation: slideUp 0.3s ease;
   <div id="app">
     <!-- Header -->
     <div class="header">
-      <div class="header-title" style="font-size:14px;line-height:1.2">🎡 사내 오락실 <span style="font-size:10px;opacity:0.7;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0">(주) 떠리원</span></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div id="headerPrizesWrap" style="display:none">
-          <span class="header-prizes-label">내 당첨</span>
-          <div class="header-prizes" id="headerPrizes">-</div>
-        </div>
-
-```
-    <div class="header-user">
-      <strong id="headerName">-</strong>
-      <span id="headerRole" style="font-size:10px;opacity:0.7;"></span>
+      <!-- 상단 행: 여백(나가기용) / 타이틀 / 나가기 -->
+      <div class="header-top-row">
+        <div style="width:60px"></div>
+        <div class="header-title">🎡 사내 오락실</div>
+        <button class="btn-logout" onclick="logout()">나가기</button>
+      </div>
+      <!-- 닉네임 한 줄 -->
+      <div class="header-user">
+        <strong id="headerName">-</strong>
+        <span id="headerRole" style="font-size:11px;opacity:0.7;margin-left:4px;"></span>
+      </div>
+      <!-- 내 당첨 배지 -->
+      <div id="headerPrizesWrap" style="display:none;width:100%">
+        <span class="header-prizes-label" style="text-align:center;display:block;">내 당첨</span>
+        <div class="header-prizes" id="headerPrizes" style="justify-content:center;max-width:100%;flex-wrap:wrap;">-</div>
+      </div>
     </div>
-    <button class="btn-logout" onclick="logout()">나가기</button>
-  </div>
-</div>
 
 <!-- Nav -->
+
 <div class="nav" id="mainNav">
   <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha">
     <span>🎡</span>뽑기
@@ -923,11 +927,13 @@ animation: slideUp 0.3s ease;
 </div>
 
 <!-- GACHA PAGE -->
+
 <div class="page active" id="pageGacha">
   <!-- Notice -->
   <div class="notice-card" id="noticeCard"></div>
 
   <!-- Stock badge (shared) -->
+
   <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
     <div class="stock-badge">
       <div class="label">보유 주식</div>
@@ -942,6 +948,7 @@ animation: slideUp 0.3s ease;
   </div>
 
   <!-- ROULETTE MODE -->
+
   <div id="modeRouletteWrap" class="roulette-wrap" style="padding-top:0">
     <div class="roulette-container">
       <div class="roulette-pointer"></div>
@@ -955,6 +962,7 @@ animation: slideUp 0.3s ease;
   </div>
 
   <!-- GACHA MACHINE MODE -->
+
   <div id="modeGachaWrap" class="gacha-machine-wrap" style="display:none;padding-top:4px">
     <div class="machine-body" id="machineBody">
       <div class="machine-label">✨ LUCKY GACHA ✨</div>
@@ -970,6 +978,7 @@ animation: slideUp 0.3s ease;
 </div>
 
 <!-- HISTORY PAGE -->
+
 <div class="page" id="pageHistory">
   <div class="section-title">📜 당첨 기록</div>
   <div class="filter-tabs" id="historyFilterTabs"></div>
@@ -977,6 +986,7 @@ animation: slideUp 0.3s ease;
 </div>
 
 <!-- MEMBERS PAGE (admin) -->
+
 <div class="page" id="pageMembers">
   <div class="section-title">👥 멤버 관리</div>
   <div class="card">
@@ -990,6 +1000,7 @@ animation: slideUp 0.3s ease;
 </div>
 
 <!-- PRIZES PAGE (admin) -->
+
 <div class="page" id="pagePrizes">
   <div class="section-title">🎁 경품 관리</div>
   <div class="card" style="padding:14px 16px">
@@ -1001,6 +1012,7 @@ animation: slideUp 0.3s ease;
 </div>
 
 <!-- SETTINGS PAGE (admin) -->
+
 <div class="page" id="pageSettings">
   <div class="section-title">⚙️ 설정</div>
   <div class="card">
