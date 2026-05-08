@@ -56,7 +56,7 @@ animation: twinkle var(–d, 3s) ease-in-out infinite var(–delay, 0s);
 .header {
 background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9));
 backdrop-filter: blur(20px);
-padding: 18px 20px 14px;
+padding: 10px 16px 8px;
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -66,10 +66,10 @@ position: sticky;
 top: 0;
 z-index: 100;
 }
-.header-top-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.header-title { font-family: ‘Jua’, cursive; font-size: 28px; letter-spacing: 1px; text-align: center; }
-.header-user { font-size: 14px; opacity: 0.9; text-align: center; margin-bottom: 8px; }
-.header-user strong { color: white; display: inline; font-size: 16px; font-weight: 700; }
+.header-top-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.header-title { font-family: ‘Jua’, cursive; font-size: 22px; letter-spacing: 1px; text-align: center; }
+.header-user { font-size: 12px; opacity: 0.9; text-align: center; margin-bottom: 2px; }
+.header-user strong { color: white; display: inline; font-size: 14px; font-weight: 700; }
 .btn-logout {
 background: rgba(255,255,255,0.2);
 border: 1px solid rgba(255,255,255,0.3);
@@ -221,15 +221,15 @@ overflow: hidden;
 .notice-card {
 background: linear-gradient(135deg, rgba(108,53,222,0.2), rgba(255,107,157,0.15));
 border: 1px solid rgba(255,215,0,0.3);
-border-radius: 16px;
-padding: 14px 16px;
-margin: 12px 16px 0;
+border-radius: 12px;
+padding: 8px 12px;
+margin: 6px 16px 0;
 }
 .notice-title {
 font-family: ‘Jua’, cursive;
-font-size: 14px;
+font-size: 12px;
 color: var(–gold);
-margin-bottom: 10px;
+margin-bottom: 4px;
 display: flex;
 align-items: center;
 gap: 6px;
@@ -238,9 +238,9 @@ gap: 6px;
 display: flex;
 align-items: flex-start;
 gap: 8px;
-padding: 6px 0;
+padding: 3px 0;
 border-bottom: 1px solid rgba(255,255,255,0.07);
-font-size: 13px;
+font-size: 12px;
 color: rgba(255,255,255,0.85);
 line-height: 1.5;
 }
@@ -249,8 +249,8 @@ line-height: 1.5;
 background: linear-gradient(135deg, #6C35DE, #FF6B9D);
 color: white;
 font-family: ‘Jua’, cursive;
-font-size: 12px;
-padding: 2px 8px;
+font-size: 11px;
+padding: 1px 6px;
 border-radius: 20px;
 white-space: nowrap;
 flex-shrink: 0;
@@ -1372,9 +1372,25 @@ function drawRoulette() {
 
   ctx.clearRect(0, 0, W, H);
 
-  const prizes = Object.values(allPrizes);
+  const rawPrizes = Object.values(allPrizes);
   const keys = Object.keys(allPrizes);
-  if (!prizes.length) return;
+  if (!rawPrizes.length) return;
+
+  // 같은 이름 경품들이 뭉치지 않도록 인터리브 배치
+  // 1) 이름별로 그룹핑
+  const groupMap = {};
+  rawPrizes.forEach(p => {
+    const key = (p.emoji || '') + '|' + (p.name || '');
+    if (!groupMap[key]) groupMap[key] = [];
+    groupMap[key].push({ ...p });
+  });
+  const groups = Object.values(groupMap);
+  // 2) 라운드로빈으로 섞기 (연차/투피드/출근확인증/연차/연차... 형태)
+  const prizes = [];
+  const maxLen = Math.max(...groups.map(g => g.length));
+  for (let i = 0; i < maxLen; i++) {
+    groups.forEach(g => { if (g[i]) prizes.push(g[i]); });
+  }
 
   const total = prizes.reduce((s, p) => s + (p.prob || 0), 0) || 100;
   let startAngle = (rouletteAngle - 90) * Math.PI / 180;
