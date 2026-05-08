@@ -143,8 +143,9 @@ border-radius: 24px;
 padding: 28px;
 -webkit-backdrop-filter: blur(20px);
 backdrop-filter: blur(20px);
+overflow: visible;
 }
-.login-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+.login-tabs { display: flex; gap: 8px; margin-bottom: 24px; overflow: visible; }
 .login-tab {
 flex: 1;
 padding: 10px;
@@ -158,8 +159,8 @@ cursor: pointer;
 transition: all 0.2s;
 }
 .login-tab.active {
-background: -webkit-linear-gradient(135deg, #6C35DE, #FF6B9D);
-background: linear-gradient(135deg, #6C35DE, #FF6B9D);
+background: -webkit-linear-gradient(135deg, #9B6DFF, #FF8EC0);
+background: linear-gradient(135deg, #9B6DFF, #FF8EC0);
 color: white;
 border-color: transparent;
 }
@@ -834,9 +835,7 @@ animation: slideUp 0.3s ease;
 </head>
 <body>
 
-<!-- Stars background -->
-
-<div class="stars" id="stars"></div>
+<!-- Stars background removed -->
 
 <!-- Toast -->
 
@@ -1029,14 +1028,10 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
   <div class="card">
-    <div class="search-select-wrap">
-      <label>멤버 검색</label>
-      <input class="search-select-input" id="leaveSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('leaveSearch','leaveDropdown')" onfocus="openDropdown('leaveDropdown')" onblur="closeDropdownDelay('leaveDropdown')">
-      <input type="hidden" id="leaveManageMemberVal">
-      <div class="search-select-dropdown" id="leaveDropdown"></div>
-    </div>
-    <div id="memberLeaveDisplay" style="text-align:center;padding:10px 0;font-family:'Jua',cursive;font-size:22px;color:var(--gold)"></div>
-    <div style="display:flex;gap:8px;margin-top:4px">
+    <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
+    <div class="bulk-member-list" id="leaveBulkList"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
+    <div class="bulk-actions">
       <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
       <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
@@ -1155,23 +1150,7 @@ let allPrizes = {};
 let costPerRoll = 10;
 
 
-// ===== Stars =====
-(function createStars() {
-  const container = document.getElementById('stars');
-  for (let i = 0; i < 60; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 3 + 1;
-    s.style.cssText = `
-      left:${Math.random()*100}%;
-      top:${Math.random()*100}%;
-      width:${size}px;height:${size}px;
-      --d:${2+Math.random()*4}s;
-      --delay:${Math.random()*3}s;
-    `;
-    container.appendChild(s);
-  }
-})();
+// ===== Stars removed =====
 
 // ===== Init =====
 async function init() {
@@ -1905,8 +1884,12 @@ async function loadSettings() {
   populateLeaveSelect();
   bulkSelected.giveStock.clear();
   bulkSelected.deductStock.clear();
+  bulkSelected.leave.clear();
+  // Load leave days into allMembers for display
+  await loadLeaveIntoMembers();
   renderBulkList('giveStock');
   renderBulkList('deductStock');
+  renderBulkList('leave');
   const cost = await fbGet('costPerRoll');
   costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
@@ -2047,7 +2030,7 @@ function populateDeductStockSelect() {
 }
 
 // ===== Bulk Member Select =====
-const bulkSelected = { giveStock: new Set(), deductStock: new Set() };
+const bulkSelected = { giveStock: new Set(), deductStock: new Set(), leave: new Set() };
 
 function renderBulkList(type) {
   const searchId = type + 'Search';
@@ -2070,10 +2053,13 @@ function renderBulkList(type) {
     </div>
     ${sorted.map(([k,m]) => {
       const checked = bulkSelected[type].has(k);
+      const subInfo = type === 'leave'
+        ? `🏖️ ${m.leave||0}일`
+        : `💰 ${m.stock||0}주`;
       return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')">
         <div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div>
         <div class="bulk-member-name">${escHtml(m.name)}</div>
-        <div class="bulk-member-stock">💰 ${m.stock||0}주</div>
+        <div class="bulk-member-stock">${subInfo}</div>
       </div>`;
     }).join('')}
   `;
@@ -2181,19 +2167,27 @@ async function loadMemberLeave() {
 }
 
 async function adjustLeave(sign) {
-  const key = document.getElementById('leaveManageMemberVal').value;
+  const keys = [...bulkSelected.leave];
   const amount = parseInt(document.getElementById('leaveAmount').value);
-  if (!key) { showToast('멤버를 선택하세요'); return; }
+  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1) { showToast('일수를 입력하세요'); return; }
 
-  const current = await fbGet(`memberLeave/${key}`) || 0;
-  const next = current + sign * amount;
-  if (next < 0) { showToast(`잔여 연차(${current}일)보다 많이 차감할 수 없어요`); return; }
+  let skipped = 0;
+  for (const key of keys) {
+    const current = await fbGet(`memberLeave/${key}`) || 0;
+    const next = current + sign * amount;
+    if (next < 0) { skipped++; continue; }
+    await fbSet(`memberLeave/${key}`, next);
+    if (allMembers[key]) allMembers[key].leave = next;
+  }
 
-  await fbSet(`memberLeave/${key}`, next);
   document.getElementById('leaveAmount').value = '';
-  showToast(sign > 0 ? `✅ ${allMembers[key].name} 연차 ${amount}일 지급! (잔여 ${next}일)` : `📉 ${allMembers[key].name} 연차 ${amount}일 차감 (잔여 ${next}일)`);
-  loadMemberLeave();
+  document.getElementById('leaveSearch').value = '';
+  bulkSelected.leave.clear();
+  renderBulkList('leave');
+  const done = keys.length - skipped;
+  const action = sign > 0 ? '지급' : '차감';
+  showToast(`✅ ${done}명 연차 ${amount}일 ${action} 완료${skipped > 0 ? ` (${skipped}명 연차 부족으로 건너뜀)` : ''}`);
 }
 
 // ===== Notice =====
@@ -2283,6 +2277,15 @@ async function toggleNoticeBadgeType(index) {
   await fbSet('notice', rows);
   renderNoticeCard(rows);
   renderNoticeEditor(rows);
+}
+
+async function loadLeaveIntoMembers() {
+  for (const key of Object.keys(allMembers)) {
+    const leave = await fbGet(`memberLeave/${key}`) || 0;
+    const prizes = await fbGet(`memberPrizes/${key}`) || [];
+    const prizeLeave = prizes.filter(p => p.name === '연차').length;
+    allMembers[key].leave = leave + prizeLeave;
+  }
 }
 
 // ===== Helpers =====
