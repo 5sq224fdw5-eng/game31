@@ -934,6 +934,15 @@ animation: slideUp 0.3s ease;
 
   <!-- Stock badge (shared) -->
 
+  <!-- 멤버용 수동 연차 내역 카드 -->
+
+  <div id="myLeaveCard" style="display:none;margin:10px 16px 0;">
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
+      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 지급 내역</div>
+      <div id="myLeaveLogList" style="font-size:12px;"></div>
+    </div>
+  </div>
+
   <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
     <div class="stock-badge">
       <div class="label">보유 주식</div>
@@ -1060,6 +1069,11 @@ animation: slideUp 0.3s ease;
       <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
       <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input type="text" id="leaveMemo" placeholder="📝 소진기한 메모 (예: 2025-12월)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급 시에만 저장됩니다</div>
     </div>
   </div>
 
@@ -1513,6 +1527,34 @@ async function refreshGachaPage() {
   allPrizes = prizes || allPrizes;
 
   if (currentUser.role === 'member') {
+    // 수동 연차 지급 내역 표시
+    const leaveCard = document.getElementById('myLeaveCard');
+    const leaveLogList = document.getElementById('myLeaveLogList');
+    const leaveLog = await fbGet(`leaveLog/${currentUser.key}`);
+    const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
+    const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
+    const prizeLeave = prizes.filter(p => p.name === '연차').length;
+    const totalLeave = manualLeave + prizeLeave;
+
+    if (leaveLog) {
+      leaveCard.style.display = '';
+      const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      leaveLogList.innerHTML = `
+        <div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>
+        ${logs.map(l => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div>
+              <span style="color:rgba(255,255,255,0.9)">+${l.amount}일</span>
+              ${l.memo ? `<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${l.memo}</span>` : ''}
+            </div>
+            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
+          </div>
+        `).join('')}
+      `;
+    } else {
+      leaveCard.style.display = 'none';
+    }
+
     const member = await fbGet(`members/${currentUser.key}`);
     const stock = member ? (member.stock || 0) : 0;
     document.getElementById('myStockDisplay').textContent = `${stock} 주`;
@@ -2224,19 +2266,34 @@ async function loadMemberLeave() {
 async function adjustLeave(sign) {
   const keys = [...bulkSelected.leave];
   const amount = parseInt(document.getElementById('leaveAmount').value);
+  const memo = document.getElementById('leaveMemo') ? document.getElementById('leaveMemo').value.trim() : '';
   if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1) { showToast('일수를 입력하세요'); return; }
 
   let skipped = 0;
+  const today = new Date().toISOString().slice(0, 10);
+
   for (const key of keys) {
-    const current = await fbGet(`memberLeave/${key}`) || 0;
-    const next = current + sign * amount;
-    if (next < 0) { skipped++; continue; }
-    await fbSet(`memberLeave/${key}`, next);
-    if (allMembers[key]) allMembers[key].leave = next;
+    if (sign > 0) {
+      // 지급: leaveLog에 기록 추가 (메모/기한 포함)
+      const logEntry = { amount, date: today, memo: memo || '' };
+      await fbPush(`leaveLog/${key}`, logEntry);
+      // 기존 총합도 업데이트
+      const current = await fbGet(`memberLeave/${key}`) || 0;
+      await fbSet(`memberLeave/${key}`, current + amount);
+      if (allMembers[key]) allMembers[key].leave = current + amount;
+    } else {
+      // 차감: 총합만 차감
+      const current = await fbGet(`memberLeave/${key}`) || 0;
+      const next = current - amount;
+      if (next < 0) { skipped++; continue; }
+      await fbSet(`memberLeave/${key}`, next);
+      if (allMembers[key]) allMembers[key].leave = next;
+    }
   }
 
   document.getElementById('leaveAmount').value = '';
+  if (document.getElementById('leaveMemo')) document.getElementById('leaveMemo').value = '';
   document.getElementById('leaveSearch').value = '';
   bulkSelected.leave.clear();
   renderBulkList('leave');
