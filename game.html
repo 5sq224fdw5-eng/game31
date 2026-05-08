@@ -693,6 +693,65 @@ transition: background 0.15s;
 }
 .search-select-option:hover { background: rgba(108,53,222,0.3); }
 .search-select-option.selected { color: var(–gold); }
+
+/* ===== BULK SELECT ===== */
+.bulk-member-list {
+max-height: 220px;
+overflow-y: auto;
+border: 1px solid var(–border);
+border-radius: 12px;
+margin-bottom: 10px;
+scrollbar-width: none;
+}
+.bulk-member-list::-webkit-scrollbar { display: none; }
+.bulk-member-item {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 10px 14px;
+border-bottom: 1px solid rgba(255,255,255,0.05);
+cursor: pointer;
+transition: background 0.15s;
+}
+.bulk-member-item:last-child { border-bottom: none; }
+.bulk-member-item:active { background: rgba(108,53,222,0.2); }
+.bulk-member-item.checked { background: rgba(108,53,222,0.15); }
+.bulk-checkbox {
+width: 20px; height: 20px;
+border-radius: 6px;
+border: 2px solid rgba(255,255,255,0.3);
+flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-size: 13px;
+transition: all 0.15s;
+}
+.bulk-checkbox.checked {
+background: linear-gradient(135deg, #6C35DE, #FF6B9D);
+border-color: transparent;
+}
+.bulk-member-name { flex: 1; font-size: 14px; }
+.bulk-member-stock { font-size: 11px; color: var(–gold); }
+.bulk-select-all {
+display: flex; align-items: center; gap: 8px;
+padding: 8px 14px;
+font-size: 12px; color: rgba(255,255,255,0.6);
+cursor: pointer;
+border-bottom: 1px solid var(–border);
+}
+.bulk-actions { display: flex; gap: 8px; margin-top: 8px; }
+.bulk-search {
+width: 100%;
+padding: 10px 14px;
+background: rgba(255,255,255,0.08);
+border: 1px solid var(–border);
+border-radius: 10px;
+color: white;
+font-size: 14px;
+font-family: ‘Noto Sans KR’, sans-serif;
+outline: none;
+margin-bottom: 8px;
+}
+.bulk-search:focus { border-color: var(–purple); }
 /* ===== SETTINGS ===== */
 .setting-row {
 display: flex;
@@ -948,32 +1007,24 @@ animation: slideUp 0.3s ease;
 
   <div class="section-title" style="margin-top:20px">💰 주식 지급</div>
   <div class="card">
-    <div class="search-select-wrap">
-      <label>멤버 검색</label>
-      <input class="search-select-input" id="giveStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('giveStockSearch','giveStockDropdown')" onfocus="openDropdown('giveStockDropdown')" onblur="closeDropdownDelay('giveStockDropdown')">
-      <input type="hidden" id="giveStockMemberVal">
-      <div class="search-select-dropdown" id="giveStockDropdown"></div>
+    <input class="bulk-search" id="giveStockSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock')">
+    <div class="bulk-member-list" id="giveStockBulkList"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="giveStockSelected">선택된 멤버: 0명</div>
+    <div class="bulk-actions">
+      <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="100" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
     </div>
-    <div class="input-group">
-      <label>지급할 주식 (1~100주)</label>
-      <input type="number" id="giveStockAmount" placeholder="주식 수 입력" min="1" max="100">
-    </div>
-    <button class="btn-primary" onclick="giveStock()">주식 지급하기</button>
   </div>
 
   <div class="section-title" style="margin-top:20px">📉 주식 차감</div>
   <div class="card">
-    <div class="search-select-wrap">
-      <label>멤버 검색</label>
-      <input class="search-select-input" id="deductStockSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('deductStockSearch','deductStockDropdown')" onfocus="openDropdown('deductStockDropdown')" onblur="closeDropdownDelay('deductStockDropdown')">
-      <input type="hidden" id="deductStockMemberVal">
-      <div class="search-select-dropdown" id="deductStockDropdown"></div>
+    <input class="bulk-search" id="deductStockSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('deductStock')">
+    <div class="bulk-member-list" id="deductStockBulkList"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="deductStockSelected">선택된 멤버: 0명</div>
+    <div class="bulk-actions">
+      <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="100" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
     </div>
-    <div class="input-group">
-      <label>차감할 주식 (1~100주)</label>
-      <input type="number" id="deductStockAmount" placeholder="주식 수 입력" min="1" max="100">
-    </div>
-    <button class="btn-primary" style="background:-webkit-linear-gradient(135deg,#FC5C65,#fd9644);background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">주식 차감하기</button>
   </div>
 
   <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
@@ -1852,6 +1903,10 @@ async function deletePrize(key) {
 async function loadSettings() {
   loadNoticeEditor();
   populateLeaveSelect();
+  bulkSelected.giveStock.clear();
+  bulkSelected.deductStock.clear();
+  renderBulkList('giveStock');
+  renderBulkList('deductStock');
   const cost = await fbGet('costPerRoll');
   costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
@@ -1937,41 +1992,46 @@ async function saveCost() {
 }
 
 async function giveStock() {
-  const memberKey = document.getElementById('giveStockMemberVal').value;
+  const keys = [...bulkSelected.giveStock];
   const amount = parseInt(document.getElementById('giveStockAmount').value);
-  if (!memberKey) { showToast('멤버를 선택하세요'); return; }
+  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
-  
-  const member = await fbGet(`members/${memberKey}`);
-  const current = member ? (member.stock || 0) : 0;
-  const newStock = current + amount;
-  await fbSet(`members/${memberKey}/stock`, newStock);
-  
+
+  for (const key of keys) {
+    const member = await fbGet(`members/${key}`);
+    const current = member ? (member.stock || 0) : 0;
+    await fbSet(`members/${key}/stock`, current + amount);
+  }
+
   allMembers = (await fbGet('members')) || {};
   document.getElementById('giveStockAmount').value = '';
   document.getElementById('giveStockSearch').value = '';
-  document.getElementById('giveStockMemberVal').value = '';
-  showToast(`✅ ${allMembers[memberKey].name}에게 ${amount}주 지급! (총 ${newStock}주)`);
+  bulkSelected.giveStock.clear();
+  renderBulkList('giveStock');
+  showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료!`);
 }
 
 async function deductStock() {
-  const memberKey = document.getElementById('deductStockMemberVal').value;
+  const keys = [...bulkSelected.deductStock];
   const amount = parseInt(document.getElementById('deductStockAmount').value);
-  if (!memberKey) { showToast('멤버를 선택하세요'); return; }
+  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
   if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
 
-  const member = await fbGet(`members/${memberKey}`);
-  const current = member ? (member.stock || 0) : 0;
-  if (amount > current) { showToast(`보유 주식(${current}주)보다 많이 차감할 수 없어요`); return; }
-
-  const newStock = current - amount;
-  await fbSet(`members/${memberKey}/stock`, newStock);
+  let skipped = 0;
+  for (const key of keys) {
+    const member = await fbGet(`members/${key}`);
+    const current = member ? (member.stock || 0) : 0;
+    if (amount > current) { skipped++; continue; }
+    await fbSet(`members/${key}/stock`, current - amount);
+  }
 
   allMembers = (await fbGet('members')) || {};
   document.getElementById('deductStockAmount').value = '';
   document.getElementById('deductStockSearch').value = '';
-  document.getElementById('deductStockMemberVal').value = '';
-  showToast(`📉 ${allMembers[memberKey].name} ${amount}주 차감 (잔여 ${newStock}주)`);
+  bulkSelected.deductStock.clear();
+  renderBulkList('deductStock');
+  const done = keys.length - skipped;
+  showToast(`📉 ${done}명 ${amount}주 차감 완료${skipped > 0 ? ` (${skipped}명 주식 부족으로 건너뜀)` : ''}`);
 }
 
 function populateDeductStockSelect() {
@@ -1984,6 +2044,58 @@ function populateDeductStockSelect() {
     opt.textContent = `${m.name} (${m.stock || 0}주)`;
     sel.appendChild(opt);
   });
+}
+
+// ===== Bulk Member Select =====
+const bulkSelected = { giveStock: new Set(), deductStock: new Set() };
+
+function renderBulkList(type) {
+  const searchId = type + 'Search';
+  const listId = type + 'BulkList';
+  const q = (document.getElementById(searchId)?.value || '').toLowerCase();
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  const sorted = Object.entries(allMembers)
+    .sort(([,a],[,b]) => a.name.localeCompare(b.name,'ko'))
+    .filter(([k,m]) => !q || m.name.toLowerCase().includes(q));
+
+  const allKeys = sorted.map(([k]) => k);
+  const allChecked = allKeys.length > 0 && allKeys.every(k => bulkSelected[type].has(k));
+
+  list.innerHTML = `
+    <div class="bulk-select-all" onclick="toggleBulkAll('${type}', ${JSON.stringify(allKeys)})">
+      <div class="bulk-checkbox ${allChecked ? 'checked' : ''}">${allChecked ? '✓' : ''}</div>
+      <span>전체 선택 (${sorted.length}명)</span>
+    </div>
+    ${sorted.map(([k,m]) => {
+      const checked = bulkSelected[type].has(k);
+      return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')">
+        <div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div>
+        <div class="bulk-member-name">${escHtml(m.name)}</div>
+        <div class="bulk-member-stock">💰 ${m.stock||0}주</div>
+      </div>`;
+    }).join('')}
+  `;
+  updateBulkCount(type);
+}
+
+function toggleBulkMember(type, key) {
+  if (bulkSelected[type].has(key)) bulkSelected[type].delete(key);
+  else bulkSelected[type].add(key);
+  renderBulkList(type);
+}
+
+function toggleBulkAll(type, keys) {
+  const allChecked = keys.every(k => bulkSelected[type].has(k));
+  if (allChecked) keys.forEach(k => bulkSelected[type].delete(k));
+  else keys.forEach(k => bulkSelected[type].add(k));
+  renderBulkList(type);
+}
+
+function updateBulkCount(type) {
+  const el = document.getElementById(type + 'Selected');
+  if (el) el.textContent = `선택된 멤버: ${bulkSelected[type].size}명`;
 }
 
 // ===== Searchable Select =====
