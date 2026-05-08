@@ -1075,6 +1075,14 @@ animation: slideUp 0.3s ease;
     </div>
   </div>
 
+  <!-- 관리자용 멤버 연차 내역 조회 -->
+
+  <div class="section-title" style="margin-top:20px">🏖️ 연차 내역 조회</div>
+  <div class="card">
+    <input class="bulk-search" id="leaveViewSearch" placeholder="🔍 멤버 이름 검색..." autocomplete="off" oninput="filterLeaveView()">
+    <div id="leaveViewList" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,0.5)">이름을 입력하세요</div>
+  </div>
+
   <div class="section-title admin-only" style="margin-top:20px;display:none">📢 공지사항 편집</div>
   <div class="card admin-only" id="noticeEditorCard" style="display:none">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
@@ -2240,6 +2248,56 @@ function closeDropdownDelay(dropdownId) {
     const el = document.getElementById(dropdownId);
     if (el) el.classList.remove('open');
   }, 150);
+}
+
+// ===== 연차 내역 조회 (관리자) =====
+async function filterLeaveView() {
+  const query = document.getElementById('leaveViewSearch').value.trim();
+  const container = document.getElementById('leaveViewList');
+  if (!query) { container.innerHTML = '<span style="color:rgba(255,255,255,0.4)">이름을 입력하세요</span>'; return; }
+
+  const matched = Object.entries(allMembers).filter(([k, m]) =>
+    m.name.includes(query)
+  );
+
+  if (!matched.length) { container.innerHTML = '<span style="color:rgba(255,255,255,0.4)">멤버를 찾을 수 없습니다</span>'; return; }
+
+  container.innerHTML = '<div style="color:rgba(255,255,255,0.4)">불러오는 중...</div>';
+
+  let html = '';
+  for (const [key, m] of matched) {
+    const manualLeave = await fbGet(`memberLeave/${key}`) || 0;
+    const prizes = await fbGet(`memberPrizes/${key}`) || [];
+    const prizeLeave = prizes.filter(p => p.name === '연차').length;
+    const total = manualLeave + prizeLeave;
+    const leaveLog = await fbGet(`leaveLog/${key}`);
+
+    html += `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:700;color:white">${escHtml(m.name)}</span>
+        <span style="color:var(--gold);font-family:'Jua',cursive">총 ${total}일 잔여</span>
+      </div>`;
+
+    if (leaveLog) {
+      const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      html += logs.map(l => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);">
+          <div>
+            <span style="color:#26DE81">+${l.amount}일 수동지급</span>
+            ${l.memo ? `<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>` : ''}
+          </div>
+          <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
+        </div>`).join('');
+    }
+    if (prizeLeave > 0) {
+      html += `<div style="padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.6)">🎰 경품 연차 ${prizeLeave}일</div>`;
+    }
+    if (!leaveLog && prizeLeave === 0) {
+      html += `<div style="color:rgba(255,255,255,0.3);font-size:12px">지급 내역 없음</div>`;
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
 }
 
 // ===== 연차 관리 =====
