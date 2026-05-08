@@ -934,15 +934,6 @@ animation: slideUp 0.3s ease;
 
   <!-- Stock badge (shared) -->
 
-  <!-- 멤버용 수동 연차 내역 카드 -->
-
-  <div id="myLeaveCard" style="display:none;margin:10px 16px 0;">
-    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
-      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 지급 내역</div>
-      <div id="myLeaveLogList" style="font-size:12px;"></div>
-    </div>
-  </div>
-
   <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
     <div class="stock-badge">
       <div class="label">보유 주식</div>
@@ -989,6 +980,13 @@ animation: slideUp 0.3s ease;
 <!-- HISTORY PAGE -->
 
 <div class="page" id="pageHistory">
+  <!-- 멤버용 연차 지급 내역 -->
+  <div id="myLeaveCard" style="display:none;margin-bottom:12px;">
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
+      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 지급 내역</div>
+      <div id="myLeaveLogList" style="font-size:12px;"></div>
+    </div>
+  </div>
   <div class="section-title">📜 당첨 기록</div>
   <div class="filter-tabs" id="historyFilterTabs"></div>
   <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
@@ -1078,7 +1076,7 @@ animation: slideUp 0.3s ease;
   </div>
 
   <div class="section-title admin-only" style="margin-top:20px;display:none">📢 공지사항 편집</div>
-<div class="card admin-only" id="noticeEditorCard" style="display:none">
+  <div class="card admin-only" id="noticeEditorCard" style="display:none">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
     <div id="noticeEditorList"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
@@ -1089,7 +1087,7 @@ animation: slideUp 0.3s ease;
   </div>
 
   <div class="section-title admin-only" style="margin-top:20px;display:none">🏆 경품 관리 (지급/차감)</div>
-<div class="card admin-only" style="display:none">
+  <div class="card admin-only" style="display:none">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
       <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
@@ -1284,6 +1282,14 @@ function enterApp() {
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
+  // 혹시 남아있는 관리자 전용 요소 강제 숨김
+  if (!isAdmin) {
+    const hideIds = ['noticeEditorCard', 'pageMembers', 'pagePrizes', 'pageSettings'];
+    hideIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
 
   // Show prize badge for members
   if (!isAdmin) {
@@ -1527,34 +1533,6 @@ async function refreshGachaPage() {
   allPrizes = prizes || allPrizes;
 
   if (currentUser.role === 'member') {
-    // 수동 연차 지급 내역 표시
-    const leaveCard = document.getElementById('myLeaveCard');
-    const leaveLogList = document.getElementById('myLeaveLogList');
-    const leaveLog = await fbGet(`leaveLog/${currentUser.key}`);
-    const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
-    const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
-    const prizeLeave = prizes.filter(p => p.name === '연차').length;
-    const totalLeave = manualLeave + prizeLeave;
-
-    if (leaveLog) {
-      leaveCard.style.display = '';
-      const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-      leaveLogList.innerHTML = `
-        <div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>
-        ${logs.map(l => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-            <div>
-              <span style="color:rgba(255,255,255,0.9)">+${l.amount}일</span>
-              ${l.memo ? `<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${l.memo}</span>` : ''}
-            </div>
-            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
-          </div>
-        `).join('')}
-      `;
-    } else {
-      leaveCard.style.display = 'none';
-    }
-
     const member = await fbGet(`members/${currentUser.key}`);
     const stock = member ? (member.stock || 0) : 0;
     document.getElementById('myStockDisplay').textContent = `${stock} 주`;
@@ -1722,6 +1700,34 @@ let historyFilter = '전체'; // current filter
 let allHistoryItems = []; // cache
 
 async function loadHistory() {
+  // 멤버용 연차 내역 표시
+  if (currentUser && currentUser.role === 'member') {
+    const leaveCard = document.getElementById('myLeaveCard');
+    const leaveLogList = document.getElementById('myLeaveLogList');
+    const leaveLog = await fbGet(`leaveLog/${currentUser.key}`);
+    const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
+    const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
+    const prizeLeave = prizes.filter(p => p.name === '연차').length;
+    const totalLeave = manualLeave + prizeLeave;
+    if (leaveLog) {
+      leaveCard.style.display = '';
+      const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      leaveLogList.innerHTML = `
+        <div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>
+        ${logs.map(l => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div>
+              <span style="color:rgba(255,255,255,0.9)">+${l.amount}일</span>
+              ${l.memo ? `<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${l.memo}</span>` : ''}
+            </div>
+            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
+          </div>
+        `).join('')}
+      `;
+    } else {
+      leaveCard.style.display = 'none';
+    }
+  }
   const list = document.getElementById('historyList');
   list.innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const history = await fbGet('history');
