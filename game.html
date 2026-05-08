@@ -56,7 +56,7 @@ animation: twinkle var(–d, 3s) ease-in-out infinite var(–delay, 0s);
 .header {
 background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9));
 backdrop-filter: blur(20px);
-padding: 16px 20px;
+padding: 8px 14px;
 display: flex;
 align-items: center;
 justify-content: space-between;
@@ -64,10 +64,11 @@ border-bottom: 1px solid var(–border);
 position: sticky;
 top: 0;
 z-index: 100;
+min-height: 48px;
 }
-.header-title { font-family: ‘Jua’, cursive; font-size: 22px; letter-spacing: 1px; }
-.header-user { font-size: 12px; opacity: 0.8; text-align: right; }
-.header-user strong { color: var(–gold); display: block; font-size: 14px; }
+.header-title { font-family: ‘Jua’, cursive; font-size: 15px; letter-spacing: 0.5px; white-space: nowrap; }
+.header-user { font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.header-user strong { color: var(–gold); display: inline; font-size: 13px; }
 .btn-logout {
 background: rgba(255,255,255,0.2);
 border: 1px solid rgba(255,255,255,0.3);
@@ -86,7 +87,7 @@ display: flex;
 background: rgba(0,0,0,0.4);
 border-bottom: 1px solid var(–border);
 position: sticky;
-top: 65px;
+top: 48px;
 z-index: 99;
 overflow-x: auto;
 scrollbar-width: none;
@@ -651,12 +652,11 @@ transition: all 0.15s;
 
 /* ===== PRIZE BADGES IN HEADER ===== */
 .header-prizes {
-display: grid;
-grid-template-columns: repeat(2, auto);
+display: flex;
+flex-wrap: nowrap;
 gap: 3px;
-max-width: 180px;
-max-height: 72px;
-overflow-y: auto;
+max-width: 120px;
+overflow-x: auto;
 scrollbar-width: none;
 }
 .header-prizes::-webkit-scrollbar { display: none; }
@@ -887,7 +887,7 @@ animation: slideUp 0.3s ease;
   <div id="app">
     <!-- Header -->
     <div class="header">
-      <div class="header-title" style="font-size:16px;line-height:1.2">🎡 사내 오락실<br><span style="font-size:11px;opacity:0.7;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0">(주) 떠리원</span></div>
+      <div class="header-title" style="font-size:14px;line-height:1.2">🎡 사내 오락실 <span style="font-size:10px;opacity:0.7;font-family:'Noto Sans KR',sans-serif;font-weight:400;letter-spacing:0">(주) 떠리원</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <div id="headerPrizesWrap" style="display:none">
           <span class="header-prizes-label">내 당첨</span>
@@ -897,7 +897,7 @@ animation: slideUp 0.3s ease;
 ```
     <div class="header-user">
       <strong id="headerName">-</strong>
-      <span id="headerRole">-</span>
+      <span id="headerRole" style="font-size:10px;opacity:0.7;"></span>
     </div>
     <button class="btn-logout" onclick="logout()">나가기</button>
   </div>
