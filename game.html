@@ -1169,6 +1169,20 @@ async function fbDelete(path) {
 
 // ===== State =====
 let currentUser = null; // { name, role, key }
+
+// 새로고침 시 로그인 상태 복원
+(function restoreLogin() {
+  const saved = localStorage.getItem('currentUser');
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      // DOM 준비 후 enterApp 실행
+      window.addEventListener('DOMContentLoaded', () => enterApp());
+    } catch(e) {
+      localStorage.removeItem('currentUser');
+    }
+  }
+})();
 let loginTab = 'member';
 let allMembers = {};
 let allPrizes = {};
@@ -1244,6 +1258,9 @@ async function doLogin() {
 }
 
 function enterApp() {
+  // 로그인 상태 저장 (새로고침 유지)
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = '';
   document.getElementById('headerName').textContent = currentUser.name;
@@ -1330,6 +1347,8 @@ async function refreshHeaderPrizes() {
 
 function logout() {
   currentUser = null;
+  localStorage.removeItem('currentUser');
+  window._shuffledPrizeKeys = null;
   document.getElementById('loginPage').style.display = '';
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('adminPassword').value = '';
@@ -1376,12 +1395,15 @@ function drawRoulette() {
   const keys = Object.keys(allPrizes);
   if (!rawPrizes.length) return;
 
-  // 랜덤 셔플 (같은 경품이 뭉치지 않도록)
-  const prizes = [...rawPrizes];
-  for (let i = prizes.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [prizes[i], prizes[j]] = [prizes[j], prizes[i]];
+  // 세션 고정 셔플 (로그인 시 한 번 섞어서 유지)
+  if (!window._shuffledPrizeKeys || window._shuffledPrizeKeys.length !== rawPrizes.length) {
+    window._shuffledPrizeKeys = [...Array(rawPrizes.length).keys()];
+    for (let i = window._shuffledPrizeKeys.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [window._shuffledPrizeKeys[i], window._shuffledPrizeKeys[j]] = [window._shuffledPrizeKeys[j], window._shuffledPrizeKeys[i]];
+    }
   }
+  const prizes = window._shuffledPrizeKeys.map(i => rawPrizes[i]);
 
   const total = prizes.reduce((s, p) => s + (p.prob || 0), 0) || 100;
   let startAngle = (rouletteAngle - 90) * Math.PI / 180;
