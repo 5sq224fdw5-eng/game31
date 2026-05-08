@@ -1094,7 +1094,7 @@ animation: slideUp 0.3s ease;
   </div>
 
   <div class="section-title admin-only" style="margin-top:20px;display:none">🏆 경품 관리 (지급/차감)</div>
-  <div class="card admin-only">
+  <div class="card admin-only" style="display:none">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
       <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
@@ -1282,7 +1282,7 @@ function enterApp() {
 
   const isAdmin = currentUser.role === 'admin';
   document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.setProperty('display', isAdmin ? '' : 'none', 'important');
+    el.style.display = isAdmin ? '' : 'none';
   });
 
   // Show prize badge for members
