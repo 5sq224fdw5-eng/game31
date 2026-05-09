@@ -393,7 +393,8 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <div class="search-select-dropdown" id="managePrizeDropdown"></div>
     </div>
     <div id="memberPrizeList" style="margin-top:8px"></div>
-    <div style="display:flex;gap:8px;margin-top:12px">
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:8px">경품명으로 직접 지급 (이모지 + 이름 입력)</div>
+    <div style="display:flex;gap:8px;">
       <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
       <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
@@ -653,10 +654,10 @@ function closeModal(){
   const sc=document.getElementById('screenContent');if(sc){sc.className='screen-idle';sc.textContent='🎰';}
 }
 
-let historyFilter='전체',allHistoryItems=[];
+let allHistoryItems=[];
+let openHistoryName=null;
 
 async function loadHistory(){
-  // 멤버용 연차 내역 (기록 탭) - 지급+차감 모두 표시
   if(currentUser&&currentUser.role==='member'){
     const leaveCard=document.getElementById('myLeaveCard');const leaveLogList=document.getElementById('myLeaveLogList');
     const leaveLog=await fbGet(`leaveLog/${currentUser.key}`);
@@ -666,40 +667,103 @@ async function loadHistory(){
     if(leaveLog){
       leaveCard.style.display='';
       const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-      leaveLogList.innerHTML=`
-        <div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>
-        ${logs.map(l=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-            <div>
-              <span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>
-              ${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}
-            </div>
-            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span>
-          </div>`).join('')}
-      `;
+      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('')}`;
     }else leaveCard.style.display='none';
   }
   const list=document.getElementById('historyList');
   list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-  const history=await fbGet('history');const isAdmin=currentUser&&currentUser.role==='admin';
+  const history=await fbGet('history');
+  const isAdmin=currentUser&&currentUser.role==='admin';
   if(!history){document.getElementById('historyFilterTabs').innerHTML='';list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
   let items=Object.entries(history).map(([k,v])=>v).sort((a,b)=>(b.time||0)-(a.time||0));
-  if(!isAdmin){items=items.filter(item=>item.name===currentUser.name);document.getElementById('historyFilterTabs').innerHTML='';}
-  else{const names=['전체',...new Set(items.map(i=>i.name))];document.getElementById('historyFilterTabs').innerHTML=names.map(name=>`<button class="filter-tab ${name===historyFilter?'active':''}" onclick="setHistoryFilter('${name}')">${name}</button>`).join('');}
-  allHistoryItems=items;renderHistoryList(isAdmin);
+  document.getElementById('historyFilterTabs').innerHTML='';
+  allHistoryItems=items;
+  if(!isAdmin){
+    items=items.filter(item=>item.name===currentUser.name);
+    renderHistoryList(items);
+  }else{
+    renderHistoryAccordion(items);
+  }
 }
 
-function setHistoryFilter(name){
-  historyFilter=name;const isAdmin=currentUser&&currentUser.role==='admin';
-  document.querySelectorAll('.filter-tab').forEach(btn=>btn.classList.toggle('active',btn.textContent===name));
-  renderHistoryList(isAdmin);
+function renderHistoryList(items){
+  const list=document.getElementById('historyList');
+  if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  list.innerHTML=items.map(item=>`<div class="history-item"><div class="history-emoji">${item.emoji}</div><div class="history-info"><div class="history-prize" style="font-size:15px;font-weight:700;color:var(--gold)">${escHtml(item.prize)}</div></div><div class="history-time">${formatTime(item.time)}</div></div>`).join('');
 }
 
-function renderHistoryList(isAdmin){
-  const list=document.getElementById('historyList');let items=allHistoryItems;
-  if(isAdmin&&historyFilter!=='전체')items=items.filter(i=>i.name===historyFilter);
-  if(items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
-  list.innerHTML=items.map(item=>`<div class="history-item"><div class="history-emoji">${item.emoji}</div><div class="history-info">${isAdmin?`<div class="history-name">${escHtml(item.name)}</div>`:''}<div class="history-prize" style="${isAdmin?'':'font-size:15px;font-weight:700;color:var(--gold)'}">${escHtml(item.prize)}</div></div><div class="history-time">${formatTime(item.time)}</div></div>`).join('');
+function getNameGroup(name){
+  const clean=name.replace(/^\*/,'');
+  if(clean.startsWith('좋아요'))return '좋아요';
+  if(clean.startsWith('댓글'))return '댓글';
+  if(clean.startsWith('시크릿'))return '시크릿';
+  return '기타';
+}
+
+const GROUP_ORDER=['좋아요','댓글','시크릿','기타'];
+const GROUP_COLOR={'좋아요':'#6C35DE','댓글':'#FF6B9D','시크릿':'#00C9A7','기타':'#F7B731'};
+
+function renderHistoryAccordion(items){
+  const list=document.getElementById('historyList');
+  if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  const groups={};
+  items.forEach(item=>{if(!groups[item.name])groups[item.name]=[];groups[item.name].push(item);});
+  list.innerHTML=`<input id="historySearchInput" placeholder="🔍 이름 검색..." autocomplete="off" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:12px;" oninput="filterHistoryAccordion()"><div id="historyAccordionList"></div>`;
+  renderAccordionItems(groups,'');
+}
+
+function renderAccordionItems(groups,q){
+  const container=document.getElementById('historyAccordionList');if(!container)return;
+  const allNames=Object.keys(groups).filter(n=>!q||n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>a.localeCompare(b,'ko'));
+  if(allNames.length===0){container.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과 없음</div>';return;}
+
+  // 그룹별로 분류
+  const byGroup={};
+  GROUP_ORDER.forEach(g=>byGroup[g]=[]);
+  allNames.forEach(name=>{const g=getNameGroup(name);if(byGroup[g])byGroup[g].push(name);else byGroup['기타'].push(name);});
+
+  let html='';
+  GROUP_ORDER.forEach(g=>{
+    const names=byGroup[g];
+    if(names.length===0)return;
+    const color=GROUP_COLOR[g];
+    html+=`<div style="margin-bottom:4px;padding:6px 2px 4px;font-family:'Jua',cursive;font-size:13px;color:${color};border-bottom:1px solid ${color}44;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>${g} (${names.length}명)
+    </div>`;
+    names.forEach(name=>{
+      const records=groups[name];
+      const isOpen=openHistoryName===name;
+      const safeN=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+=`<div style="margin-bottom:4px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+        <div onclick="toggleHistoryAccordion('${safeN}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${isOpen?'rgba(108,53,222,0.25)':'rgba(255,255,255,0.05)'};cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:30px;height:30px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Jua',cursive;font-size:12px;color:white;">${name.replace(/^\*/,'').charAt(0)}</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;">${escHtml(name)}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);">총 ${records.length}건 · 최근 ${formatTime(records[0].time)}</div>
+            </div>
+          </div>
+          <span style="color:var(--gold);font-size:14px;">${isOpen?'▲':'▼'}</span>
+        </div>
+        ${isOpen?`<div style="background:rgba(0,0,0,0.2);">${records.map(item=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid rgba(255,255,255,0.05);"><span style="font-size:20px;">${item.emoji}</span><div style="flex:1;"><div style="font-size:13px;color:var(--gold);">${escHtml(item.prize)}</div></div><div style="font-size:10px;color:rgba(255,255,255,0.3);">${formatTime(item.time)}</div></div>`).join('')}</div>`:''}
+      </div>`;
+    });
+    html+='<div style="margin-bottom:12px;"></div>';
+  });
+  container.innerHTML=html;
+}
+
+function toggleHistoryAccordion(name){
+  openHistoryName=(openHistoryName===name)?null:name;
+  const q=document.getElementById('historySearchInput')?.value||'';
+  const groups={};allHistoryItems.forEach(item=>{if(!groups[item.name])groups[item.name]=[];groups[item.name].push(item);});
+  renderAccordionItems(groups,q);
+}
+
+function filterHistoryAccordion(){
+  const q=document.getElementById('historySearchInput')?.value||'';
+  const groups={};allHistoryItems.forEach(item=>{if(!groups[item.name])groups[item.name]=[];groups[item.name].push(item);});
+  renderAccordionItems(groups,q);
 }
 
 async function loadMembers(){
@@ -821,16 +885,41 @@ async function loadMemberPrizes(){
   if(!key){container.innerHTML='';return;}
   const prizes=await fbGet(`memberPrizes/${key}`);
   if(!prizes||prizes.length===0){container.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';return;}
-  container.innerHTML=prizes.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:24px">${p.emoji}</span><span style="flex:1;font-size:14px">${escHtml(p.name)}</span><button class="btn-sm btn-del" onclick="removeMemberPrize('${key}',${i})">차감</button></div>`).join('');
+  const fmtDate=ts=>ts?new Date(ts).toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1):'';
+  container.innerHTML=prizes.map((p,i)=>{
+    const giveDate=fmtDate(p.time);
+    const deductDate=p.deductDate||'';
+    const isDeducted=!!p.deducted;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${isDeducted?'opacity:0.45':''}">
+      <span style="font-size:22px">${p.emoji}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;${isDeducted?'text-decoration:line-through;color:rgba(255,255,255,0.5)':''}">${escHtml(p.name)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px">
+          ${giveDate?`지급 ${giveDate}`:''}${isDeducted&&deductDate?` &nbsp;·&nbsp; <span style="color:#FC5C65">차감 ${deductDate}</span>`:''}
+        </div>
+      </div>
+      ${isDeducted
+        ? `<span style="font-size:11px;color:#FC5C65;white-space:nowrap">차감됨</span>`
+        : `<button class="btn-sm btn-del" onclick="removeMemberPrize('${key}',${i})">차감</button>`
+      }
+    </div>`;
+  }).join('');
 }
 async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
-  const current=await fbGet(`memberPrizes/${key}`)||[];current.push({emoji,name,time:Date.now()});await fbSet(`memberPrizes/${key}`,current);
+  const current=await fbGet(`memberPrizes/${key}`)||[];current.push({emoji,name,time:Date.now(),deducted:false});await fbSet(`memberPrizes/${key}`,current);
   document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
-async function removeMemberPrize(key,index){const current=await fbGet(`memberPrizes/${key}`)||[];current.splice(index,1);await fbSet(`memberPrizes/${key}`,current);showToast('🗑️ 경품 차감됨');loadMemberPrizes();}
+async function removeMemberPrize(key,index){
+  const current=await fbGet(`memberPrizes/${key}`)||[];
+  // 삭제 대신 차감 표시 + 날짜 기록
+  const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
+  current[index]={...current[index],deducted:true,deductDate:today};
+  await fbSet(`memberPrizes/${key}`,current);
+  showToast('✅ 경품 차감 처리됨');loadMemberPrizes();
+}
 
 function populateGiveStockSelect(){
   const sel=document.getElementById('giveStockMember');if(!sel)return;
