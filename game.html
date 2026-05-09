@@ -708,7 +708,8 @@ async function loadHistory(){
       .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate}));
     renderMemberPrizeHistory(prizeItems);
   }else{
-    renderHistoryAccordion(items);
+    // 관리자: memberPrizes 전체 기준으로 표시
+    renderAdminPrizeHistory();
   }
 }
 
@@ -748,6 +749,106 @@ const GROUP_EMOJI={'좋아요':'👍','댓글':'💬','시크릿':'🤫','기타
 
 // 열린 그룹, 열린 이름 각각 관리
 let openHistoryGroup=null;
+
+
+async function renderAdminPrizeHistory(){
+  const list=document.getElementById('historyList');
+  list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const [members,allMemberPrizes]=await Promise.all([fbGet('members'),fbGet('memberPrizes')]);
+  if(!members){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>멤버 없음</div>';return;}
+  list.innerHTML='<input id="historySearchInput" placeholder="🔍 이름 검색..." autocomplete="off" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;margin-bottom:12px;" oninput="filterAdminPrizeHistory()"><div id="adminPrizeAccordion"></div>';
+  window._adminPrizeData=Object.entries(members).map(function([key,m]){
+    const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]).sort(function(a,b){return (b.time||0)-(a.time||0);});
+    return {key:key,name:m.name,prizes:prizes};
+  }).filter(function(m){return m.prizes.length>0;}).sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+  renderAdminPrizeAccordion('');
+}
+
+function renderAdminPrizeAccordion(q){
+  const container=document.getElementById('adminPrizeAccordion');
+  if(!container||!window._adminPrizeData)return;
+  const data=q?window._adminPrizeData.filter(function(m){return m.name.toLowerCase().includes(q.toLowerCase());}):window._adminPrizeData;
+  if(data.length===0){container.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과 없음</div>';return;}
+
+  const byGroup={};
+  GROUP_ORDER.forEach(function(g){byGroup[g]=[];});
+  data.forEach(function(m){const g=getNameGroup(m.name);(byGroup[g]||byGroup['기타']).push(m);});
+  const isSearching=!!q;
+  let html='';
+
+  GROUP_ORDER.forEach(function(g){
+    const mems=byGroup[g];
+    if(!mems||mems.length===0)return;
+    const color=GROUP_COLOR[g];
+    const isGroupOpen=isSearching||(openHistoryGroup===g);
+    const totalPrizes=mems.reduce(function(s,m){return s+m.prizes.length;},0);
+
+    html+='<div style="margin-bottom:6px;border-radius:12px;overflow:hidden;border:2px solid '+color+'66;">';
+    html+='<div onclick="toggleAdminPrizeGroup(this)" data-group="'+g+'" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:'+(isGroupOpen?color+'33':'rgba(255,255,255,0.04)')+';cursor:pointer;">';
+    html+='<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">'+GROUP_EMOJI[g]+'</span>';
+    html+='<div><div style="font-family:Jua,cursive;font-size:16px;color:'+color+';">'+g+'</div>';
+    html+='<div style="font-size:11px;color:rgba(255,255,255,0.45);">'+mems.length+'명 · 경품 '+totalPrizes+'개</div></div></div>';
+    html+='<span style="color:'+color+';font-size:18px;">'+(isGroupOpen?'▲':'▼')+'</span></div>';
+
+    if(isGroupOpen){
+      html+='<div style="background:rgba(0,0,0,0.15);padding:6px 8px;">';
+      mems.forEach(function(m){
+        const isOpen=openHistoryName===m.key;
+        const activeCnt=m.prizes.filter(function(p){return !p.deducted;}).length;
+        const deductCnt=m.prizes.filter(function(p){return p.deducted;}).length;
+        const initial=m.name.replace(/^\*/,'').replace(/^(좋아요|댓글|시크릿)/,'').charAt(0)||m.name.charAt(0);
+
+        html+='<div style="margin-bottom:4px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">';
+        html+='<div onclick="toggleAdminPrizeMember(this)" data-key="'+m.key+'" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:'+(isOpen?'rgba(108,53,222,0.3)':'rgba(255,255,255,0.05)')+';cursor:pointer;">';
+        html+='<div style="display:flex;align-items:center;gap:8px;">';
+        html+='<div style="width:28px;height:28px;background:'+color+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Jua,cursive;font-size:11px;color:white;flex-shrink:0;">'+initial+'</div>';
+        html+='<div><div style="font-weight:700;font-size:13px;">'+escHtml(m.name)+'</div>';
+        html+='<div style="font-size:11px;color:rgba(255,255,255,0.4);">보유 '+activeCnt+'개'+(deductCnt>0?' · 차감 '+deductCnt+'개':'')+'</div></div></div>';
+        html+='<span style="color:var(--gold);font-size:13px;">'+(isOpen?'▲':'▼')+'</span></div>';
+
+        if(isOpen){
+          html+='<div style="background:rgba(0,0,0,0.25);">';
+          m.prizes.forEach(function(p){
+            const isDeducted=!!p.deducted;
+            const giveDate=p.time?new Date(p.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/'):'';
+            html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.05);'+(isDeducted?'opacity:0.45;':'')+'">';
+            html+='<span style="font-size:18px;">'+p.emoji+'</span>';
+            html+='<div style="flex:1;min-width:0;">';
+            html+='<div style="font-size:13px;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(p.name)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>';
+            html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(giveDate?'지급 '+giveDate:'')+(isDeducted&&p.deductDate?' &nbsp;·&nbsp; <span style="color:#FC5C65;">차감 '+p.deductDate+'</span>':'')+'</div>';
+            html+='</div></div>';
+          });
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  container.innerHTML=html||'<div class="empty"><div class="empty-icon">📭</div>경품 보유 멤버 없음</div>';
+}
+
+function toggleAdminPrizeGroup(el){
+  const g=el.getAttribute('data-group');
+  openHistoryGroup=(openHistoryGroup===g)?null:g;
+  openHistoryName=null;
+  const q=document.getElementById('historySearchInput')?.value||'';
+  renderAdminPrizeAccordion(q);
+}
+
+function toggleAdminPrizeMember(el){
+  const key=el.getAttribute('data-key');
+  openHistoryName=(openHistoryName===key)?null:key;
+  const q=document.getElementById('historySearchInput')?.value||'';
+  renderAdminPrizeAccordion(q);
+}
+
+function filterAdminPrizeHistory(){
+  const q=document.getElementById('historySearchInput')?.value||'';
+  renderAdminPrizeAccordion(q);
+}
+
 
 function renderHistoryAccordion(items){
   const list=document.getElementById('historyList');
