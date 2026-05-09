@@ -335,6 +335,13 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     </div>
   </div>
 
+  <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
+  <div class="card">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">당첨 기록(history) 기준으로 누락된 경품을 전체 복구합니다.</div>
+    <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+    <button class="btn-confirm" onclick="recoverMemberPrizes()" style="width:100%">📦 전체 경품 데이터 복구</button>
+  </div>
+
   <div class="section-title" style="margin-top:20px">💰 주식 지급</div>
   <div class="card">
     <input class="bulk-search" id="giveStockSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock')">
@@ -443,6 +450,12 @@ function toArray(val){
   return Object.values(val);
 }
 
+
+// 이름에서 접두어 제거해서 순수 이름 추출
+// 예: "*좋아요불주먹" -> "불주먹", "댓글김철수" -> "김철수"
+function pureName(name){
+  return (name||'').replace(/^\*?(?:좋아요|댓글|시크릿)/, '').trim();
+}
 
 let currentUser=null;
 (function restoreLogin(){
@@ -611,9 +624,9 @@ async function showPrizeModal(prize){
   document.getElementById('modalMsg').textContent=`${currentUser.name}님 축하합니다! 🎉`;
   document.getElementById('resultModal').classList.add('active');
   if(currentUser&&currentUser.role==='member'){
-    const current=toArray(await fbGet(`memberPrizes/${currentUser.key}`));
-    current.push({emoji:prize.emoji,name:prize.name,time:Date.now()});
-    await fbSet(`memberPrizes/${currentUser.key}`,current);refreshHeaderPrizes();
+    // fbPush로 개별 저장 - 동시 저장 시 덮어쓰기 방지
+    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now()});
+    refreshHeaderPrizes();
   }
 }
 
@@ -688,11 +701,31 @@ async function loadHistory(){
   document.getElementById('historyFilterTabs').innerHTML='';
   allHistoryItems=items;
   if(!isAdmin){
-    items=items.filter(item=>item.name===currentUser.name);
-    renderHistoryList(items);
+    // 멤버는 memberPrizes 기준으로 표시 (이름 변경과 무관하게 정확한 데이터)
+    const memberPrizes=toArray(await fbGet('memberPrizes/'+currentUser.key));
+    const prizeItems=memberPrizes
+      .sort((a,b)=>(b.time||0)-(a.time||0))
+      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate}));
+    renderMemberPrizeHistory(prizeItems);
   }else{
     renderHistoryAccordion(items);
   }
+}
+
+function renderMemberPrizeHistory(items){
+  const list=document.getElementById('historyList');
+  if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  list.innerHTML=items.map(item=>{
+    const isDeducted=!!item.deducted;
+    return '<div class="history-item" style="'+( isDeducted?'opacity:0.5;':'')+'">'
+      +'<div class="history-emoji">'+item.emoji+'</div>'
+      +'<div class="history-info">'
+      +'<div class="history-prize" style="font-size:15px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:11px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
+      +(item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
+      +'</div>'
+      +'<div class="history-time">'+formatTime(item.time)+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function renderHistoryList(items){
@@ -976,6 +1009,51 @@ function populateGiveStockSelect(){
   Object.entries(allMembers).forEach(([k,m])=>{const opt=document.createElement('option');opt.value=k;opt.textContent=`${m.name} (${m.stock||0}주)`;sel.appendChild(opt);});
 }
 
+
+// ★ history 기준으로 memberPrizes 재구성 복구 함수
+async function recoverMemberPrizes(){
+  const statusEl=document.getElementById('recoverStatus');
+  statusEl.textContent='불러오는 중...';
+
+  const [history, members] = await Promise.all([fbGet('history'), fbGet('members')]);
+  if(!history||!members){statusEl.textContent='❌ 데이터를 불러오지 못했습니다.';return;}
+
+  // history를 멤버 이름별로 그룹핑
+  const byName={};
+  Object.values(history).forEach(h=>{
+    if(!h.name||!h.prize)return;
+    if(!byName[h.name])byName[h.name]=[];
+    byName[h.name].push({emoji:h.emoji||'🎁',name:h.prize,time:h.time||0});
+  });
+
+  let fixed=0;
+  for(const [key,m] of Object.entries(members)){
+    const historyItems=byName[m.name]||[];
+    if(historyItems.length===0)continue;
+
+    // 현재 저장된 memberPrizes
+    const current=toArray(await fbGet('memberPrizes/'+key));
+
+    // history에는 있는데 memberPrizes에 없는 것 찾기 (time 기준)
+    const currentTimes=new Set(current.map(p=>p.time));
+    const missing=historyItems.filter(h=>!currentTimes.has(h.time));
+
+    if(missing.length>0){
+      // fbPush로 누락된 것만 추가
+      for(const item of missing){
+        await fbPush('memberPrizes/'+key, item);
+      }
+      fixed++;
+      statusEl.textContent=fixed+'명 복구 중...';
+    }
+  }
+
+  if(fixed===0){
+    statusEl.textContent='✅ 누락된 경품 없음 (이미 최신 상태)';
+  }else{
+    statusEl.textContent='✅ '+fixed+'명의 경품 데이터 복구 완료!';
+  }
+}
 async function saveCost(){const val=parseInt(document.getElementById('newCostInput').value);if(isNaN(val)||val<1){showToast('올바른 숫자를 입력하세요');return;}costPerRoll=val;await fbSet('costPerRoll',val);document.getElementById('costDisplay').textContent=`${val}주`;showToast(`✅ 1판 = ${val}주로 설정됨`);}
 
 async function giveStock(){
