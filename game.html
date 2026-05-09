@@ -7,855 +7,183 @@
 <title>🎡 사내 오락실</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
-
 :root {
-–gold: #FFD700;
-–gold2: #FFA500;
-–dark: #1a0a2e;
-–purple: #6C35DE;
-–pink: #FF6B9D;
-–cyan: #00F5FF;
-–card: rgba(255,255,255,0.07);
-–border: rgba(255,255,255,0.12);
+--gold: #FFD700; --gold2: #FFA500; --dark: #1a0a2e; --purple: #6C35DE;
+--pink: #FF6B9D; --cyan: #00F5FF; --card: rgba(255,255,255,0.07); --border: rgba(255,255,255,0.12);
 }
-
-html {
-background-color: #1a0a2e;
-}
-
-- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+html { background-color: #1a0a2e; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
-font-family: ‘Noto Sans KR’, sans-serif;
-background-color: #1a0a2e;
-background-image:
-radial-gradient(ellipse at 20% 20%, rgba(108,53,222,0.5) 0%, transparent 50%),
-radial-gradient(ellipse at 80% 80%, rgba(255,107,157,0.4) 0%, transparent 50%),
-radial-gradient(ellipse at 50% 50%, rgba(0,245,255,0.15) 0%, transparent 70%);
-background-attachment: fixed;
-color: #fff;
-min-height: 100vh;
-min-height: -webkit-fill-available;
-overflow-x: hidden;
+font-family: 'Noto Sans KR', sans-serif; background-color: #1a0a2e;
+background-image: radial-gradient(ellipse at 20% 20%, rgba(108,53,222,0.5) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,107,157,0.4) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(0,245,255,0.15) 0%, transparent 70%);
+background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden;
 }
-
-/* ===== STARS ===== */
-.stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: transparent; }
-.star {
-position: absolute;
-border-radius: 50%;
-background: white;
-animation: twinkle var(–d, 3s) ease-in-out infinite var(–delay, 0s);
-}
-@keyframes twinkle { 0%,100%{opacity:0.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
-
-/* ===== LAYOUT ===== */
 #app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 80px; min-height: 100vh; }
-
-/* ===== HEADER ===== */
-.header {
-background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9));
-backdrop-filter: blur(20px);
-padding: 10px 16px 8px;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-border-bottom: 1px solid var(–border);
-position: sticky;
-top: 0;
-z-index: 100;
-}
+.header { background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9)); backdrop-filter: blur(20px); padding: 10px 16px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
 .header-top-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
-.header-title { font-family: ‘Jua’, cursive; font-size: 22px; letter-spacing: 1px; text-align: center; }
+.header-title { font-family: 'Jua', cursive; font-size: 22px; letter-spacing: 1px; text-align: center; }
 .header-user { font-size: 12px; opacity: 0.9; text-align: center; margin-bottom: 2px; }
 .header-user strong { color: white; display: inline; font-size: 14px; font-weight: 700; }
-.btn-logout {
-background: rgba(255,255,255,0.2);
-border: 1px solid rgba(255,255,255,0.3);
-color: white;
-padding: 5px 12px;
-border-radius: 20px;
-font-size: 12px;
-cursor: pointer;
-transition: all 0.2s;
-}
+.btn-logout { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
 .btn-logout:hover { background: rgba(255,255,255,0.3); }
-
-/* ===== NAV ===== */
-.nav {
-display: flex;
-background: rgba(0,0,0,0.4);
-border-bottom: 1px solid var(–border);
-position: sticky;
-top: 0px;
-z-index: 99;
-overflow-x: auto;
-scrollbar-width: none;
-}
+.nav { display: flex; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); position: sticky; top: 0px; z-index: 99; overflow-x: auto; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
-.nav-btn {
-flex: 1;
-min-width: 70px;
-padding: 10px 8px;
-background: none;
-border: none;
-color: rgba(255,255,255,0.5);
-font-size: 11px;
-font-family: ‘Noto Sans KR’, sans-serif;
-cursor: pointer;
-transition: all 0.2s;
-border-bottom: 2px solid transparent;
-white-space: nowrap;
-}
-.nav-btn.active {
-color: var(–gold);
-border-bottom-color: var(–gold);
-background: rgba(255,215,0,0.05);
-}
+.nav-btn { flex: 1; min-width: 70px; padding: 10px 8px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 11px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(255,215,0,0.05); }
 .nav-btn span { display: block; font-size: 18px; margin-bottom: 2px; }
-
-/* ===== PAGES ===== */
 .page { display: none; padding: 20px; }
 .page.active { display: block; }
-
-/* ===== LOGIN ===== */
-.login-wrap {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-min-height: 100vh;
-min-height: -webkit-fill-available;
-padding: 40px 24px;
-position: relative;
-z-index: 1;
-}
-.login-logo { font-family: ‘Jua’, cursive; font-size: 56px; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
+.login-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; min-height: -webkit-fill-available; padding: 40px 24px; position: relative; z-index: 1; }
+.login-logo { font-family: 'Jua', cursive; font-size: 56px; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-.login-title { font-family: ‘Jua’, cursive; font-size: 18px; margin-bottom: 4px; color: var(–gold); }
-.login-sub { font-size: 32px; color: white; margin-bottom: 40px; font-family: ‘Jua’, cursive; letter-spacing: 2px; }
-.login-card {
-width: 100%;
-max-width: 360px;
-background: rgba(255,255,255,0.07);
-background-color: rgba(30,15,60,0.7);
-border: 1px solid rgba(255,255,255,0.12);
-border-radius: 24px;
-padding: 28px;
--webkit-backdrop-filter: blur(20px);
-backdrop-filter: blur(20px);
-overflow: visible;
-}
-.login-tabs {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 8px;
-margin-bottom: 24px;
-width: 100%;
-}
-.login-tab {
-width: 100%;
-padding: 11px 4px;
-border-radius: 12px;
-border: 1px solid rgba(255,255,255,0.12);
-background: transparent;
-color: rgba(255,255,255,0.5);
-font-family: ‘Noto Sans KR’, sans-serif;
-font-size: 14px;
-cursor: pointer;
-transition: all 0.2s;
-text-align: center;
-box-sizing: border-box;
--webkit-appearance: none;
-display: block;
-overflow: hidden;
-}
-.login-tab.active {
-background: #A78BFA;
-color: white;
-border-color: transparent;
-}
+.login-title { font-family: 'Jua', cursive; font-size: 18px; margin-bottom: 4px; color: var(--gold); }
+.login-sub { font-size: 32px; color: white; margin-bottom: 40px; font-family: 'Jua', cursive; letter-spacing: 2px; }
+.login-card { width: 100%; max-width: 360px; background: rgba(255,255,255,0.07); background-color: rgba(30,15,60,0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 28px; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); overflow: visible; }
+.login-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; width: 100%; }
+.login-tab { width: 100%; padding: 11px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Noto Sans KR', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; text-align: center; box-sizing: border-box; -webkit-appearance: none; display: block; overflow: hidden; }
+.login-tab.active { background: #A78BFA; color: white; border-color: transparent; }
 .input-group { margin-bottom: 14px; }
 .input-group label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
-.input-group input, .input-group select {
-width: 100%;
-padding: 12px 16px;
-background: rgba(255,255,255,0.08);
-border: 1px solid var(–border);
-border-radius: 12px;
-color: white;
-font-size: 15px;
-font-family: ‘Noto Sans KR’, sans-serif;
-outline: none;
-transition: border-color 0.2s;
--webkit-appearance: none;
-}
-.input-group input:focus, .input-group select:focus { border-color: var(–purple); }
+.input-group input, .input-group select { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+.input-group input:focus, .input-group select:focus { border-color: var(--purple); }
 .input-group select option { background: #1a0a2e; }
-.btn-primary {
-width: 100%;
-padding: 14px;
-background: -webkit-linear-gradient(135deg, #6C35DE, #FF6B9D);
-background: linear-gradient(135deg, #6C35DE, #FF6B9D);
-border: none;
-border-radius: 14px;
-color: white;
-font-size: 16px;
-font-family: ‘Jua’, cursive;
-cursor: pointer;
-transition: transform 0.15s, box-shadow 0.15s;
-box-shadow: 0 4px 20px rgba(108,53,222,0.4);
-letter-spacing: 1px;
--webkit-appearance: none;
-box-sizing: border-box;
-display: block;
-overflow: hidden;
-}
+.btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, #6C35DE, #FF6B9D); border: none; border-radius: 14px; color: white; font-size: 16px; font-family: 'Jua', cursive; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 20px rgba(108,53,222,0.4); letter-spacing: 1px; -webkit-appearance: none; box-sizing: border-box; display: block; overflow: hidden; }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:hover { box-shadow: 0 6px 24px rgba(108,53,222,0.6); }
-
-/* ===== HISTORY FILTER ===== */
-
-/* ===== NOTICE ===== */
-.notice-card {
-background: linear-gradient(135deg, rgba(108,53,222,0.2), rgba(255,107,157,0.15));
-border: 1px solid rgba(255,215,0,0.3);
-border-radius: 12px;
-padding: 8px 12px;
-margin: 6px 16px 0;
-}
-.notice-title {
-font-family: ‘Jua’, cursive;
-font-size: 12px;
-color: var(–gold);
-margin-bottom: 4px;
-display: flex;
-align-items: center;
-gap: 6px;
-}
-.notice-row {
-display: flex;
-align-items: flex-start;
-gap: 8px;
-padding: 3px 0;
-border-bottom: 1px solid rgba(255,255,255,0.07);
-font-size: 12px;
-color: rgba(255,255,255,0.85);
-line-height: 1.5;
-}
+.notice-card { background: linear-gradient(135deg, rgba(108,53,222,0.2), rgba(255,107,157,0.15)); border: 1px solid rgba(255,215,0,0.3); border-radius: 12px; padding: 8px 12px; margin: 6px 16px 0; }
+.notice-title { font-family: 'Jua', cursive; font-size: 12px; color: var(--gold); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.notice-row { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.5; }
 .notice-row:last-child { border-bottom: none; }
-.notice-badge {
-background: linear-gradient(135deg, #6C35DE, #FF6B9D);
-color: white;
-font-family: ‘Jua’, cursive;
-font-size: 11px;
-padding: 1px 6px;
-border-radius: 20px;
-white-space: nowrap;
-flex-shrink: 0;
-margin-top: 1px;
-}
-.notice-badge.gold {
-background: linear-gradient(135deg, #F7B731, #FD9644);
-}
-.notice-sub {
-font-size: 11px;
-color: rgba(255,255,255,0.45);
-margin-top: 2px;
-}
-
-.filter-tabs {
-display: flex;
-gap: 6px;
-flex-wrap: wrap;
-margin-bottom: 14px;
-}
-.filter-tab {
-padding: 6px 14px;
-border-radius: 20px;
-border: 1px solid var(–border);
-background: transparent;
-color: rgba(255,255,255,0.5);
-font-family: ‘Noto Sans KR’, sans-serif;
-font-size: 12px;
-cursor: pointer;
-transition: all 0.2s;
-white-space: nowrap;
-}
-.filter-tab.active {
-background: linear-gradient(135deg, #6C35DE, #FF6B9D);
-color: white;
-border-color: transparent;
-}
-/* ===== SECTION TITLE ===== */
-.section-title {
-font-family: ‘Jua’, cursive;
-font-size: 20px;
-color: var(–gold);
-margin-bottom: 16px;
-display: flex;
-align-items: center;
-gap: 8px;
-}
-
-/* ===== CARD ===== */
-.card {
-background: var(–card);
-border: 1px solid var(–border);
-border-radius: 20px;
-padding: 20px;
-margin-bottom: 16px;
-backdrop-filter: blur(10px);
-}
-
-/* ===== ROULETTE ===== */
-.roulette-wrap {
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 16px 0 24px;
-}
-.stock-badge {
-background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15));
-border: 1px solid var(–gold);
-border-radius: 20px;
-padding: 10px 20px;
-text-align: center;
-margin-bottom: 20px;
-width: 100%;
-max-width: 300px;
-}
+.notice-badge { background: linear-gradient(135deg, #6C35DE, #FF6B9D); color: white; font-family: 'Jua', cursive; font-size: 11px; padding: 1px 6px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.notice-badge.gold { background: linear-gradient(135deg, #F7B731, #FD9644); }
+.notice-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.filter-tab.active { background: linear-gradient(135deg, #6C35DE, #FF6B9D); color: white; border-color: transparent; }
+.section-title { font-family: 'Jua', cursive; font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px); }
+.roulette-wrap { display: flex; flex-direction: column; align-items: center; padding: 16px 0 24px; }
+.stock-badge { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15)); border: 1px solid var(--gold); border-radius: 20px; padding: 10px 20px; text-align: center; margin-bottom: 20px; width: 100%; max-width: 300px; }
 .stock-badge .label { font-size: 11px; color: rgba(255,255,255,0.6); }
-.stock-badge .value { font-family: ‘Jua’, cursive; font-size: 28px; color: var(–gold); }
+.stock-badge .value { font-family: 'Jua', cursive; font-size: 28px; color: var(--gold); }
 .stock-badge .cost-info { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-
-.roulette-container {
-position: relative;
-width: 300px;
-height: 300px;
-margin-bottom: 8px;
-overflow: visible;
-}
-.roulette-canvas {
-width: 300px;
-height: 300px;
-border-radius: 50%;
-box-shadow: 0 0 40px rgba(255,215,0,0.35), 0 0 0 6px var(–gold), 0 0 0 10px #8B6914;
-display: block;
-}
-/* Pointer arrow at top */
-.roulette-pointer {
-position: absolute;
-top: -18px;
-left: 50%;
-transform: translateX(-50%);
-width: 0;
-height: 0;
-border-left: 14px solid transparent;
-border-right: 14px solid transparent;
-border-top: 32px solid #FFD700;
-filter: drop-shadow(0 2px 8px rgba(255,165,0,1));
-z-index: 20;
-}
-/* Center pin */
-.roulette-center {
-position: absolute;
-top: 50%; left: 50%;
-transform: translate(-50%, -50%);
-width: 28px; height: 28px;
-background: radial-gradient(circle at 35% 35%, #fff, var(–gold));
-border-radius: 50%;
-border: 3px solid #8B6914;
-box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-z-index: 10;
-}
-
-.btn-spin {
-margin-top: 24px;
-width: 260px;
-padding: 16px;
-background: linear-gradient(135deg, var(–gold), var(–gold2));
-border: none;
-border-radius: 50px;
-color: #1a0a2e;
-font-family: ‘Jua’, cursive;
-font-size: 20px;
-cursor: pointer;
-letter-spacing: 3px;
-transition: all 0.15s;
-box-shadow: 0 4px 20px rgba(255,165,0,0.5);
-}
+.roulette-container { position: relative; width: 300px; height: 300px; margin-bottom: 8px; overflow: visible; }
+.roulette-canvas { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 0 40px rgba(255,215,0,0.35), 0 0 0 6px var(--gold), 0 0 0 10px #8B6914; display: block; }
+.roulette-pointer { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 32px solid #FFD700; filter: drop-shadow(0 2px 8px rgba(255,165,0,1)); z-index: 20; }
+.roulette-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 28px; height: 28px; background: radial-gradient(circle at 35% 35%, #fff, var(--gold)); border-radius: 50%; border: 3px solid #8B6914; box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 10; }
+.btn-spin { margin-top: 24px; width: 260px; padding: 16px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border: none; border-radius: 50px; color: #1a0a2e; font-family: 'Jua', cursive; font-size: 20px; cursor: pointer; letter-spacing: 3px; transition: all 0.15s; box-shadow: 0 4px 20px rgba(255,165,0,0.5); }
 .btn-spin:active { transform: scale(0.96); }
 .btn-spin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .btn-spin:not(:disabled):hover { box-shadow: 0 6px 28px rgba(255,165,0,0.7); }
-
-/* Prize legend */
-.prize-legend {
-width: 100%;
-max-width: 300px;
-margin-top: 20px;
-}
-.legend-item {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 8px 12px;
-border-radius: 10px;
-margin-bottom: 6px;
-background: rgba(255,255,255,0.05);
-border: 1px solid rgba(255,255,255,0.08);
-}
-.legend-color {
-width: 14px; height: 14px;
-border-radius: 4px;
-flex-shrink: 0;
-}
+.prize-legend { width: 100%; max-width: 300px; margin-top: 20px; }
+.legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+.legend-color { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
 .legend-name { flex: 1; font-size: 13px; font-weight: 700; }
-.legend-prob { font-size: 12px; color: var(–gold); font-family: ‘Jua’, cursive; }
-/* ===== MODE TOGGLE ===== */
-.mode-toggle {
-display: flex;
-background: rgba(0,0,0,0.3);
-border: 1px solid var(–border);
-border-radius: 50px;
-padding: 4px;
-margin-bottom: 20px;
-gap: 4px;
-}
-.mode-btn {
-padding: 8px 22px;
-border-radius: 50px;
-border: none;
-background: transparent;
-color: rgba(255,255,255,0.5);
-font-family: ‘Jua’, cursive;
-font-size: 15px;
-cursor: pointer;
-transition: all 0.25s;
-letter-spacing: 1px;
-white-space: nowrap;
-}
-.mode-btn.active {
-background: linear-gradient(135deg, var(–purple), var(–pink));
-color: white;
-box-shadow: 0 2px 12px rgba(108,53,222,0.5);
-}
-
-/* ===== GACHA MACHINE (slot) ===== */
+.legend-prob { font-size: 12px; color: var(--gold); font-family: 'Jua', cursive; }
+.mode-toggle { display: flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 50px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+.mode-btn { padding: 8px 22px; border-radius: 50px; border: none; background: transparent; color: rgba(255,255,255,0.5); font-family: 'Jua', cursive; font-size: 15px; cursor: pointer; transition: all 0.25s; letter-spacing: 1px; white-space: nowrap; }
+.mode-btn.active { background: linear-gradient(135deg, var(--purple), var(--pink)); color: white; box-shadow: 0 2px 12px rgba(108,53,222,0.5); }
 .gacha-machine-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
-.machine-body {
-width: 240px;
-background: linear-gradient(160deg, #2d1b69, #1a0a2e);
-border: 3px solid var(–gold);
-border-radius: 24px;
-padding: 16px;
-box-shadow: 0 0 40px rgba(255,215,0,0.3), inset 0 0 20px rgba(108,53,222,0.3);
-position: relative;
-margin-bottom: 20px;
-}
-.machine-screen {
-background: #000;
-border: 2px solid var(–gold2);
-border-radius: 16px;
-height: 140px;
-display: flex;
-align-items: center;
-justify-content: center;
-margin-bottom: 14px;
-overflow: hidden;
-}
+.machine-body { width: 240px; background: linear-gradient(160deg, #2d1b69, #1a0a2e); border: 3px solid var(--gold); border-radius: 24px; padding: 16px; box-shadow: 0 0 40px rgba(255,215,0,0.3), inset 0 0 20px rgba(108,53,222,0.3); position: relative; margin-bottom: 20px; }
+.machine-screen { background: #000; border: 2px solid var(--gold2); border-radius: 16px; height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: hidden; }
 .screen-idle { font-size: 50px; animation: float 2s ease-in-out infinite; }
 .screen-result { font-size: 60px; animation: pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
 @keyframes pop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
 .screen-spinning { animation: spin-emoji 0.15s linear infinite; font-size: 50px; }
 @keyframes spin-emoji { 0%{transform:rotateY(0)} 100%{transform:rotateY(360deg)} }
-.machine-label {
-text-align: center;
-font-family: ‘Jua’, cursive;
-font-size: 13px;
-color: var(–gold);
-margin-bottom: 10px;
-letter-spacing: 1px;
-}
-.machine-ball {
-width: 50px; height: 50px;
-background: radial-gradient(circle at 35% 35%, #ff6b9d, #6c35de);
-border-radius: 50%;
-margin: 0 auto 10px;
-border: 2px solid rgba(255,255,255,0.3);
-box-shadow: 0 4px 12px rgba(108,53,222,0.5);
-}
-.btn-gacha {
-width: 100%;
-padding: 14px;
-background: linear-gradient(135deg, var(–gold), var(–gold2));
-border: none;
-border-radius: 12px;
-color: #1a0a2e;
-font-family: ‘Jua’, cursive;
-font-size: 18px;
-cursor: pointer;
-letter-spacing: 2px;
-transition: all 0.15s;
-box-shadow: 0 4px 16px rgba(255,165,0,0.4);
-}
+.machine-label { text-align: center; font-family: 'Jua', cursive; font-size: 13px; color: var(--gold); margin-bottom: 10px; letter-spacing: 1px; }
+.machine-ball { width: 50px; height: 50px; background: radial-gradient(circle at 35% 35%, #ff6b9d, #6c35de); border-radius: 50%; margin: 0 auto 10px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(108,53,222,0.5); }
+.btn-gacha { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border: none; border-radius: 12px; color: #1a0a2e; font-family: 'Jua', cursive; font-size: 18px; cursor: pointer; letter-spacing: 2px; transition: all 0.15s; box-shadow: 0 4px 16px rgba(255,165,0,0.4); }
 .btn-gacha:active { transform: scale(0.95); }
 .btn-gacha:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .btn-gacha:not(:disabled):hover { box-shadow: 0 6px 24px rgba(255,165,0,0.6); }
 @keyframes shake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-5deg)} 40%{transform:rotate(5deg)} 60%{transform:rotate(-3deg)} 80%{transform:rotate(3deg)} }
 .machine-shake { animation: shake 0.5s ease; }
-
-/* ===== RESULT MODAL ===== */
-.modal-overlay {
-display: none;
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.85);
-z-index: 200;
-align-items: center;
-justify-content: center;
-backdrop-filter: blur(8px);
-}
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
 .modal-overlay.active { display: flex; }
-.modal {
-background: linear-gradient(160deg, #2d1b69, #1a0a2e);
-border: 2px solid var(–gold);
-border-radius: 28px;
-padding: 40px 32px;
-text-align: center;
-max-width: 320px;
-width: 90%;
-animation: modalIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-box-shadow: 0 0 60px rgba(255,215,0,0.3);
-}
+.modal { background: linear-gradient(160deg, #2d1b69, #1a0a2e); border: 2px solid var(--gold); border-radius: 28px; padding: 40px 32px; text-align: center; max-width: 320px; width: 90%; animation: modalIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275); box-shadow: 0 0 60px rgba(255,215,0,0.3); }
 @keyframes modalIn { 0%{transform:scale(0.5);opacity:0} 100%{transform:scale(1);opacity:1} }
 .modal-emoji { font-size: 80px; margin-bottom: 12px; display: block; animation: bounceIn 0.6s 0.2s both; }
 @keyframes bounceIn { 0%{transform:scale(0) rotate(-20deg)} 70%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0)} }
-.modal-prize { font-family: ‘Jua’, cursive; font-size: 32px; color: var(–gold); margin-bottom: 8px; }
+.modal-prize { font-family: 'Jua', cursive; font-size: 32px; color: var(--gold); margin-bottom: 8px; }
 .modal-msg { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 24px; }
-.confetti { position: absolute; pointer-events: none; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
-
-/* ===== MEMBERS LIST ===== */
-.member-item {
-display: flex;
-align-items: center;
-gap: 12px;
-padding: 12px 16px;
-background: rgba(255,255,255,0.05);
-border: 1px solid var(–border);
-border-radius: 14px;
-margin-bottom: 8px;
-transition: background 0.2s;
-}
-.member-avatar {
-width: 40px; height: 40px;
-background: linear-gradient(135deg, var(–purple), var(–pink));
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-font-family: ‘Jua’, cursive;
-font-size: 16px;
-flex-shrink: 0;
-}
+.member-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; transition: background 0.2s; }
+.member-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--purple), var(--pink)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Jua', cursive; font-size: 16px; flex-shrink: 0; }
 .member-info { flex: 1; min-width: 0; }
 .member-name { font-weight: 700; font-size: 15px; }
-.member-stock { font-size: 12px; color: var(–gold); }
+.member-stock { font-size: 12px; color: var(--gold); }
 .member-actions { display: flex; gap: 6px; }
-.btn-sm {
-padding: 6px 12px;
-border-radius: 8px;
-border: none;
-font-size: 12px;
-font-family: ‘Noto Sans KR’, sans-serif;
-cursor: pointer;
-transition: all 0.15s;
-}
+.btn-sm { padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.15s; }
 .btn-sm:active { transform: scale(0.95); }
-.btn-add { background: rgba(0,245,255,0.15); color: var(–cyan); border: 1px solid rgba(0,245,255,0.3); }
+.btn-add { background: rgba(0,245,255,0.15); color: var(--cyan); border: 1px solid rgba(0,245,255,0.3); }
 .btn-del { background: rgba(255,80,80,0.15); color: #ff8080; border: 1px solid rgba(255,80,80,0.3); }
-.btn-edit { background: rgba(255,215,0,0.15); color: var(–gold); border: 1px solid rgba(255,215,0,0.3); }
-
-/* ===== PRIZES ===== */
-.prize-item {
-display: flex;
-align-items: center;
-gap: 14px;
-padding: 14px 16px;
-background: rgba(255,255,255,0.05);
-border: 1px solid var(–border);
-border-radius: 14px;
-margin-bottom: 8px;
-}
+.btn-edit { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+.prize-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
 .prize-emoji { font-size: 32px; }
 .prize-info { flex: 1; }
 .prize-name { font-weight: 700; font-size: 15px; }
 .prize-prob { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-.prob-bar {
-height: 4px;
-background: rgba(255,255,255,0.1);
-border-radius: 2px;
-margin-top: 6px;
-overflow: hidden;
-}
-.prob-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(–purple), var(–pink)); transition: width 0.4s; }
-
-/* ===== HISTORY ===== */
-.history-item {
-display: flex;
-align-items: center;
-gap: 12px;
-padding: 10px 14px;
-background: rgba(255,255,255,0.04);
-border: 1px solid var(–border);
-border-radius: 12px;
-margin-bottom: 6px;
-}
+.prob-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--purple), var(--pink)); transition: width 0.4s; }
+.history-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; }
 .history-emoji { font-size: 28px; }
 .history-info { flex: 1; }
 .history-name { font-size: 14px; font-weight: 700; }
-.history-prize { font-size: 12px; color: var(–gold); }
+.history-prize { font-size: 12px; color: var(--gold); }
 .history-time { font-size: 10px; color: rgba(255,255,255,0.3); }
-
-/* ===== STOCK INPUT ===== */
-.stock-input-row {
-display: flex;
-align-items: center;
-gap: 10px;
-margin-top: 8px;
-}
-.stock-input-row input {
-flex: 1;
-padding: 10px 14px;
-background: rgba(255,255,255,0.08);
-border: 1px solid var(–border);
-border-radius: 10px;
-color: white;
-font-size: 15px;
-font-family: ‘Noto Sans KR’, sans-serif;
-outline: none;
-}
-.stock-input-row input:focus { border-color: var(–purple); }
-.btn-confirm {
-padding: 10px 16px;
-background: linear-gradient(135deg, var(–purple), var(–pink));
-border: none;
-border-radius: 10px;
-color: white;
-font-family: ‘Jua’, cursive;
-font-size: 14px;
-cursor: pointer;
-white-space: nowrap;
-transition: all 0.15s;
-}
+.stock-input-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.stock-input-row input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; }
+.stock-input-row input:focus { border-color: var(--purple); }
+.btn-confirm { padding: 10px 16px; background: linear-gradient(135deg, var(--purple), var(--pink)); border: none; border-radius: 10px; color: white; font-family: 'Jua', cursive; font-size: 14px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .btn-confirm:active { transform: scale(0.95); }
-
-/* ===== PRIZE BADGES IN HEADER ===== */
-.header-prizes {
-display: flex;
-flex-wrap: nowrap;
-gap: 3px;
-max-width: 320px;
-overflow-x: auto;
-scrollbar-width: none;
-}
+.header-prizes { display: flex; flex-wrap: nowrap; gap: 3px; max-width: 320px; overflow-x: auto; scrollbar-width: none; }
 .header-prizes::-webkit-scrollbar { display: none; }
-.header-prizes-label {
-font-size: 9px;
-color: rgba(255,255,255,0.5);
-display: block;
-margin-bottom: 1px;
-}
-
-/* ===== SEARCHABLE SELECT ===== */
+.header-prizes-label { font-size: 9px; color: rgba(255,255,255,0.5); display: block; margin-bottom: 1px; }
 .search-select-wrap { position: relative; margin-bottom: 14px; }
 .search-select-wrap label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
-.search-select-input {
-width: 100%;
-padding: 12px 16px;
-background: rgba(255,255,255,0.08);
-border: 1px solid var(–border);
-border-radius: 12px;
-color: white;
-font-size: 15px;
-font-family: ‘Noto Sans KR’, sans-serif;
-outline: none;
-transition: border-color 0.2s;
-box-sizing: border-box;
-}
-.search-select-input:focus { border-color: var(–purple); }
-.search-select-dropdown {
-display: none;
-position: absolute;
-top: 100%;
-left: 0; right: 0;
-background: #1a0a2e;
-border: 1px solid var(–purple);
-border-radius: 12px;
-max-height: 200px;
-overflow-y: auto;
-z-index: 150;
-margin-top: 4px;
-}
+.search-select-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.search-select-input:focus { border-color: var(--purple); }
+.search-select-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1a0a2e; border: 1px solid var(--purple); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 150; margin-top: 4px; }
 .search-select-dropdown.open { display: block; }
-.search-select-option {
-padding: 10px 16px;
-font-size: 14px;
-color: white;
-cursor: pointer;
-transition: background 0.15s;
-}
+.search-select-option { padding: 10px 16px; font-size: 14px; color: white; cursor: pointer; transition: background 0.15s; }
 .search-select-option:hover { background: rgba(108,53,222,0.3); }
-.search-select-option.selected { color: var(–gold); }
-
-/* ===== BULK SELECT ===== */
-.bulk-member-list {
-max-height: 220px;
-overflow-y: auto;
-border: 1px solid var(–border);
-border-radius: 12px;
-margin-bottom: 10px;
-scrollbar-width: none;
-}
+.bulk-member-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; scrollbar-width: none; }
 .bulk-member-list::-webkit-scrollbar { display: none; }
-.bulk-member-item {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 10px 14px;
-border-bottom: 1px solid rgba(255,255,255,0.05);
-cursor: pointer;
-transition: background 0.15s;
-}
+.bulk-member-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.15s; }
 .bulk-member-item:last-child { border-bottom: none; }
 .bulk-member-item:active { background: rgba(108,53,222,0.2); }
 .bulk-member-item.checked { background: rgba(108,53,222,0.15); }
-.bulk-checkbox {
-width: 20px; height: 20px;
-border-radius: 6px;
-border: 2px solid rgba(255,255,255,0.3);
-flex-shrink: 0;
-display: flex; align-items: center; justify-content: center;
-font-size: 13px;
-transition: all 0.15s;
-}
-.bulk-checkbox.checked {
-background: linear-gradient(135deg, #6C35DE, #FF6B9D);
-border-color: transparent;
-}
+.bulk-checkbox { width: 20px; height: 20px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; }
+.bulk-checkbox.checked { background: linear-gradient(135deg, #6C35DE, #FF6B9D); border-color: transparent; }
 .bulk-member-name { flex: 1; font-size: 14px; }
-.bulk-member-stock { font-size: 11px; color: var(–gold); }
-.bulk-select-all {
-display: flex; align-items: center; gap: 8px;
-padding: 8px 14px;
-font-size: 12px; color: rgba(255,255,255,0.6);
-cursor: pointer;
-border-bottom: 1px solid var(–border);
-}
+.bulk-member-stock { font-size: 11px; color: var(--gold); }
+.bulk-select-all { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 12px; color: rgba(255,255,255,0.6); cursor: pointer; border-bottom: 1px solid var(--border); }
 .bulk-actions { display: flex; gap: 8px; margin-top: 8px; }
-.bulk-search {
-width: 100%;
-padding: 10px 14px;
-background: rgba(255,255,255,0.08);
-border: 1px solid var(–border);
-border-radius: 10px;
-color: white;
-font-size: 14px;
-font-family: ‘Noto Sans KR’, sans-serif;
-outline: none;
-margin-bottom: 8px;
-}
-.bulk-search:focus { border-color: var(–purple); }
-/* ===== SETTINGS ===== */
-.setting-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 14px 0;
-border-bottom: 1px solid var(–border);
-}
+.bulk-search { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; outline: none; margin-bottom: 8px; }
+.bulk-search:focus { border-color: var(--purple); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .setting-row:last-child { border-bottom: none; }
 .setting-label { font-size: 14px; color: rgba(255,255,255,0.8); }
-.setting-value { font-family: ‘Jua’, cursive; font-size: 18px; color: var(–gold); }
-
-/* ===== TOAST ===== */
-.toast {
-position: fixed;
-bottom: 90px;
-left: 50%;
-transform: translateX(-50%) translateY(20px);
-background: rgba(30,20,60,0.95);
-border: 1px solid var(–purple);
-color: white;
-padding: 12px 24px;
-border-radius: 24px;
-font-size: 14px;
-z-index: 300;
-opacity: 0;
-transition: all 0.3s;
-pointer-events: none;
-white-space: nowrap;
-backdrop-filter: blur(10px);
-}
+.setting-value { font-family: 'Jua', cursive; font-size: 18px; color: var(--gold); }
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(30,20,60,0.95); border: 1px solid var(--purple); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; z-index: 300; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; backdrop-filter: blur(10px); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ===== EMPTY STATE ===== */
 .empty { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.3); }
 .empty-icon { font-size: 48px; margin-bottom: 12px; }
-
-/* ===== LOADING ===== */
 .loading { text-align: center; padding: 40px; color: rgba(255,255,255,0.5); }
-.spinner {
-width: 40px; height: 40px;
-border: 3px solid rgba(255,255,255,0.1);
-border-top-color: var(–purple);
-border-radius: 50%;
-animation: spin 0.8s linear infinite;
-margin: 0 auto 16px;
-}
+.spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { to{transform:rotate(360deg)} }
-
-/* ===== PRIZE EDIT MODAL ===== */
-.prize-modal {
-display: none;
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.85);
-z-index: 200;
-align-items: flex-end;
-justify-content: center;
-backdrop-filter: blur(6px);
-}
+.prize-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(6px); }
 .prize-modal.active { display: flex; }
-.prize-modal-inner {
-background: linear-gradient(160deg, #2d1b69, #1a0a2e);
-border: 1px solid var(–border);
-border-radius: 24px 24px 0 0;
-padding: 28px 24px 40px;
-width: 100%;
-max-width: 480px;
-animation: slideUp 0.3s ease;
-}
+.prize-modal-inner { background: linear-gradient(160deg, #2d1b69, #1a0a2e); border: 1px solid var(--border); border-radius: 24px 24px 0 0; padding: 28px 24px 40px; width: 100%; max-width: 480px; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.prize-modal-title { font-family: ‘Jua’, cursive; font-size: 20px; color: var(–gold); margin-bottom: 20px; }
-
-/* ===== SCROLLBAR ===== */
+.prize-modal-title { font-family: 'Jua', cursive; font-size: 20px; color: var(--gold); margin-bottom: 20px; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(–purple); border-radius: 2px; }
-
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
 </style>
 </head>
 <body>
-
-<!-- Stars background removed -->
-
-<!-- Toast -->
-
 <div class="toast" id="toast"></div>
-
-<!-- Login Page -->
 
 <div id="loginPage" class="login-wrap" style="background-color:#1a0a2e;position:relative;z-index:1;">
   <div class="login-logo">🎡</div>
@@ -882,105 +210,66 @@ animation: slideUp 0.3s ease;
   </div>
 </div>
 
-<!-- Main App -->
-
 <div id="mainApp" style="display:none;background-color:#1a0a2e;min-height:100vh;">
   <div id="app">
-    <!-- Header -->
     <div class="header">
-      <!-- 상단 행: 여백(나가기용) / 타이틀 / 나가기 -->
       <div class="header-top-row">
         <div style="width:60px"></div>
         <div class="header-title">🎡 사내 오락실</div>
         <button class="btn-logout" onclick="logout()">나가기</button>
       </div>
-      <!-- 닉네임 한 줄 -->
       <div class="header-user">
         <strong id="headerName">-</strong>
         <span id="headerRole" style="font-size:11px;opacity:0.7;margin-left:4px;"></span>
       </div>
-      <!-- 내 당첨 배지 -->
       <div id="headerPrizesWrap" style="display:none;width:100%">
         <span class="header-prizes-label" style="text-align:center;display:block;">내 당첨</span>
         <div class="header-prizes" id="headerPrizes" style="justify-content:center;max-width:100%;flex-wrap:wrap;">-</div>
       </div>
     </div>
 
-<!-- Nav -->
-
+```
 <div class="nav" id="mainNav">
-  <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha">
-    <span>🎡</span>뽑기
-  </button>
-  <button class="nav-btn" onclick="showPage('history')" data-page="history">
-    <span>📜</span>기록
-  </button>
-  <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none">
-    <span>👥</span>멤버
-  </button>
-  <button class="nav-btn admin-only" onclick="showPage('prizes')" data-page="prizes" style="display:none">
-    <span>🎁</span>경품
-  </button>
-  <button class="nav-btn admin-only" onclick="showPage('settings')" data-page="settings" style="display:none">
-    <span>⚙️</span>설정
-  </button>
+  <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha"><span>🎡</span>뽑기</button>
+  <button class="nav-btn" onclick="showPage('history')" data-page="history"><span>📜</span>기록</button>
+  <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none"><span>👥</span>멤버</button>
+  <button class="nav-btn admin-only" onclick="showPage('prizes')" data-page="prizes" style="display:none"><span>🎁</span>경품</button>
+  <button class="nav-btn admin-only" onclick="showPage('settings')" data-page="settings" style="display:none"><span>⚙️</span>설정</button>
 </div>
 
-<!-- GACHA PAGE -->
-
 <div class="page active" id="pageGacha">
-  <!-- Notice -->
   <div class="notice-card" id="noticeCard"></div>
-
-  <!-- Stock badge (shared) -->
-
   <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
     <div class="stock-badge">
       <div class="label">보유 주식</div>
       <div class="value" id="myStockDisplay">0 주</div>
       <div class="cost-info" id="costInfo">1판 = ? 주</div>
     </div>
-    <!-- Mode toggle -->
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeRoulette" onclick="switchMode('roulette')">🎡 룰렛</button>
       <button class="mode-btn" id="modeGacha" onclick="switchMode('gacha')">🎰 가챠</button>
     </div>
   </div>
-
-  <!-- ROULETTE MODE -->
-
   <div id="modeRouletteWrap" class="roulette-wrap" style="padding-top:0">
     <div class="roulette-container">
       <div class="roulette-pointer"></div>
       <canvas class="roulette-canvas" id="rouletteCanvas" width="300" height="300"></canvas>
       <div class="roulette-center"></div>
     </div>
-    <button class="btn-spin" id="spinBtn" onclick="doSpin()">
-      🎡 돌리기!
-    </button>
+    <button class="btn-spin" id="spinBtn" onclick="doSpin()">🎡 돌리기!</button>
     <div class="prize-legend" id="prizeLegend"></div>
   </div>
-
-  <!-- GACHA MACHINE MODE -->
-
   <div id="modeGachaWrap" class="gacha-machine-wrap" style="display:none;padding-top:4px">
     <div class="machine-body" id="machineBody">
       <div class="machine-label">✨ LUCKY GACHA ✨</div>
-      <div class="machine-screen">
-        <div id="screenContent" class="screen-idle">🎰</div>
-      </div>
+      <div class="machine-screen"><div id="screenContent" class="screen-idle">🎰</div></div>
       <div class="machine-ball"></div>
-      <button class="btn-gacha" id="gachaSlotBtn" onclick="doGachaSlot()">
-        뽑 기 !
-      </button>
+      <button class="btn-gacha" id="gachaSlotBtn" onclick="doGachaSlot()">뽑 기 !</button>
     </div>
   </div>
 </div>
 
-<!-- HISTORY PAGE -->
-
 <div class="page" id="pageHistory">
-  <!-- 멤버용 연차 지급 내역 -->
   <div id="myLeaveCard" style="display:none;margin-bottom:12px;">
     <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
       <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 지급 내역</div>
@@ -991,8 +280,6 @@ animation: slideUp 0.3s ease;
   <div class="filter-tabs" id="historyFilterTabs"></div>
   <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
-
-<!-- MEMBERS PAGE (admin) -->
 
 <div class="page" id="pageMembers">
   <div class="section-title">👥 멤버 관리</div>
@@ -1006,8 +293,6 @@ animation: slideUp 0.3s ease;
   <div id="memberList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
 
-<!-- PRIZES PAGE (admin) -->
-
 <div class="page" id="pagePrizes">
   <div class="section-title">🎁 경품 관리</div>
   <div class="card" style="padding:14px 16px">
@@ -1017,10 +302,6 @@ animation: slideUp 0.3s ease;
   <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
   <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
 </div>
-
-<!-- SETTINGS PAGE (admin) -->
-
-<!-- ★ 버그수정: 아래 pageSettings div 안에 연차내역조회/공지사항편집/경품관리 섹션을 모두 포함시킴 -->
 
 <div class="page" id="pageSettings">
   <div class="section-title">⚙️ 설정</div>
@@ -1076,14 +357,10 @@ animation: slideUp 0.3s ease;
     <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급 시에만 저장됩니다</div>
   </div>
 
-  <!-- 관리자용 멤버 연차 내역 조회 -->
-
   <div class="section-title" style="margin-top:20px">🏖️ 연차 내역 조회</div>
   <div class="card">
     <div id="leaveViewList" style="font-size:13px;color:rgba(255,255,255,0.5)">불러오는 중...</div>
   </div>
-
-  <!-- 공지사항 편집 -->
 
   <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
   <div class="card" id="noticeEditorCard">
@@ -1095,8 +372,6 @@ animation: slideUp 0.3s ease;
       <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
     </div>
   </div>
-
-  <!-- 경품 관리 (지급/차감) -->
 
   <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
   <div class="card">
@@ -1113,11 +388,11 @@ animation: slideUp 0.3s ease;
       <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
     </div>
   </div>
-
 </div>
-<!-- ★ pageSettings 닫힘 — 위 3개 섹션은 모두 이 안에 있어야 함 -->
+```
 
-<!-- Result Modal -->
+  </div>
+</div>
 
 <div class="modal-overlay" id="resultModal">
   <div class="modal">
@@ -1128,24 +403,13 @@ animation: slideUp 0.3s ease;
   </div>
 </div>
 
-<!-- Prize Edit Modal -->
-
 <div class="prize-modal" id="prizeModal">
   <div class="prize-modal-inner">
     <div class="prize-modal-title" id="prizeModalTitle">경품 설정</div>
     <input type="hidden" id="editPrizeKey">
-    <div class="input-group">
-      <label>이름</label>
-      <input type="text" id="editPrizeName" placeholder="경품 이름">
-    </div>
-    <div class="input-group">
-      <label>이모지</label>
-      <input type="text" id="editPrizeEmoji" placeholder="🎁">
-    </div>
-    <div class="input-group">
-      <label>확률 (%)</label>
-      <input type="number" id="editPrizeProb" placeholder="0~100" min="0" max="100">
-    </div>
+    <div class="input-group"><label>이름</label><input type="text" id="editPrizeName" placeholder="경품 이름"></div>
+    <div class="input-group"><label>이모지</label><input type="text" id="editPrizeEmoji" placeholder="🎁"></div>
+    <div class="input-group"><label>확률 (%)</label><input type="number" id="editPrizeProb" placeholder="0~100" min="0" max="100"></div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn-primary" style="flex:1" onclick="savePrize()">저장</button>
       <button onclick="closePrizeModal()" style="flex:1;padding:14px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:14px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;">취소</button>
@@ -1153,1343 +417,442 @@ animation: slideUp 0.3s ease;
   </div>
 </div>
 
-  </div><!-- #app 닫힘 -->
-</div><!-- #mainApp 닫힘 -->
-
 <script>
-// ===== Firebase Config =====
-const DB_URL = 'https://gacha-31-default-rtdb.firebaseio.com';
+const DB_URL='https://gacha-31-default-rtdb.firebaseio.com';
+async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
+async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
+async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
+async function fbDelete(path){try{await fetch(`${DB_URL}/${path}.json`,{method:'DELETE'});}catch(e){}}
 
-async function fbGet(path) {
-  try {
-    const r = await fetch(`${DB_URL}/${path}.json`);
-    return await r.json();
-  } catch(e) { return null; }
-}
-
-async function fbSet(path, data) {
-  try {
-    await fetch(`${DB_URL}/${path}.json`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
-  } catch(e) {}
-}
-
-async function fbPush(path, data) {
-  try {
-    const r = await fetch(`${DB_URL}/${path}.json`, {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-    return await r.json();
-  } catch(e) { return null; }
-}
-
-async function fbDelete(path) {
-  try {
-    await fetch(`${DB_URL}/${path}.json`, { method: 'DELETE' });
-  } catch(e) {}
-}
-
-// ===== State =====
-let currentUser = null; // { name, role, key }
-
-// 새로고침 시 로그인 상태 복원
-(function restoreLogin() {
-  const saved = localStorage.getItem('currentUser');
-  if (saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      // DOM 준비 후 enterApp 실행
-      window.addEventListener('DOMContentLoaded', () => enterApp());
-    } catch(e) {
-      localStorage.removeItem('currentUser');
-    }
-  }
+let currentUser=null;
+(function restoreLogin(){
+  const saved=localStorage.getItem('currentUser');
+  if(saved){try{currentUser=JSON.parse(saved);window.addEventListener('DOMContentLoaded',()=>enterApp());}catch(e){localStorage.removeItem('currentUser');}}
 })();
-let loginTab = 'member';
-let allMembers = {};
-let allPrizes = {};
-let costPerRoll = 10;
+let loginTab='member',allMembers={},allPrizes={},costPerRoll=10;
 
-
-// ===== Stars removed =====
-
-// ===== Init =====
-async function init() {
-  const members = await fbGet('members');
-  allMembers = members || {};
-
-  const prizes = await fbGet('prizes');
-  allPrizes = prizes;
-  if (!prizes) {
-    // default prizes
-    allPrizes = {
-      p1: { name: '연차', emoji: '🏖️', prob: 10 },
-      p2: { name: '투피드', emoji: '🍔', prob: 40 },
-      p3: { name: '출근확인증', emoji: '📋', prob: 50 }
-    };
-    await fbSet('prizes', allPrizes);
-  }
-
-  const cost = await fbGet('costPerRoll');
-  costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
-
-  // populate member select
+async function init(){
+  const members=await fbGet('members');allMembers=members||{};
+  const prizes=await fbGet('prizes');allPrizes=prizes;
+  if(!prizes){allPrizes={p1:{name:'연차',emoji:'🏖️',prob:10},p2:{name:'투피드',emoji:'🍔',prob:40},p3:{name:'출근확인증',emoji:'📋',prob:50}};await fbSet('prizes',allPrizes);}
+  const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   populateMemberSelect();
 }
+function populateMemberSelect(){populateGiveStockSelect();}
 
-function populateMemberSelect() {
-  // 로그인은 직접 입력 방식 - select 없음, giveStock select만 별도 유지
-  populateGiveStockSelect();
+function switchLoginTab(tab){
+  loginTab=tab;
+  document.querySelectorAll('.login-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='member')||(i===1&&tab==='admin')));
+  document.getElementById('memberLoginForm').style.display=tab==='member'?'':'none';
+  document.getElementById('adminLoginForm').style.display=tab==='admin'?'':'none';
 }
 
-// ===== Login =====
-function switchLoginTab(tab) {
-  loginTab = tab;
-  document.querySelectorAll('.login-tab').forEach((t,i) => {
-    t.classList.toggle('active', (i===0 && tab==='member') || (i===1 && tab==='admin'));
-  });
-  document.getElementById('memberLoginForm').style.display = tab === 'member' ? '' : 'none';
-  document.getElementById('adminLoginForm').style.display = tab === 'admin' ? '' : 'none';
-}
-
-async function doLogin() {
-  if (loginTab === 'admin') {
-    const pw = document.getElementById('adminPassword').value;
-    if (pw !== 'admin1234') { showToast('❌ 비밀번호가 틀렸습니다'); return; }
-    currentUser = { name: '관리자', role: 'admin', key: null };
-    enterApp();
-  } else {
-    const inputName = document.getElementById('memberNameInput').value.trim();
-    if (!inputName) { showToast('이름을 입력해주세요'); return; }
-
-    // Firebase에서 최신 멤버 목록 가져와서 매칭
-    const members = await fbGet('members');
-    allMembers = members || {};
-    const match = Object.entries(allMembers).find(([k, m]) =>
-      m.name.trim() === inputName
-    );
-
-    if (!match) {
-      showToast('❌ 등록되지 않은 이름입니다');
-      return;
-    }
-    const [key, memberData] = match;
-    currentUser = { name: memberData.name, role: 'member', key };
-    enterApp();
+async function doLogin(){
+  if(loginTab==='admin'){
+    const pw=document.getElementById('adminPassword').value;
+    if(pw!=='admin1234'){showToast('❌ 비밀번호가 틀렸습니다');return;}
+    currentUser={name:'관리자',role:'admin',key:null};enterApp();
+  }else{
+    const inputName=document.getElementById('memberNameInput').value.trim();
+    if(!inputName){showToast('이름을 입력해주세요');return;}
+    const members=await fbGet('members');allMembers=members||{};
+    const match=Object.entries(allMembers).find(([k,m])=>m.name.trim()===inputName);
+    if(!match){showToast('❌ 등록되지 않은 이름입니다');return;}
+    const[key,memberData]=match;currentUser={name:memberData.name,role:'member',key};enterApp();
   }
 }
 
-function enterApp() {
-  // 로그인 상태 저장 (새로고침 유지)
-  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+function enterApp(){
+  localStorage.setItem('currentUser',JSON.stringify(currentUser));
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('mainApp').style.display='';
+  document.getElementById('headerName').textContent=currentUser.name;
+  document.getElementById('headerRole').textContent=currentUser.role==='admin'?'관리자':'참여자';
+  const isAdmin=currentUser.role==='admin';
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  if(!isAdmin){document.getElementById('headerPrizesWrap').style.display='';refreshHeaderPrizes();}
+  else document.getElementById('headerPrizesWrap').style.display='none';
+  loadNotice();showPage('gacha');
+}
 
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('mainApp').style.display = '';
-  document.getElementById('headerName').textContent = currentUser.name;
-  document.getElementById('headerRole').textContent = currentUser.role === 'admin' ? '관리자' : '참여자';
-
-  const isAdmin = currentUser.role === 'admin';
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = isAdmin ? '' : 'none';
-  });
-
-  // Show prize badge for members
-  if (!isAdmin) {
-    document.getElementById('headerPrizesWrap').style.display = '';
-    refreshHeaderPrizes();
-  } else {
-    document.getElementById('headerPrizesWrap').style.display = 'none';
+async function refreshHeaderPrizes(){
+  if(!currentUser||currentUser.role==='admin')return;
+  const el=document.getElementById('headerPrizes');
+  let prizes=await fbGet(`memberPrizes/${currentUser.key}`);
+  if(!prizes||prizes.length===0){
+    const history=await fbGet('history');
+    if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name).map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
   }
+  const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
+  const counts={};
+  (prizes||[]).forEach(p=>{const key=p.name;if(!counts[key])counts[key]={emoji:p.emoji,name:p.name,count:0};counts[key].count++;});
+  if(manualLeave>0){if(counts['연차'])counts['연차'].count+=manualLeave;else counts['연차']={emoji:'🏖️',name:'연차',count:manualLeave};}
+  if(Object.keys(counts).length===0)el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
+  else el.innerHTML=Object.values(counts).map(p=>`<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
+}
 
-  loadNotice();
+function logout(){
+  currentUser=null;localStorage.removeItem('currentUser');window._shuffledPrizeKeys=null;
+  document.getElementById('loginPage').style.display='';document.getElementById('mainApp').style.display='none';
+  document.getElementById('adminPassword').value='';document.getElementById('memberNameInput').value='';
   showPage('gacha');
 }
 
-async function refreshHeaderLeave() {
-  if (!currentUser || currentUser.role === 'admin') return;
-  const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
-  const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
-  const prizeLeave = prizes.filter(p => p.name === '연차').length;
-  const total = manualLeave + prizeLeave;
-  const el = document.getElementById('headerLeave');
-  if (el) el.textContent = `🏖️ ${total}일`;
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1)).classList.add('active');
+  const btn=document.querySelector(`.nav-btn[data-page="${page}"]`);if(btn)btn.classList.add('active');
+  if(page==='gacha'){refreshGachaPage();loadNotice();}
+  if(page==='history')loadHistory();
+  if(page==='members')loadMembers();
+  if(page==='prizes')loadPrizes();
+  if(page==='settings')loadSettings();
 }
 
-async function refreshHeaderPrizes() {
-  if (!currentUser || currentUser.role === 'admin') return;
-  const el = document.getElementById('headerPrizes');
+const SLICE_COLORS=['#6C35DE','#FF6B9D','#00C9A7','#F7B731','#FC5C65','#45AAF2','#A55EEA','#26DE81','#FD9644','#2BCBBA'];
+let rouletteAngle=0,isSpinning=false,currentMode='roulette',slotSpinInterval=null;
 
-  // memberPrizes 없으면 history에서 자동 마이그레이션
-  let prizes = await fbGet(`memberPrizes/${currentUser.key}`);
-  if (!prizes || prizes.length === 0) {
-    const history = await fbGet('history');
-    if (history) {
-      const myItems = Object.values(history)
-        .filter(h => h.name === currentUser.name)
-        .map(h => ({ emoji: h.emoji, name: h.prize, time: h.time || 0 }));
-      if (myItems.length > 0) {
-        await fbSet(`memberPrizes/${currentUser.key}`, myItems);
-        prizes = myItems;
-      }
-    }
+function drawRoulette(){
+  const canvas=document.getElementById('rouletteCanvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,r=W/2-2;
+  ctx.clearRect(0,0,W,H);
+  const rawPrizes=Object.values(allPrizes);if(!rawPrizes.length)return;
+  if(!window._shuffledPrizeKeys||window._shuffledPrizeKeys.length!==rawPrizes.length){
+    window._shuffledPrizeKeys=[...Array(rawPrizes.length).keys()];
+    for(let i=window._shuffledPrizeKeys.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[window._shuffledPrizeKeys[i],window._shuffledPrizeKeys[j]]=[window._shuffledPrizeKeys[j],window._shuffledPrizeKeys[i]];}
   }
-
-  // 수동 연차를 경품 목록에 합산
-  const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
-
-  const counts = {};
-  (prizes || []).forEach(p => {
-    // 이름 기준으로 합산 (이모지 달라도 같은 이름이면 하나로)
-    const key = p.name;
-    if (!counts[key]) counts[key] = { emoji: p.emoji, name: p.name, count: 0 };
-    counts[key].count++;
+  const prizes=window._shuffledPrizeKeys.map(i=>rawPrizes[i]);
+  const total=prizes.reduce((s,p)=>s+(p.prob||0),0)||100;
+  let startAngle=(rouletteAngle-90)*Math.PI/180;
+  prizes.forEach((p,i)=>{
+    const sliceAngle=((p.prob||0)/total)*2*Math.PI,endAngle=startAngle+sliceAngle,color=SLICE_COLORS[i%SLICE_COLORS.length];
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,startAngle,endAngle);ctx.closePath();ctx.fillStyle=color;ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,startAngle,endAngle);ctx.closePath();ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=2;ctx.stroke();
+    const midAngle=startAngle+sliceAngle/2,labelR=r*0.62,lx=cx+labelR*Math.cos(midAngle),ly=cy+labelR*Math.sin(midAngle);
+    ctx.save();ctx.translate(lx,ly);ctx.rotate(midAngle+Math.PI/2);
+    ctx.font=sliceAngle>0.4?'22px serif':'14px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.emoji||'🎁',0,sliceAngle>0.5?-12:0);
+    if(sliceAngle>0.35){ctx.font='bold 12px "Noto Sans KR",sans-serif';ctx.fillStyle='#fff';ctx.fillText(p.name||'',0,10);}
+    ctx.restore();startAngle=endAngle;
   });
-
-  // 수동 연차 - 이름 기준으로 합산
-  if (manualLeave > 0) {
-    if (counts['연차']) {
-      counts['연차'].count += manualLeave;
-    } else {
-      counts['연차'] = { emoji: '🏖️', name: '연차', count: manualLeave };
-    }
-  }
-
-  if (Object.keys(counts).length === 0) {
-    el.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
-  } else {
-    el.innerHTML = Object.values(counts).map(p =>
-      `<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;">
-        <span style="font-size:14px">${p.emoji}</span>
-        <span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span>
-        <span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span>
-      </span>`
-    ).join('');
-  }
+  ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='rgba(255,215,0,0.6)';ctx.lineWidth=3;ctx.stroke();
 }
 
-function logout() {
-  currentUser = null;
-  localStorage.removeItem('currentUser');
-  window._shuffledPrizeKeys = null;
-  document.getElementById('loginPage').style.display = '';
-  document.getElementById('mainApp').style.display = 'none';
-  document.getElementById('adminPassword').value = '';
-  document.getElementById('memberNameInput').value = '';
-  showPage('gacha');
+function renderPrizeLegend(){
+  const legend=document.getElementById('prizeLegend');if(!legend)return;
+  legend.innerHTML=Object.values(allPrizes).map((p,i)=>`<div class="legend-item"><div class="legend-color" style="background:${SLICE_COLORS[i%SLICE_COLORS.length]}"></div><span style="font-size:18px">${p.emoji}</span><span class="legend-name">${escHtml(p.name)}</span><span class="legend-prob">${p.prob}%</span></div>`).join('');
 }
 
-// ===== Pages =====
-function showPage(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
-  const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
-  if (btn) btn.classList.add('active');
-
-  if (page === 'gacha') { refreshGachaPage(); loadNotice(); }
-  if (page === 'history') loadHistory();
-  if (page === 'members') loadMembers();
-  if (page === 'prizes') loadPrizes();
-  // ★ 버그수정: setTimeout 제거하고 loadSettings 안에서 loadLeaveView() 직접 호출
-  if (page === 'settings') { loadSettings(); }
+function switchMode(mode){
+  currentMode=mode;
+  document.getElementById('modeRouletteWrap').style.display=mode==='roulette'?'':'none';
+  document.getElementById('modeGachaWrap').style.display=mode==='gacha'?'':'none';
+  document.getElementById('modeRoulette').classList.toggle('active',mode==='roulette');
+  document.getElementById('modeGacha').classList.toggle('active',mode==='gacha');
+  if(mode==='roulette'){drawRoulette();renderPrizeLegend();}
+  else{const sc=document.getElementById('screenContent');sc.className='screen-idle';sc.textContent='🎰';}
 }
 
-// ===== Roulette Drawing =====
-const SLICE_COLORS = [
-  '#6C35DE','#FF6B9D','#00C9A7','#F7B731','#FC5C65',
-  '#45AAF2','#A55EEA','#26DE81','#FD9644','#2BCBBA'
-];
-
-let rouletteAngle = 0;
-let isSpinning = false;
-let currentMode = 'roulette'; // 'roulette' | 'gacha'
-let slotSpinInterval = null;
-
-function drawRoulette() {
-  const canvas = document.getElementById('rouletteCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W / 2, cy = H / 2, r = W / 2 - 2;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const rawPrizes = Object.values(allPrizes);
-  const keys = Object.keys(allPrizes);
-  if (!rawPrizes.length) return;
-
-  // 세션 고정 셔플 (로그인 시 한 번 섞어서 유지)
-  if (!window._shuffledPrizeKeys || window._shuffledPrizeKeys.length !== rawPrizes.length) {
-    window._shuffledPrizeKeys = [...Array(rawPrizes.length).keys()];
-    for (let i = window._shuffledPrizeKeys.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [window._shuffledPrizeKeys[i], window._shuffledPrizeKeys[j]] = [window._shuffledPrizeKeys[j], window._shuffledPrizeKeys[i]];
-    }
-  }
-  const prizes = window._shuffledPrizeKeys.map(i => rawPrizes[i]);
-
-  const total = prizes.reduce((s, p) => s + (p.prob || 0), 0) || 100;
-  let startAngle = (rouletteAngle - 90) * Math.PI / 180;
-
-  prizes.forEach((p, i) => {
-    const sliceAngle = ((p.prob || 0) / total) * 2 * Math.PI;
-    const endAngle = startAngle + sliceAngle;
-    const color = SLICE_COLORS[i % SLICE_COLORS.length];
-
-    // Slice fill
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    // Slice border
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startAngle, endAngle);
-    ctx.closePath();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Label (emoji + name)
-    const midAngle = startAngle + sliceAngle / 2;
-    const labelR = r * 0.62;
-    const lx = cx + labelR * Math.cos(midAngle);
-    const ly = cy + labelR * Math.sin(midAngle);
-
-    ctx.save();
-    ctx.translate(lx, ly);
-    ctx.rotate(midAngle + Math.PI / 2);
-
-    // Emoji
-    ctx.font = sliceAngle > 0.4 ? '22px serif' : '14px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.fillText(p.emoji || '🎁', 0, sliceAngle > 0.5 ? -12 : 0);
-
-    // Name text (only if slice is big enough)
-    if (sliceAngle > 0.35) {
-      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
-      ctx.fillStyle = '#fff';
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.fillText(p.name || '', 0, 10);
-    }
-    ctx.restore();
-
-    startAngle = endAngle;
-  });
-
-  // Outer ring
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(255,215,0,0.6)';
-  ctx.lineWidth = 3;
-  ctx.stroke();
+async function refreshGachaPage(){
+  if(!currentUser)return;
+  const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
+  document.getElementById('costInfo').textContent=`1판 = ${costPerRoll}주`;
+  const prizes=await fbGet('prizes');allPrizes=prizes||allPrizes;
+  if(currentUser.role==='member'){
+    const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
+    document.getElementById('myStockDisplay').textContent=`${stock} 주`;
+    const noStock=stock<costPerRoll;document.getElementById('spinBtn').disabled=noStock;document.getElementById('gachaSlotBtn').disabled=noStock;
+  }else{document.getElementById('myStockDisplay').textContent='∞ 주';document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;}
+  drawRoulette();renderPrizeLegend();
 }
 
-function renderPrizeLegend() {
-  const legend = document.getElementById('prizeLegend');
-  if (!legend) return;
-  const prizes = Object.values(allPrizes);
-  const total = prizes.reduce((s, p) => s + (p.prob || 0), 0) || 100;
-  legend.innerHTML = prizes.map((p, i) => `
-    <div class="legend-item">
-      <div class="legend-color" style="background:${SLICE_COLORS[i % SLICE_COLORS.length]}"></div>
-      <span style="font-size:18px">${p.emoji}</span>
-      <span class="legend-name">${escHtml(p.name)}</span>
-      <span class="legend-prob">${p.prob}%</span>
-    </div>
-  `).join('');
-}
-
-// ===== Mode Switch =====
-function switchMode(mode) {
-  currentMode = mode;
-  document.getElementById('modeRouletteWrap').style.display = mode === 'roulette' ? '' : 'none';
-  document.getElementById('modeGachaWrap').style.display = mode === 'gacha' ? '' : 'none';
-  document.getElementById('modeRoulette').classList.toggle('active', mode === 'roulette');
-  document.getElementById('modeGacha').classList.toggle('active', mode === 'gacha');
-  if (mode === 'roulette') {
-    drawRoulette();
-    renderPrizeLegend();
-  } else {
-    // reset slot screen
-    const sc = document.getElementById('screenContent');
-    sc.className = 'screen-idle';
-    sc.textContent = '🎰';
-  }
-}
-
-// ===== Gacha Page =====
-async function refreshGachaPage() {
-  if (!currentUser) return;
-  const cost = await fbGet('costPerRoll');
-  costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
-  document.getElementById('costInfo').textContent = `1판 = ${costPerRoll}주`;
-
-  const prizes = await fbGet('prizes');
-  allPrizes = prizes || allPrizes;
-
-  if (currentUser.role === 'member') {
-    const member = await fbGet(`members/${currentUser.key}`);
-    const stock = member ? (member.stock || 0) : 0;
-    document.getElementById('myStockDisplay').textContent = `${stock} 주`;
-    const noStock = stock < costPerRoll;
-    document.getElementById('spinBtn').disabled = noStock;
-    document.getElementById('gachaSlotBtn').disabled = noStock;
-  } else {
-    document.getElementById('myStockDisplay').textContent = '∞ 주';
-    document.getElementById('spinBtn').disabled = false;
-    document.getElementById('gachaSlotBtn').disabled = false;
-  }
-
-  drawRoulette();
-  renderPrizeLegend();
-}
-
-async function deductStockAndCheck() {
-  if (currentUser.role === 'member') {
-    const member = await fbGet(`members/${currentUser.key}`);
-    const stock = member ? (member.stock || 0) : 0;
-    if (stock < costPerRoll) {
-      showToast('주식이 부족합니다!');
-      return false;
-    }
-    await fbSet(`members/${currentUser.key}/stock`, stock - costPerRoll);
+async function deductStockAndCheck(){
+  if(currentUser.role==='member'){
+    const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
+    if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
+    await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
   }
   return true;
 }
 
-function refreshStockDisplay(enableBtns) {
-  if (currentUser.role === 'member') {
-    fbGet(`members/${currentUser.key}`).then(m => {
-      const s = m ? (m.stock || 0) : 0;
-      document.getElementById('myStockDisplay').textContent = `${s} 주`;
-      const noStock = s < costPerRoll;
-      document.getElementById('spinBtn').disabled = noStock;
-      document.getElementById('gachaSlotBtn').disabled = noStock;
-    });
-  } else if (enableBtns) {
-    document.getElementById('spinBtn').disabled = false;
-    document.getElementById('gachaSlotBtn').disabled = false;
-  }
+function refreshStockDisplay(enableBtns){
+  if(currentUser.role==='member'){
+    fbGet(`members/${currentUser.key}`).then(m=>{const s=m?(m.stock||0):0;document.getElementById('myStockDisplay').textContent=`${s} 주`;const noStock=s<costPerRoll;document.getElementById('spinBtn').disabled=noStock;document.getElementById('gachaSlotBtn').disabled=noStock;});
+  }else if(enableBtns){document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;}
 }
 
-async function showPrizeModal(prize) {
-  document.getElementById('modalEmoji').textContent = prize.emoji;
-  document.getElementById('modalPrize').textContent = prize.name;
-  document.getElementById('modalMsg').textContent = `${currentUser.name}님 축하합니다! 🎉`;
+async function showPrizeModal(prize){
+  document.getElementById('modalEmoji').textContent=prize.emoji;
+  document.getElementById('modalPrize').textContent=prize.name;
+  document.getElementById('modalMsg').textContent=`${currentUser.name}님 축하합니다! 🎉`;
   document.getElementById('resultModal').classList.add('active');
-
-  // Save prize to member's prize list (members only)
-  if (currentUser && currentUser.role === 'member') {
-    const current = await fbGet(`memberPrizes/${currentUser.key}`) || [];
-    current.push({ emoji: prize.emoji, name: prize.name, time: Date.now() });
-    await fbSet(`memberPrizes/${currentUser.key}`, current);
-    refreshHeaderPrizes();
+  if(currentUser&&currentUser.role==='member'){
+    const current=await fbGet(`memberPrizes/${currentUser.key}`)||[];
+    current.push({emoji:prize.emoji,name:prize.name,time:Date.now()});
+    await fbSet(`memberPrizes/${currentUser.key}`,current);refreshHeaderPrizes();
   }
 }
 
-// ===== ROULETTE SPIN =====
-async function doSpin() {
-  if (isSpinning) return;
-  const btn = document.getElementById('spinBtn');
-  btn.disabled = true;
-  isSpinning = true;
-
-  const ok = await deductStockAndCheck();
-  if (!ok) { btn.disabled = false; isSpinning = false; return; }
-
-  const prize = drawPrize();
-  const prizes = Object.values(allPrizes);
-  const total = prizes.reduce((s, p) => s + (p.prob || 0), 0) || 100;
-  let cumulative = 0, prizeStart = 0, prizeEnd = 0;
-  for (const p of prizes) {
-    const sliceDeg = (p.prob / total) * 360;
-    if (p.name === prize.name && p.emoji === prize.emoji) {
-      prizeEnd = cumulative + sliceDeg;
-      prizeStart = cumulative;
-      break;
-    }
-    cumulative += sliceDeg;
-  }
-  const prizeMid = prizeStart + (prizeEnd - prizeStart) / 2;
-  const extraSpins = 5 + Math.floor(Math.random() * 4);
-  const jitter = (Math.random() - 0.5) * (prizeEnd - prizeStart) * 0.6;
-  const targetAngle = rouletteAngle - (rouletteAngle % 360) + extraSpins * 360 + (360 - prizeMid) + jitter;
-  const duration = 4000 + Math.random() * 1000;
-  const startAngle = rouletteAngle;
-  const startTime = performance.now();
-
-  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
-
-  function animate(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    rouletteAngle = startAngle + (targetAngle - startAngle) * easeOut(progress);
-    drawRoulette();
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      rouletteAngle = targetAngle % 360;
-      drawRoulette();
-      isSpinning = false;
-      fbPush('history', { name: currentUser.name, prize: prize.name, emoji: prize.emoji, time: Date.now() });
-      setTimeout(() => showPrizeModal(prize), 300);
-      refreshStockDisplay(true);
-    }
+async function doSpin(){
+  if(isSpinning)return;
+  const btn=document.getElementById('spinBtn');btn.disabled=true;isSpinning=true;
+  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
+  const prize=drawPrize();
+  const prizes=Object.values(allPrizes);const total=prizes.reduce((s,p)=>s+(p.prob||0),0)||100;
+  let cumulative=0,prizeStart=0,prizeEnd=0;
+  for(const p of prizes){const sliceDeg=(p.prob/total)*360;if(p.name===prize.name&&p.emoji===prize.emoji){prizeEnd=cumulative+sliceDeg;prizeStart=cumulative;break;}cumulative+=sliceDeg;}
+  const prizeMid=prizeStart+(prizeEnd-prizeStart)/2;
+  const extraSpins=5+Math.floor(Math.random()*4);
+  const jitter=(Math.random()-0.5)*(prizeEnd-prizeStart)*0.6;
+  const targetAngle=rouletteAngle-(rouletteAngle%360)+extraSpins*360+(360-prizeMid)+jitter;
+  const duration=4000+Math.random()*1000;const startAngle=rouletteAngle;const startTime=performance.now();
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function animate(now){
+    const elapsed=now-startTime;const progress=Math.min(elapsed/duration,1);
+    rouletteAngle=startAngle+(targetAngle-startAngle)*easeOut(progress);drawRoulette();
+    if(progress<1)requestAnimationFrame(animate);
+    else{rouletteAngle=targetAngle%360;drawRoulette();isSpinning=false;fbPush('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:Date.now()});setTimeout(()=>showPrizeModal(prize),300);refreshStockDisplay(true);}
   }
   requestAnimationFrame(animate);
 }
 
-// ===== SLOT MACHINE =====
-async function doGachaSlot() {
-  const btn = document.getElementById('gachaSlotBtn');
-  btn.disabled = true;
-
-  const ok = await deductStockAndCheck();
-  if (!ok) { btn.disabled = false; return; }
-
-  const screen = document.getElementById('screenContent');
-  const machine = document.getElementById('machineBody');
-  machine.classList.add('machine-shake');
-  setTimeout(() => machine.classList.remove('machine-shake'), 500);
-
-  screen.className = 'screen-spinning';
-  const emojiList = Object.values(allPrizes).map(p => p.emoji);
-  let i = 0;
-  slotSpinInterval = setInterval(() => {
-    screen.textContent = emojiList[i % emojiList.length];
-    i++;
-  }, 100);
-
-  const prize = drawPrize();
-
-  setTimeout(async () => {
-    clearInterval(slotSpinInterval);
-    screen.className = 'screen-result';
-    screen.textContent = prize.emoji;
-    await fbPush('history', { name: currentUser.name, prize: prize.name, emoji: prize.emoji, time: Date.now() });
-    showPrizeModal(prize);
-    refreshStockDisplay(true);
-  }, 1800);
+async function doGachaSlot(){
+  const btn=document.getElementById('gachaSlotBtn');btn.disabled=true;
+  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;return;}
+  const screen=document.getElementById('screenContent');const machine=document.getElementById('machineBody');
+  machine.classList.add('machine-shake');setTimeout(()=>machine.classList.remove('machine-shake'),500);
+  screen.className='screen-spinning';
+  const emojiList=Object.values(allPrizes).map(p=>p.emoji);let i=0;
+  slotSpinInterval=setInterval(()=>{screen.textContent=emojiList[i%emojiList.length];i++;},100);
+  const prize=drawPrize();
+  setTimeout(async()=>{clearInterval(slotSpinInterval);screen.className='screen-result';screen.textContent=prize.emoji;await fbPush('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:Date.now()});showPrizeModal(prize);refreshStockDisplay(true);},1800);
 }
 
-function drawPrize() {
-  const prizes = Object.values(allPrizes);
-  const total = prizes.reduce((s, p) => s + (p.prob || 0), 0);
-  let rand = Math.random() * total;
-  for (const p of prizes) {
-    rand -= (p.prob || 0);
-    if (rand <= 0) return p;
-  }
-  return prizes[prizes.length - 1];
+function drawPrize(){
+  const prizes=Object.values(allPrizes);const total=prizes.reduce((s,p)=>s+(p.prob||0),0);
+  let rand=Math.random()*total;for(const p of prizes){rand-=(p.prob||0);if(rand<=0)return p;}
+  return prizes[prizes.length-1];
 }
 
-function closeModal() {
+function closeModal(){
   document.getElementById('resultModal').classList.remove('active');
-  // Reset slot screen when closing
-  const sc = document.getElementById('screenContent');
-  if (sc) { sc.className = 'screen-idle'; sc.textContent = '🎰'; }
+  const sc=document.getElementById('screenContent');if(sc){sc.className='screen-idle';sc.textContent='🎰';}
 }
 
-// ===== History =====
-let historyFilter = '전체'; // current filter
-let allHistoryItems = []; // cache
+let historyFilter='전체',allHistoryItems=[];
 
-async function loadHistory() {
-  // 멤버용 연차 내역 표시
-  if (currentUser && currentUser.role === 'member') {
-    const leaveCard = document.getElementById('myLeaveCard');
-    const leaveLogList = document.getElementById('myLeaveLogList');
-    const leaveLog = await fbGet(`leaveLog/${currentUser.key}`);
-    const manualLeave = await fbGet(`memberLeave/${currentUser.key}`) || 0;
-    const prizes = await fbGet(`memberPrizes/${currentUser.key}`) || [];
-    const prizeLeave = prizes.filter(p => p.name === '연차').length;
-    const totalLeave = manualLeave + prizeLeave;
-    if (leaveLog) {
-      leaveCard.style.display = '';
-      const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-      leaveLogList.innerHTML = `
-        <div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>
-        ${logs.map(l => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-            <div>
-              <span style="color:rgba(255,255,255,0.9)">+${l.amount}일</span>
-              ${l.memo ? `<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${l.memo}</span>` : ''}
-            </div>
-            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
-          </div>
-        `).join('')}
-      `;
-    } else {
-      leaveCard.style.display = 'none';
-    }
+async function loadHistory(){
+  if(currentUser&&currentUser.role==='member'){
+    const leaveCard=document.getElementById('myLeaveCard');const leaveLogList=document.getElementById('myLeaveLogList');
+    const leaveLog=await fbGet(`leaveLog/${currentUser.key}`);
+    const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
+    const prizes=await fbGet(`memberPrizes/${currentUser.key}`)||[];
+    const prizeLeave=prizes.filter(p=>p.name==='연차').length;const totalLeave=manualLeave+prizeLeave;
+    if(leaveLog){
+      leaveCard.style.display='';
+      const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:rgba(255,255,255,0.9)">+${l.amount}일</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${l.memo}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('')}`;
+    }else leaveCard.style.display='none';
   }
-  const list = document.getElementById('historyList');
-  list.innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-  const history = await fbGet('history');
+  const list=document.getElementById('historyList');
+  list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const history=await fbGet('history');const isAdmin=currentUser&&currentUser.role==='admin';
+  if(!history){document.getElementById('historyFilterTabs').innerHTML='';list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  let items=Object.entries(history).map(([k,v])=>v).sort((a,b)=>(b.time||0)-(a.time||0));
+  if(!isAdmin){items=items.filter(item=>item.name===currentUser.name);document.getElementById('historyFilterTabs').innerHTML='';}
+  else{const names=['전체',...new Set(items.map(i=>i.name))];document.getElementById('historyFilterTabs').innerHTML=names.map(name=>`<button class="filter-tab ${name===historyFilter?'active':''}" onclick="setHistoryFilter('${name}')">${name}</button>`).join('');}
+  allHistoryItems=items;renderHistoryList(isAdmin);
+}
 
-  const isAdmin = currentUser && currentUser.role === 'admin';
-
-  if (!history) {
-    document.getElementById('historyFilterTabs').innerHTML = '';
-    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';
-    return;
-  }
-
-  let items = Object.entries(history)
-    .map(([k, v]) => v)
-    .sort((a, b) => (b.time || 0) - (a.time || 0));
-
-  if (!isAdmin) {
-    items = items.filter(item => item.name === currentUser.name);
-    document.getElementById('historyFilterTabs').innerHTML = '';
-  } else {
-    // Build member filter tabs
-    const names = ['전체', ...new Set(items.map(i => i.name))];
-    const tabsEl = document.getElementById('historyFilterTabs');
-    tabsEl.innerHTML = names.map(name => `
-      <button class="filter-tab ${name === historyFilter ? 'active' : ''}"
-        onclick="setHistoryFilter('${name}')">${name}</button>
-    `).join('');
-  }
-
-  allHistoryItems = items;
+function setHistoryFilter(name){
+  historyFilter=name;const isAdmin=currentUser&&currentUser.role==='admin';
+  document.querySelectorAll('.filter-tab').forEach(btn=>btn.classList.toggle('active',btn.textContent===name));
   renderHistoryList(isAdmin);
 }
 
-function setHistoryFilter(name) {
-  historyFilter = name;
-  const isAdmin = currentUser && currentUser.role === 'admin';
-  // update tab active state
-  document.querySelectorAll('.filter-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent === name);
-  });
-  renderHistoryList(isAdmin);
+function renderHistoryList(isAdmin){
+  const list=document.getElementById('historyList');let items=allHistoryItems;
+  if(isAdmin&&historyFilter!=='전체')items=items.filter(i=>i.name===historyFilter);
+  if(items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  list.innerHTML=items.map(item=>`<div class="history-item"><div class="history-emoji">${item.emoji}</div><div class="history-info">${isAdmin?`<div class="history-name">${escHtml(item.name)}</div>`:''}<div class="history-prize" style="${isAdmin?'':'font-size:15px;font-weight:700;color:var(--gold)'}">${escHtml(item.prize)}</div></div><div class="history-time">${formatTime(item.time)}</div></div>`).join('');
 }
 
-function renderHistoryList(isAdmin) {
-  const list = document.getElementById('historyList');
-  let items = allHistoryItems;
-
-  if (isAdmin && historyFilter !== '전체') {
-    items = items.filter(i => i.name === historyFilter);
-  }
-
-  if (items.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';
-    return;
-  }
-
-  list.innerHTML = items.map(item => `
-    <div class="history-item">
-      <div class="history-emoji">${item.emoji}</div>
-      <div class="history-info">
-        ${isAdmin ? `<div class="history-name">${escHtml(item.name)}</div>` : ''}
-        <div class="history-prize" style="${isAdmin ? '' : 'font-size:15px;font-weight:700;color:var(--gold)'}">
-          ${escHtml(item.prize)}
-        </div>
-      </div>
-      <div class="history-time">${formatTime(item.time)}</div>
-    </div>
-  `).join('');
+async function loadMembers(){
+  const list=document.getElementById('memberList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const members=await fbGet('members');allMembers=members||{};populateMemberSelect();populateGiveStockSelect();
+  if(!members||Object.keys(members).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">👥</div>멤버가 없습니다</div>';return;}
+  list.innerHTML=Object.entries(members).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).map(([k,m])=>`<div class="member-item"><div class="member-avatar">${m.name.charAt(0)}</div><div class="member-info"><div class="member-name">${escHtml(m.name)}</div><div class="member-stock">💰 ${m.stock||0}주</div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="editMemberName('${k}','${m.name}')">수정</button><button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button></div></div>`).join('');
 }
 
-// ===== Members =====
-async function loadMembers() {
-  const list = document.getElementById('memberList');
-  list.innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-  const members = await fbGet('members');
-  allMembers = members || {};
-  populateMemberSelect();
-  populateGiveStockSelect();
-
-  if (!members || Object.keys(members).length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>멤버가 없습니다</div>';
-    return;
-  }
-
-  list.innerHTML = Object.entries(members)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
-    .map(([k, m]) => `
-    <div class="member-item">
-      <div class="member-avatar">${m.name.charAt(0)}</div>
-      <div class="member-info">
-        <div class="member-name">${escHtml(m.name)}</div>
-        <div class="member-stock">💰 ${m.stock || 0}주</div>
-      </div>
-      <div class="member-actions">
-        <button class="btn-sm btn-edit" onclick="editMemberName('${k}', '${m.name}')">수정</button>
-        <button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button>
-      </div>
-    </div>
-  `).join('');
+async function addMember(){
+  const name=document.getElementById('newMemberName').value.trim();if(!name){showToast('이름을 입력하세요');return;}
+  if(Object.values(allMembers).some(m=>m.name===name)){showToast('이미 존재하는 이름입니다');return;}
+  await fbPush('members',{name,stock:0});document.getElementById('newMemberName').value='';showToast(`✅ ${name} 추가됨`);loadMembers();
+}
+async function deleteMember(key){const m=allMembers[key];if(!m)return;if(!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`))return;await fbDelete(`members/${key}`);showToast('🗑️ 삭제됨');loadMembers();}
+async function editMemberName(key,currentName){
+  const newName=prompt('새 이름을 입력하세요',currentName);if(!newName||newName.trim()==='')return;if(newName.trim()===currentName)return;
+  if(Object.entries(allMembers).some(([k,m])=>m.name===newName.trim()&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
+  await fbSet(`members/${key}/name`,newName.trim());showToast(`✅ ${currentName} → ${newName.trim()} 변경됨`);loadMembers();
 }
 
-async function addMember() {
-  const name = document.getElementById('newMemberName').value.trim();
-  if (!name) { showToast('이름을 입력하세요'); return; }
-  // check duplicate
-  const exists = Object.values(allMembers).some(m => m.name === name);
-  if (exists) { showToast('이미 존재하는 이름입니다'); return; }
-  await fbPush('members', { name, stock: 0 });
-  document.getElementById('newMemberName').value = '';
-  showToast(`✅ ${name} 추가됨`);
-  loadMembers();
+async function loadPrizes(){
+  const list=document.getElementById('prizeList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const prizes=await fbGet('prizes');allPrizes=prizes||{};updateTotalProb();
+  if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';return;}
+  list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="openEditPrize('${k}')">수정</button><button class="btn-sm btn-del" onclick="deletePrize('${k}')">삭제</button></div></div>`).join('');
+  drawRoulette();renderPrizeLegend();
 }
-
-async function deleteMember(key) {
-  const m = allMembers[key];
-  if (!m) return;
-  if (!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`)) return;
-  await fbDelete(`members/${key}`);
-  showToast('🗑️ 삭제됨');
-  loadMembers();
+function updateTotalProb(){const total=Object.values(allPrizes).reduce((s,p)=>s+(p.prob||0),0);const el=document.getElementById('totalProb');el.textContent=`합계: ${total}%`;el.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';}
+function openAddPrize(){document.getElementById('prizeModalTitle').textContent='경품 추가';['editPrizeKey','editPrizeName','editPrizeEmoji','editPrizeProb'].forEach(id=>document.getElementById(id).value='');document.getElementById('prizeModal').classList.add('active');}
+function openEditPrize(key){const p=allPrizes[key];if(!p)return;document.getElementById('prizeModalTitle').textContent='경품 수정';document.getElementById('editPrizeKey').value=key;document.getElementById('editPrizeName').value=p.name;document.getElementById('editPrizeEmoji').value=p.emoji;document.getElementById('editPrizeProb').value=p.prob;document.getElementById('prizeModal').classList.add('active');}
+function closePrizeModal(){document.getElementById('prizeModal').classList.remove('active');}
+async function savePrize(){
+  const key=document.getElementById('editPrizeKey').value;const name=document.getElementById('editPrizeName').value.trim();
+  const emoji=document.getElementById('editPrizeEmoji').value.trim();const prob=parseFloat(document.getElementById('editPrizeProb').value);
+  if(!name||!emoji||isNaN(prob)){showToast('모든 항목을 입력하세요');return;}if(prob<0||prob>100){showToast('확률은 0~100 사이');return;}
+  if(key)await fbSet(`prizes/${key}`,{name,emoji,prob});else await fbPush('prizes',{name,emoji,prob});
+  closePrizeModal();showToast('✅ 저장됨');loadPrizes();
 }
+async function deletePrize(key){if(!confirm('경품을 삭제하시겠습니까?'))return;await fbDelete(`prizes/${key}`);showToast('🗑️ 삭제됨');loadPrizes();}
 
-async function editMemberName(key, currentName) {
-  const newName = prompt(`새 이름을 입력하세요`, currentName);
-  if (!newName || newName.trim() === '') return;
-  if (newName.trim() === currentName) return;
-  const exists = Object.entries(allMembers).some(([k, m]) => m.name === newName.trim() && k !== key);
-  if (exists) { showToast('이미 존재하는 이름입니다'); return; }
-  await fbSet(`members/${key}/name`, newName.trim());
-  showToast(`✅ ${currentName} → ${newName.trim()} 변경됨`);
-  loadMembers();
-}
-
-// ===== Prizes =====
-async function loadPrizes() {
-  const list = document.getElementById('prizeList');
-  list.innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-  const prizes = await fbGet('prizes');
-  allPrizes = prizes || {};
-
-  updateTotalProb();
-
-  if (!prizes || Object.keys(prizes).length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';
-    return;
-  }
-
-  list.innerHTML = Object.entries(prizes).map(([k, p]) => `
-    <div class="prize-item">
-      <div class="prize-emoji">${p.emoji}</div>
-      <div class="prize-info">
-        <div class="prize-name">${escHtml(p.name)}</div>
-        <div class="prize-prob">${p.prob}%</div>
-        <div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div>
-      </div>
-      <div class="member-actions">
-        <button class="btn-sm btn-edit" onclick="openEditPrize('${k}')">수정</button>
-        <button class="btn-sm btn-del" onclick="deletePrize('${k}')">삭제</button>
-      </div>
-    </div>
-  `).join('');
-  // Redraw roulette preview on prizes page
-  drawRoulettePreview();
-}
-
-function drawRoulettePreview() {
-  // Redraw main roulette if currently on gacha page
-  drawRoulette();
-  renderPrizeLegend();
-}
-
-function updateTotalProb() {
-  const total = Object.values(allPrizes).reduce((s, p) => s + (p.prob || 0), 0);
-  const el = document.getElementById('totalProb');
-  el.textContent = `합계: ${total}%`;
-  el.style.color = total === 100 ? '#00ff88' : total > 100 ? '#ff4444' : 'var(--gold)';
-}
-
-function openAddPrize() {
-  document.getElementById('prizeModalTitle').textContent = '경품 추가';
-  document.getElementById('editPrizeKey').value = '';
-  document.getElementById('editPrizeName').value = '';
-  document.getElementById('editPrizeEmoji').value = '';
-  document.getElementById('editPrizeProb').value = '';
-  document.getElementById('prizeModal').classList.add('active');
-}
-
-function openEditPrize(key) {
-  const p = allPrizes[key];
-  if (!p) return;
-  document.getElementById('prizeModalTitle').textContent = '경품 수정';
-  document.getElementById('editPrizeKey').value = key;
-  document.getElementById('editPrizeName').value = p.name;
-  document.getElementById('editPrizeEmoji').value = p.emoji;
-  document.getElementById('editPrizeProb').value = p.prob;
-  document.getElementById('prizeModal').classList.add('active');
-}
-
-function closePrizeModal() {
-  document.getElementById('prizeModal').classList.remove('active');
-}
-
-async function savePrize() {
-  const key = document.getElementById('editPrizeKey').value;
-  const name = document.getElementById('editPrizeName').value.trim();
-  const emoji = document.getElementById('editPrizeEmoji').value.trim();
-  const prob = parseFloat(document.getElementById('editPrizeProb').value);
-  if (!name || !emoji || isNaN(prob)) { showToast('모든 항목을 입력하세요'); return; }
-  if (prob < 0 || prob > 100) { showToast('확률은 0~100 사이'); return; }
-
-  if (key) {
-    await fbSet(`prizes/${key}`, { name, emoji, prob });
-  } else {
-    await fbPush('prizes', { name, emoji, prob });
-  }
-  closePrizeModal();
-  showToast('✅ 저장됨');
-  await syncMemberPrizeNames();
-  loadPrizes();
-}
-
-async function syncMemberPrizeNames() {
-  // When a prize name/emoji changes, update all memberPrizes entries
-  const freshPrizes = await fbGet('prizes');
-  if (!freshPrizes) return;
-  const members = await fbGet('members');
-  if (!members) return;
-  for (const memberKey of Object.keys(members)) {
-    const mp = await fbGet(`memberPrizes/${memberKey}`);
-    if (!mp || !mp.length) continue;
-    let changed = false;
-    const updated = mp.map(item => {
-      // find matching prize by old name or emoji
-      const match = Object.values(freshPrizes).find(fp =>
-        fp.name === item.name || fp.emoji === item.emoji
-      );
-      if (match && (match.name !== item.name || match.emoji !== item.emoji)) {
-        changed = true;
-        return { ...item, name: match.name, emoji: match.emoji };
-      }
-      return item;
-    });
-    if (changed) await fbSet(`memberPrizes/${memberKey}`, updated);
-  }
-}
-
-async function deletePrize(key) {
-  if (!confirm('경품을 삭제하시겠습니까?')) return;
-  await fbDelete(`prizes/${key}`);
-  showToast('🗑️ 삭제됨');
-  loadPrizes();
-}
-
-// ===== Settings =====
-async function loadSettings() {
+// ★ 핵심 수정: members를 먼저 await로 가져온 뒤 loadLeaveView 호출
+async function loadSettings(){
+  const members=await fbGet('members');
+  allMembers=members||{};
   loadNoticeEditor();
-  populateLeaveSelect();
-  bulkSelected.giveStock.clear();
-  bulkSelected.deductStock.clear();
-  bulkSelected.leave.clear();
-  // Load leave days into allMembers for display
+  bulkSelected.giveStock.clear();bulkSelected.deductStock.clear();bulkSelected.leave.clear();
   await loadLeaveIntoMembers();
-  renderBulkList('giveStock');
-  renderBulkList('deductStock');
-  renderBulkList('leave');
-  const cost = await fbGet('costPerRoll');
-  costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
-  document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
-  document.getElementById('newCostInput').value = costPerRoll;
-
-  // ★ 버그수정: setTimeout 없이 바로 호출 (섹션이 pageSettings 안에 있으므로 정상 작동)
-  loadLeaveView();
+  renderBulkList('giveStock');renderBulkList('deductStock');renderBulkList('leave');
+  const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
+  document.getElementById('costDisplay').textContent=`${costPerRoll}주`;
+  document.getElementById('newCostInput').value=costPerRoll;
+  await loadLeaveView();
 }
 
-function populateManagePrizeSelect() {
-  const sel = document.getElementById('managePrizeMember');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
-  Object.entries(allMembers).forEach(([k, m]) => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = m.name;
-    sel.appendChild(opt);
-  });
+async function loadMemberPrizes(){
+  const key=document.getElementById('managePrizeMemberVal').value;const container=document.getElementById('memberPrizeList');
+  if(!key){container.innerHTML='';return;}
+  const prizes=await fbGet(`memberPrizes/${key}`);
+  if(!prizes||prizes.length===0){container.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';return;}
+  container.innerHTML=prizes.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:24px">${p.emoji}</span><span style="flex:1;font-size:14px">${escHtml(p.name)}</span><button class="btn-sm btn-del" onclick="removeMemberPrize('${key}',${i})">차감</button></div>`).join('');
+}
+async function addMemberPrize(){
+  const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
+  if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
+  const current=await fbGet(`memberPrizes/${key}`)||[];current.push({emoji,name,time:Date.now()});await fbSet(`memberPrizes/${key}`,current);
+  document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';
+  showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
+}
+async function removeMemberPrize(key,index){const current=await fbGet(`memberPrizes/${key}`)||[];current.splice(index,1);await fbSet(`memberPrizes/${key}`,current);showToast('🗑️ 경품 차감됨');loadMemberPrizes();}
+
+function populateGiveStockSelect(){
+  const sel=document.getElementById('giveStockMember');if(!sel)return;
+  sel.innerHTML='<option value="">멤버를 선택하세요</option>';
+  Object.entries(allMembers).forEach(([k,m])=>{const opt=document.createElement('option');opt.value=k;opt.textContent=`${m.name} (${m.stock||0}주)`;sel.appendChild(opt);});
 }
 
-async function loadMemberPrizes() {
-  const key = document.getElementById('managePrizeMemberVal').value;
-  const container = document.getElementById('memberPrizeList');
-  if (!key) { container.innerHTML = ''; return; }
+async function saveCost(){const val=parseInt(document.getElementById('newCostInput').value);if(isNaN(val)||val<1){showToast('올바른 숫자를 입력하세요');return;}costPerRoll=val;await fbSet('costPerRoll',val);document.getElementById('costDisplay').textContent=`${val}주`;showToast(`✅ 1판 = ${val}주로 설정됨`);}
 
-  const prizes = await fbGet(`memberPrizes/${key}`);
-  if (!prizes || prizes.length === 0) {
-    container.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';
-    return;
-  }
-  container.innerHTML = prizes.map((p, i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:24px">${p.emoji}</span>
-      <span style="flex:1;font-size:14px">${escHtml(p.name)}</span>
-      <button class="btn-sm btn-del" onclick="removeMemberPrize('${key}', ${i})">차감</button>
-    </div>
-  `).join('');
+async function giveStock(){
+  const keys=[...bulkSelected.giveStock];const amount=parseInt(document.getElementById('giveStockAmount').value);
+  if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
+  for(const key of keys){const member=await fbGet(`members/${key}`);const current=member?(member.stock||0):0;await fbSet(`members/${key}/stock`,current+amount);}
+  allMembers=(await fbGet('members'))||{};document.getElementById('giveStockAmount').value='';document.getElementById('giveStockSearch').value='';bulkSelected.giveStock.clear();renderBulkList('giveStock');showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료!`);
 }
 
-async function addMemberPrize() {
-  const key = document.getElementById('managePrizeMemberVal').value;
-  const emoji = document.getElementById('addPrizeEmoji').value.trim();
-  const name = document.getElementById('addPrizeName').value.trim();
-  if (!key) { showToast('멤버를 선택하세요'); return; }
-  if (!emoji || !name) { showToast('이모지와 경품명을 입력하세요'); return; }
-
-  const current = await fbGet(`memberPrizes/${key}`) || [];
-  current.push({ emoji, name, time: Date.now() });
-  await fbSet(`memberPrizes/${key}`, current);
-
-  document.getElementById('addPrizeEmoji').value = '';
-  document.getElementById('addPrizeName').value = '';
-  showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);
-  loadMemberPrizes();
+async function deductStock(){
+  const keys=[...bulkSelected.deductStock];const amount=parseInt(document.getElementById('deductStockAmount').value);
+  if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
+  let skipped=0;
+  for(const key of keys){const member=await fbGet(`members/${key}`);const current=member?(member.stock||0):0;if(amount>current){skipped++;continue;}await fbSet(`members/${key}/stock`,current-amount);}
+  allMembers=(await fbGet('members'))||{};document.getElementById('deductStockAmount').value='';document.getElementById('deductStockSearch').value='';bulkSelected.deductStock.clear();renderBulkList('deductStock');
+  showToast(`📉 ${keys.length-skipped}명 ${amount}주 차감 완료${skipped>0?` (${skipped}명 주식 부족으로 건너뜀)`:''}`);
 }
 
-async function removeMemberPrize(key, index) {
-  const current = await fbGet(`memberPrizes/${key}`) || [];
-  current.splice(index, 1);
-  await fbSet(`memberPrizes/${key}`, current);
-  showToast('🗑️ 경품 차감됨');
-  loadMemberPrizes();
-}
+const bulkSelected={giveStock:new Set(),deductStock:new Set(),leave:new Set()};
 
-function populateGiveStockSelect() {
-  const sel = document.getElementById('giveStockMember');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
-  Object.entries(allMembers).forEach(([k, m]) => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = `${m.name} (${m.stock || 0}주)`;
-    sel.appendChild(opt);
-  });
-}
-
-async function saveCost() {
-  const val = parseInt(document.getElementById('newCostInput').value);
-  if (isNaN(val) || val < 1) { showToast('올바른 숫자를 입력하세요'); return; }
-  costPerRoll = val;
-  await fbSet('costPerRoll', val);
-  document.getElementById('costDisplay').textContent = `${val}주`;
-  showToast(`✅ 1판 = ${val}주로 설정됨`);
-}
-
-async function giveStock() {
-  const keys = [...bulkSelected.giveStock];
-  const amount = parseInt(document.getElementById('giveStockAmount').value);
-  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
-  if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
-
-  for (const key of keys) {
-    const member = await fbGet(`members/${key}`);
-    const current = member ? (member.stock || 0) : 0;
-    await fbSet(`members/${key}/stock`, current + amount);
-  }
-
-  allMembers = (await fbGet('members')) || {};
-  document.getElementById('giveStockAmount').value = '';
-  document.getElementById('giveStockSearch').value = '';
-  bulkSelected.giveStock.clear();
-  renderBulkList('giveStock');
-  showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료!`);
-}
-
-async function deductStock() {
-  const keys = [...bulkSelected.deductStock];
-  const amount = parseInt(document.getElementById('deductStockAmount').value);
-  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
-  if (isNaN(amount) || amount < 1 || amount > 100) { showToast('1~100 사이의 숫자를 입력하세요'); return; }
-
-  let skipped = 0;
-  for (const key of keys) {
-    const member = await fbGet(`members/${key}`);
-    const current = member ? (member.stock || 0) : 0;
-    if (amount > current) { skipped++; continue; }
-    await fbSet(`members/${key}/stock`, current - amount);
-  }
-
-  allMembers = (await fbGet('members')) || {};
-  document.getElementById('deductStockAmount').value = '';
-  document.getElementById('deductStockSearch').value = '';
-  bulkSelected.deductStock.clear();
-  renderBulkList('deductStock');
-  const done = keys.length - skipped;
-  showToast(`📉 ${done}명 ${amount}주 차감 완료${skipped > 0 ? ` (${skipped}명 주식 부족으로 건너뜀)` : ''}`);
-}
-
-function populateDeductStockSelect() {
-  const sel = document.getElementById('deductStockMember');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
-  Object.entries(allMembers).forEach(([k, m]) => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = `${m.name} (${m.stock || 0}주)`;
-    sel.appendChild(opt);
-  });
-}
-
-// ===== Bulk Member Select =====
-const bulkSelected = { giveStock: new Set(), deductStock: new Set(), leave: new Set() };
-
-function renderBulkList(type) {
-  const searchId = type + 'Search';
-  const listId = type + 'BulkList';
-  const q = (document.getElementById(searchId)?.value || '').toLowerCase();
-  const list = document.getElementById(listId);
-  if (!list) return;
-
-  const sorted = Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name,'ko'))
-    .filter(([k,m]) => !q || m.name.toLowerCase().includes(q));
-
-  const allKeys = sorted.map(([k]) => k);
-  const allChecked = allKeys.length > 0 && allKeys.every(k => bulkSelected[type].has(k));
-
-  list.innerHTML = `
-    <div class="bulk-select-all" onclick="toggleBulkAll('${type}', ${JSON.stringify(allKeys)})">
-      <div class="bulk-checkbox ${allChecked ? 'checked' : ''}">${allChecked ? '✓' : ''}</div>
-      <span>전체 선택 (${sorted.length}명)</span>
-    </div>
-    ${sorted.map(([k,m]) => {
-      const checked = bulkSelected[type].has(k);
-      const subInfo = type === 'leave'
-        ? `🏖️ ${m.leave||0}일`
-        : `💰 ${m.stock||0}주`;
-      return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')">
-        <div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div>
-        <div class="bulk-member-name">${escHtml(m.name)}</div>
-        <div class="bulk-member-stock">${subInfo}</div>
-      </div>`;
-    }).join('')}
-  `;
+function renderBulkList(type){
+  const q=(document.getElementById(type+'Search')?.value||'').toLowerCase();
+  const list=document.getElementById(type+'BulkList');if(!list)return;
+  const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
+  const allKeys=sorted.map(([k])=>k);const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
+  list.innerHTML=`<div class="bulk-select-all" onclick="toggleBulkAll('${type}',${JSON.stringify(allKeys)})"><div class="bulk-checkbox ${allChecked?'checked':''}">${allChecked?'✓':''}</div><span>전체 선택 (${sorted.length}명)</span></div>${sorted.map(([k,m])=>{const checked=bulkSelected[type].has(k);const subInfo=type==='leave'?`🏖️ ${m.leave||0}일`:`💰 ${m.stock||0}주`;return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')"><div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div><div class="bulk-member-name">${escHtml(m.name)}</div><div class="bulk-member-stock">${subInfo}</div></div>`;}).join('')}`;
   updateBulkCount(type);
 }
+function toggleBulkMember(type,key){if(bulkSelected[type].has(key))bulkSelected[type].delete(key);else bulkSelected[type].add(key);renderBulkList(type);}
+function toggleBulkAll(type,keys){const allChecked=keys.every(k=>bulkSelected[type].has(k));if(allChecked)keys.forEach(k=>bulkSelected[type].delete(k));else keys.forEach(k=>bulkSelected[type].add(k));renderBulkList(type);}
+function updateBulkCount(type){const el=document.getElementById(type+'Selected');if(el)el.textContent=`선택된 멤버: ${bulkSelected[type].size}명`;}
 
-function toggleBulkMember(type, key) {
-  if (bulkSelected[type].has(key)) bulkSelected[type].delete(key);
-  else bulkSelected[type].add(key);
-  renderBulkList(type);
+const ssConfigs={managePrizeDropdown:{inputId:'managePrizeSearch',hiddenId:'managePrizeMemberVal',onSelect:()=>loadMemberPrizes()}};
+function openDropdown(dropdownId){const cfg=ssConfigs[dropdownId];if(!cfg)return;renderDropdown(dropdownId,(document.getElementById(cfg.inputId).value||'').toLowerCase());document.getElementById(dropdownId).classList.add('open');}
+function filterSearchSelect(inputId,dropdownId){renderDropdown(dropdownId,(document.getElementById(inputId).value||'').toLowerCase());document.getElementById(dropdownId).classList.add('open');}
+function renderDropdown(dropdownId,q){
+  const dropdown=document.getElementById(dropdownId);if(!dropdown)return;
+  const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
+  if(sorted.length===0){dropdown.innerHTML='<div class="search-select-option" style="opacity:0.4">검색 결과 없음</div>';return;}
+  dropdown.innerHTML=sorted.map(([k,m])=>`<div class="search-select-option" onmousedown="pickMember(event,'${dropdownId}','${k}','${m.name.replace(/'/g,"\\'")}')">${escHtml(m.name)}</div>`).join('');
 }
+function pickMember(e,dropdownId,key,name){e.preventDefault();const cfg=ssConfigs[dropdownId];if(!cfg)return;document.getElementById(cfg.hiddenId).value=key;document.getElementById(cfg.inputId).value=name;document.getElementById(dropdownId).classList.remove('open');if(cfg.onSelect)cfg.onSelect();}
+function closeDropdownDelay(dropdownId){setTimeout(()=>{const el=document.getElementById(dropdownId);if(el)el.classList.remove('open');},150);}
 
-function toggleBulkAll(type, keys) {
-  const allChecked = keys.every(k => bulkSelected[type].has(k));
-  if (allChecked) keys.forEach(k => bulkSelected[type].delete(k));
-  else keys.forEach(k => bulkSelected[type].add(k));
-  renderBulkList(type);
-}
-
-function updateBulkCount(type) {
-  const el = document.getElementById(type + 'Selected');
-  if (el) el.textContent = `선택된 멤버: ${bulkSelected[type].size}명`;
-}
-
-// ===== Searchable Select =====
-const ssConfigs = {
-  giveStockDropdown:    { inputId:'giveStockSearch',    hiddenId:'giveStockMemberVal',    onSelect: null },
-  deductStockDropdown:  { inputId:'deductStockSearch',  hiddenId:'deductStockMemberVal',  onSelect: null },
-  leaveDropdown:        { inputId:'leaveSearch',        hiddenId:'leaveManageMemberVal',  onSelect: ()=>loadMemberLeave() },
-  managePrizeDropdown:  { inputId:'managePrizeSearch',  hiddenId:'managePrizeMemberVal',  onSelect: ()=>loadMemberPrizes() },
-};
-
-function openDropdown(dropdownId) {
-  const cfg = ssConfigs[dropdownId];
-  if (!cfg) return;
-  const q = (document.getElementById(cfg.inputId).value || '').toLowerCase();
-  renderDropdown(dropdownId, q);
-  document.getElementById(dropdownId).classList.add('open');
-}
-
-function filterSearchSelect(inputId, dropdownId) {
-  const q = (document.getElementById(inputId).value || '').toLowerCase();
-  renderDropdown(dropdownId, q);
-  document.getElementById(dropdownId).classList.add('open');
-}
-
-function renderDropdown(dropdownId, q) {
-  const dropdown = document.getElementById(dropdownId);
-  if (!dropdown) return;
-  const sorted = Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
-    .filter(([k,m]) => !q || m.name.toLowerCase().includes(q));
-  if (sorted.length === 0) {
-    dropdown.innerHTML = '<div class="search-select-option" style="opacity:0.4">검색 결과 없음</div>';
-    return;
-  }
-  dropdown.innerHTML = sorted.map(([k,m]) =>
-    `<div class="search-select-option" data-key="${k}" onmousedown="pickMember(event,'${dropdownId}','${k}','${m.name.replace(/'/g,"\'")}')">${escHtml(m.name)}</div>`
-  ).join('');
-}
-
-function pickMember(e, dropdownId, key, name) {
-  e.preventDefault();
-  const cfg = ssConfigs[dropdownId];
-  if (!cfg) return;
-  document.getElementById(cfg.hiddenId).value = key;
-  document.getElementById(cfg.inputId).value = name;
-  document.getElementById(dropdownId).classList.remove('open');
-  if (cfg.onSelect) cfg.onSelect();
-}
-
-function closeDropdownDelay(dropdownId) {
-  setTimeout(() => {
-    const el = document.getElementById(dropdownId);
-    if (el) el.classList.remove('open');
-  }, 150);
-}
-
-// ===== 연차 내역 조회 (관리자) =====
-async function loadLeaveView() {
-  const container = document.getElementById('leaveViewList');
-  if (!container) return;
-  container.innerHTML = '<div style="color:rgba(255,255,255,0.4)">불러오는 중...</div>';
-
-  try {
-    const members = await fbGet('members');
-    if (!members) { container.innerHTML = '<div style="color:rgba(255,255,255,0.4)">멤버 없음</div>'; return; }
-
-    let html = '';
-    for (const [key, m] of Object.entries(members)) {
-      const manualLeave = await fbGet(`memberLeave/${key}`) || 0;
-      const prizes = await fbGet(`memberPrizes/${key}`) || [];
-      const prizeLeave = prizes.filter(p => p.name === '연차').length;
-      const total = manualLeave + prizeLeave;
-      const leaveLog = await fbGet(`leaveLog/${key}`);
-
-      // 모든 멤버 표시 (연차 없으면 0일로)
-      html += `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-weight:700;color:white">${escHtml(m.name)}</span>
-          <span style="color:var(--gold);font-family:'Jua',cursive">잔여 ${total}일</span>
-        </div>`;
-
-      if (leaveLog) {
-        const logs = Object.values(leaveLog).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-        html += logs.map(l => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);">
-            <div>
-              <span style="color:#26DE81">+${l.amount}일 수동지급</span>
-              ${l.memo ? `<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>` : ''}
-            </div>
-            <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date || ''}</span>
-          </div>`).join('');
-      }
-      if (prizeLeave > 0) {
-        html += `<div style="padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.6)">🎰 경품 연차 ${prizeLeave}일</div>`;
-      }
-      if (!leaveLog && prizeLeave === 0 && manualLeave === 0) {
-        html += `<div style="color:rgba(255,255,255,0.3);font-size:11px">내역 없음</div>`;
-      }
-      html += '</div>';
+// ★ loadLeaveView: Firebase에서 members를 직접 새로 가져와서 처리
+async function loadLeaveView(){
+  const container=document.getElementById('leaveViewList');if(!container)return;
+  container.innerHTML='<div style="color:rgba(255,255,255,0.4)">불러오는 중...</div>';
+  try{
+    const members=await fbGet('members');
+    if(!members){container.innerHTML='<div style="color:rgba(255,255,255,0.4)">멤버 없음</div>';return;}
+    let html='';
+    for(const[key,m]of Object.entries(members)){
+      const manualLeave=await fbGet(`memberLeave/${key}`)||0;
+      const prizes=await fbGet(`memberPrizes/${key}`)||[];
+      const prizeLeave=prizes.filter(p=>p.name==='연차').length;
+      const total=manualLeave+prizeLeave;
+      const leaveLog=await fbGet(`leaveLog/${key}`);
+      html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-weight:700;color:white">${escHtml(m.name)}</span><span style="color:var(--gold);font-family:'Jua',cursive">잔여 ${total}일</span></div>`;
+      if(leaveLog){const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));html+=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);"><div><span style="color:#26DE81">+${l.amount}일 수동지급</span>${l.memo?`<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('');}
+      if(prizeLeave>0)html+=`<div style="padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.6)">🎰 경품 연차 ${prizeLeave}일</div>`;
+      if(!leaveLog&&prizeLeave===0&&manualLeave===0)html+=`<div style="color:rgba(255,255,255,0.3);font-size:11px">내역 없음</div>`;
+      html+='</div>';
     }
+    container.innerHTML=html||'<div style="color:rgba(255,255,255,0.4)">멤버 없음</div>';
+  }catch(e){container.innerHTML=`<div style="color:#FC5C65">오류: ${e.message}</div>`;}
+}
 
-    container.innerHTML = html || '<div style="color:rgba(255,255,255,0.4)">멤버 없음</div>';
-  } catch(e) {
-    container.innerHTML = `<div style="color:#FC5C65">오류: ${e.message}</div>`;
+async function adjustLeave(sign){
+  const keys=[...bulkSelected.leave];const amount=parseInt(document.getElementById('leaveAmount').value);
+  const memo=document.getElementById('leaveMemo')?document.getElementById('leaveMemo').value.trim():'';
+  if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1){showToast('일수를 입력하세요');return;}
+  let skipped=0;const today=new Date().toISOString().slice(0,10);
+  for(const key of keys){
+    if(sign>0){await fbPush(`leaveLog/${key}`,{amount,date:today,memo:memo||''});const current=await fbGet(`memberLeave/${key}`)||0;await fbSet(`memberLeave/${key}`,current+amount);if(allMembers[key])allMembers[key].leave=current+amount;}
+    else{const current=await fbGet(`memberLeave/${key}`)||0;const next=current-amount;if(next<0){skipped++;continue;}await fbSet(`memberLeave/${key}`,next);if(allMembers[key])allMembers[key].leave=next;}
   }
+  document.getElementById('leaveAmount').value='';if(document.getElementById('leaveMemo'))document.getElementById('leaveMemo').value='';
+  document.getElementById('leaveSearch').value='';bulkSelected.leave.clear();renderBulkList('leave');
+  showToast(`✅ ${keys.length-skipped}명 연차 ${amount}일 ${sign>0?'지급':'차감'} 완료${skipped>0?` (${skipped}명 연차 부족으로 건너뜀)`:''}`);
+  await loadLeaveView();
 }
 
-// ===== 연차 관리 =====
-function populateLeaveSelect() {
-  const sel = document.getElementById('leaveManageMember');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">멤버를 선택하세요</option>';
-  Object.entries(allMembers)
-    .sort(([,a],[,b]) => a.name.localeCompare(b.name, 'ko'))
-    .forEach(([k, m]) => {
-      const opt = document.createElement('option');
-      opt.value = k;
-      opt.textContent = `${m.name}`;
-      sel.appendChild(opt);
-    });
+const DEFAULT_NOTICE=[{badge:'+1주',badgeType:'purple',text:'초대',sub:''},{badge:'+2주',badgeType:'purple',text:'한달 풀참',sub:''},{badge:'+1주',badgeType:'gold',text:'영업건 건당',sub:'하루 선착순 3명'},{badge:'+3주',badgeType:'gold',text:'🏆 월말 영업왕 성과금',sub:''}];
+async function loadNotice(){const data=await fbGet('notice');const rows=(data&&data.length)?data:DEFAULT_NOTICE;renderNoticeCard(rows);return rows;}
+function renderNoticeCard(rows){const card=document.getElementById('noticeCard');if(!card)return;card.innerHTML=`<div class="notice-title">📢 주식 지급 기준</div>${rows.map(r=>`<div class="notice-row"><span class="notice-badge${r.badgeType==='gold'?' gold':''}">${escHtml(r.badge)}</span><div><div>${escHtml(r.text)}</div>${r.sub?`<div class="notice-sub">${escHtml(r.sub)}</div>`:''}</div></div>`).join('')}`;}
+async function loadNoticeEditor(){const data=await fbGet('notice');renderNoticeEditor((data&&data.length)?data:DEFAULT_NOTICE);}
+function renderNoticeEditor(rows){const list=document.getElementById('noticeEditorList');if(!list)return;list.innerHTML=rows.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span class="notice-badge${r.badgeType==='gold'?' gold':''}" style="cursor:pointer" onclick="toggleNoticeBadgeType(${i})">${escHtml(r.badge)}</span><div style="flex:1;min-width:0"><div style="font-size:13px">${escHtml(r.text)}</div>${r.sub?`<div class="notice-sub">${escHtml(r.sub)}</div>`:''}</div><button class="btn-sm btn-del" onclick="deleteNoticeRow(${i})">삭제</button></div>`).join('');}
+async function addNoticeRow(){const badge=document.getElementById('newNoticeBadge').value.trim();const text=document.getElementById('newNoticeText').value.trim();if(!badge||!text){showToast('배지와 내용을 입력하세요');return;}const data=await fbGet('notice');const rows=(data&&data.length)?data:[...DEFAULT_NOTICE];rows.push({badge,badgeType:'purple',text,sub:''});await fbSet('notice',rows);document.getElementById('newNoticeBadge').value='';document.getElementById('newNoticeText').value='';showToast('✅ 추가됨');renderNoticeCard(rows);renderNoticeEditor(rows);}
+async function deleteNoticeRow(index){const data=await fbGet('notice');const rows=(data&&data.length)?data:[...DEFAULT_NOTICE];rows.splice(index,1);await fbSet('notice',rows);showToast('🗑️ 삭제됨');renderNoticeCard(rows);renderNoticeEditor(rows);}
+async function toggleNoticeBadgeType(index){const data=await fbGet('notice');const rows=(data&&data.length)?data:[...DEFAULT_NOTICE];rows[index].badgeType=rows[index].badgeType==='gold'?'purple':'gold';await fbSet('notice',rows);renderNoticeCard(rows);renderNoticeEditor(rows);}
+
+async function loadLeaveIntoMembers(){
+  for(const key of Object.keys(allMembers)){const leave=await fbGet(`memberLeave/${key}`)||0;const prizes=await fbGet(`memberPrizes/${key}`)||[];allMembers[key].leave=leave+prizes.filter(p=>p.name==='연차').length;}
 }
 
-async function loadMemberLeave() {
-  const key = document.getElementById('leaveManageMemberVal').value;
-  const display = document.getElementById('memberLeaveDisplay');
-  if (!key) { display.innerHTML = ''; return; }
-  // 수동 연차 + 경품 연차 합산
-  const manualLeave = await fbGet(`memberLeave/${key}`) || 0;
-  const prizes = await fbGet(`memberPrizes/${key}`) || [];
-  const prizeLeave = prizes.filter(p => p.name === '연차').length;
-  const total = manualLeave + prizeLeave;
-  display.innerHTML = `🏖️ 잔여 연차 <span style="color:var(--gold)">${total}일</span><div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">수동 ${manualLeave}일 + 경품 ${prizeLeave}일</div>`;
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function formatTime(ts){if(!ts)return'';const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-async function adjustLeave(sign) {
-  const keys = [...bulkSelected.leave];
-  const amount = parseInt(document.getElementById('leaveAmount').value);
-  const memo = document.getElementById('leaveMemo') ? document.getElementById('leaveMemo').value.trim() : '';
-  if (keys.length === 0) { showToast('멤버를 선택하세요'); return; }
-  if (isNaN(amount) || amount < 1) { showToast('일수를 입력하세요'); return; }
-
-  let skipped = 0;
-  const today = new Date().toISOString().slice(0, 10);
-
-  for (const key of keys) {
-    if (sign > 0) {
-      // 지급: leaveLog에 기록 추가 (메모/기한 포함)
-      const logEntry = { amount, date: today, memo: memo || '' };
-      await fbPush(`leaveLog/${key}`, logEntry);
-      // 기존 총합도 업데이트
-      const current = await fbGet(`memberLeave/${key}`) || 0;
-      await fbSet(`memberLeave/${key}`, current + amount);
-      if (allMembers[key]) allMembers[key].leave = current + amount;
-    } else {
-      // 차감: 총합만 차감
-      const current = await fbGet(`memberLeave/${key}`) || 0;
-      const next = current - amount;
-      if (next < 0) { skipped++; continue; }
-      await fbSet(`memberLeave/${key}`, next);
-      if (allMembers[key]) allMembers[key].leave = next;
-    }
-  }
-
-  document.getElementById('leaveAmount').value = '';
-  if (document.getElementById('leaveMemo')) document.getElementById('leaveMemo').value = '';
-  document.getElementById('leaveSearch').value = '';
-  bulkSelected.leave.clear();
-  renderBulkList('leave');
-  const done = keys.length - skipped;
-  const action = sign > 0 ? '지급' : '차감';
-  showToast(`✅ ${done}명 연차 ${amount}일 ${action} 완료${skipped > 0 ? ` (${skipped}명 연차 부족으로 건너뜀)` : ''}`);
-
-  // ★ 버그수정: 연차 지급/차감 후 내역 자동 갱신
-  loadLeaveView();
-}
-
-// ===== Notice =====
-const DEFAULT_NOTICE = [
-  { badge: '+1주', badgeType: 'purple', text: '초대', sub: '' },
-  { badge: '+2주', badgeType: 'purple', text: '한달 풀참', sub: '' },
-  { badge: '+1주', badgeType: 'gold', text: '영업건 건당', sub: '하루 선착순 3명' },
-  { badge: '+3주', badgeType: 'gold', text: '🏆 월말 영업왕 성과금', sub: '' }
-];
-
-async function loadNotice() {
-  const data = await fbGet('notice');
-  const rows = (data && data.length) ? data : DEFAULT_NOTICE;
-  renderNoticeCard(rows);
-  return rows;
-}
-
-function renderNoticeCard(rows) {
-  const card = document.getElementById('noticeCard');
-  if (!card) return;
-  card.innerHTML = `
-    <div class="notice-title">📢 주식 지급 기준</div>
-    ${rows.map(r => `
-      <div class="notice-row">
-        <span class="notice-badge${r.badgeType === 'gold' ? ' gold' : ''}">${escHtml(r.badge)}</span>
-        <div>
-          <div>${escHtml(r.text)}</div>
-          ${r.sub ? `<div class="notice-sub">${escHtml(r.sub)}</div>` : ''}
-        </div>
-      </div>
-    `).join('')}
-  `;
-}
-
-async function loadNoticeEditor() {
-  const data = await fbGet('notice');
-  const rows = (data && data.length) ? data : DEFAULT_NOTICE;
-  renderNoticeEditor(rows);
-}
-
-function renderNoticeEditor(rows) {
-  const list = document.getElementById('noticeEditorList');
-  if (!list) return;
-  list.innerHTML = rows.map((r, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span class="notice-badge${r.badgeType === 'gold' ? ' gold' : ''}" style="cursor:pointer" onclick="toggleNoticeBadgeType(${i})">${escHtml(r.badge)}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px">${escHtml(r.text)}</div>
-        ${r.sub ? `<div class="notice-sub">${escHtml(r.sub)}</div>` : ''}
-      </div>
-      <button class="btn-sm btn-del" onclick="deleteNoticeRow(${i})">삭제</button>
-    </div>
-  `).join('');
-}
-
-async function addNoticeRow() {
-  const badge = document.getElementById('newNoticeBadge').value.trim();
-  const text = document.getElementById('newNoticeText').value.trim();
-  if (!badge || !text) { showToast('배지와 내용을 입력하세요'); return; }
-
-  const data = await fbGet('notice');
-  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
-  rows.push({ badge, badgeType: 'purple', text, sub: '' });
-  await fbSet('notice', rows);
-
-  document.getElementById('newNoticeBadge').value = '';
-  document.getElementById('newNoticeText').value = '';
-  showToast('✅ 추가됨');
-  renderNoticeCard(rows);
-  renderNoticeEditor(rows);
-}
-
-async function deleteNoticeRow(index) {
-  const data = await fbGet('notice');
-  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
-  rows.splice(index, 1);
-  await fbSet('notice', rows);
-  showToast('🗑️ 삭제됨');
-  renderNoticeCard(rows);
-  renderNoticeEditor(rows);
-}
-
-async function toggleNoticeBadgeType(index) {
-  const data = await fbGet('notice');
-  const rows = (data && data.length) ? data : [...DEFAULT_NOTICE];
-  rows[index].badgeType = rows[index].badgeType === 'gold' ? 'purple' : 'gold';
-  await fbSet('notice', rows);
-  renderNoticeCard(rows);
-  renderNoticeEditor(rows);
-}
-
-async function loadLeaveIntoMembers() {
-  for (const key of Object.keys(allMembers)) {
-    const leave = await fbGet(`memberLeave/${key}`) || 0;
-    const prizes = await fbGet(`memberPrizes/${key}`) || [];
-    const prizeLeave = prizes.filter(p => p.name === '연차').length;
-    allMembers[key].leave = leave + prizeLeave;
-  }
-}
-
-// ===== Helpers =====
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-function formatTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const mo = d.getMonth()+1;
-  const da = d.getDate();
-  const h = d.getHours().toString().padStart(2,'0');
-  const mi = d.getMinutes().toString().padStart(2,'0');
-  return `${mo}/${da} ${h}:${mi}`;
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ===== Start =====
 init();
 </script>
 
