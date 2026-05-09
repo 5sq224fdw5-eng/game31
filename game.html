@@ -705,7 +705,7 @@ async function loadPrizes(){
   drawRoulette();renderPrizeLegend();
 }
 function updateTotalProb(){const total=Object.values(allPrizes).reduce((s,p)=>s+(p.prob||0),0);const el=document.getElementById('totalProb');el.textContent=`합계: ${total}%`;el.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';}
-function openAddPrize(){document.getElementById('prizeModalTitle').textContent='경품 추가';['editPrizeKey','editPrizeName','editPrizeEmoji','editPrizeProb'].forEach(id=>document.getElementById(id).value='');document.getElementById('prizeModal').classList.add('active');}
+function openAddPrize(){['editPrizeKey','editPrizeName','editPrizeEmoji','editPrizeProb'].forEach(id=>document.getElementById(id).value='');document.getElementById('prizeModalTitle').textContent='경품 추가';document.getElementById('prizeModal').classList.add('active');}
 function openEditPrize(key){const p=allPrizes[key];if(!p)return;document.getElementById('prizeModalTitle').textContent='경품 수정';document.getElementById('editPrizeKey').value=key;document.getElementById('editPrizeName').value=p.name;document.getElementById('editPrizeEmoji').value=p.emoji;document.getElementById('editPrizeProb').value=p.prob;document.getElementById('prizeModal').classList.add('active');}
 function closePrizeModal(){document.getElementById('prizeModal').classList.remove('active');}
 async function savePrize(){
@@ -717,7 +717,6 @@ async function savePrize(){
 }
 async function deletePrize(key){if(!confirm('경품을 삭제하시겠습니까?'))return;await fbDelete(`prizes/${key}`);showToast('🗑️ 삭제됨');loadPrizes();}
 
-// ★ 핵심 수정: members를 먼저 await로 가져온 뒤 loadLeaveView 호출
 async function loadSettings(){
   const members=await fbGet('members');
   allMembers=members||{};
@@ -728,7 +727,7 @@ async function loadSettings(){
   const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   document.getElementById('costDisplay').textContent=`${costPerRoll}주`;
   document.getElementById('newCostInput').value=costPerRoll;
-  await loadLeaveView();
+  loadLeaveView(); // await 없이 백그라운드 실행
 }
 
 async function loadMemberPrizes(){
@@ -797,22 +796,34 @@ function renderDropdown(dropdownId,q){
 function pickMember(e,dropdownId,key,name){e.preventDefault();const cfg=ssConfigs[dropdownId];if(!cfg)return;document.getElementById(cfg.hiddenId).value=key;document.getElementById(cfg.inputId).value=name;document.getElementById(dropdownId).classList.remove('open');if(cfg.onSelect)cfg.onSelect();}
 function closeDropdownDelay(dropdownId){setTimeout(()=>{const el=document.getElementById(dropdownId);if(el)el.classList.remove('open');},150);}
 
-// ★ loadLeaveView: Firebase에서 members를 직접 새로 가져와서 처리
+// ★ 핵심 최적화: 4번 요청으로 300명 처리 (기존 900번 → 4번)
 async function loadLeaveView(){
   const container=document.getElementById('leaveViewList');if(!container)return;
   container.innerHTML='<div style="color:rgba(255,255,255,0.4)">불러오는 중...</div>';
   try{
-    const members=await fbGet('members');
+    // 4개 경로를 동시에 한꺼번에 가져옴
+    const [members, allMemberLeave, allMemberPrizes, allLeaveLog] = await Promise.all([
+      fbGet('members'),
+      fbGet('memberLeave'),
+      fbGet('memberPrizes'),
+      fbGet('leaveLog')
+    ]);
+
     if(!members){container.innerHTML='<div style="color:rgba(255,255,255,0.4)">멤버 없음</div>';return;}
+
     let html='';
     for(const[key,m]of Object.entries(members)){
-      const manualLeave=await fbGet(`memberLeave/${key}`)||0;
-      const prizes=await fbGet(`memberPrizes/${key}`)||[];
-      const prizeLeave=prizes.filter(p=>p.name==='연차').length;
+      const manualLeave=(allMemberLeave&&allMemberLeave[key])||0;
+      const prizes=(allMemberPrizes&&allMemberPrizes[key])||[];
+      const prizeLeave=Array.isArray(prizes)?prizes.filter(p=>p.name==='연차').length:0;
       const total=manualLeave+prizeLeave;
-      const leaveLog=await fbGet(`leaveLog/${key}`);
+      const leaveLog=allLeaveLog&&allLeaveLog[key];
+
       html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-weight:700;color:white">${escHtml(m.name)}</span><span style="color:var(--gold);font-family:'Jua',cursive">잔여 ${total}일</span></div>`;
-      if(leaveLog){const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));html+=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);"><div><span style="color:#26DE81">+${l.amount}일 수동지급</span>${l.memo?`<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('');}
+      if(leaveLog){
+        const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+        html+=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);"><div><span style="color:#26DE81">+${l.amount}일 수동지급</span>${l.memo?`<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('');
+      }
       if(prizeLeave>0)html+=`<div style="padding:4px 0;border-top:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.6)">🎰 경품 연차 ${prizeLeave}일</div>`;
       if(!leaveLog&&prizeLeave===0&&manualLeave===0)html+=`<div style="color:rgba(255,255,255,0.3);font-size:11px">내역 없음</div>`;
       html+='</div>';
@@ -833,7 +844,7 @@ async function adjustLeave(sign){
   document.getElementById('leaveAmount').value='';if(document.getElementById('leaveMemo'))document.getElementById('leaveMemo').value='';
   document.getElementById('leaveSearch').value='';bulkSelected.leave.clear();renderBulkList('leave');
   showToast(`✅ ${keys.length-skipped}명 연차 ${amount}일 ${sign>0?'지급':'차감'} 완료${skipped>0?` (${skipped}명 연차 부족으로 건너뜀)`:''}`);
-  await loadLeaveView();
+  loadLeaveView();
 }
 
 const DEFAULT_NOTICE=[{badge:'+1주',badgeType:'purple',text:'초대',sub:''},{badge:'+2주',badgeType:'purple',text:'한달 풀참',sub:''},{badge:'+1주',badgeType:'gold',text:'영업건 건당',sub:'하루 선착순 3명'},{badge:'+3주',badgeType:'gold',text:'🏆 월말 영업왕 성과금',sub:''}];
@@ -846,7 +857,16 @@ async function deleteNoticeRow(index){const data=await fbGet('notice');const row
 async function toggleNoticeBadgeType(index){const data=await fbGet('notice');const rows=(data&&data.length)?data:[...DEFAULT_NOTICE];rows[index].badgeType=rows[index].badgeType==='gold'?'purple':'gold';await fbSet('notice',rows);renderNoticeCard(rows);renderNoticeEditor(rows);}
 
 async function loadLeaveIntoMembers(){
-  for(const key of Object.keys(allMembers)){const leave=await fbGet(`memberLeave/${key}`)||0;const prizes=await fbGet(`memberPrizes/${key}`)||[];allMembers[key].leave=leave+prizes.filter(p=>p.name==='연차').length;}
+  // 한번에 가져와서 처리
+  const [allMemberLeave, allMemberPrizes] = await Promise.all([
+    fbGet('memberLeave'),
+    fbGet('memberPrizes')
+  ]);
+  for(const key of Object.keys(allMembers)){
+    const leave=(allMemberLeave&&allMemberLeave[key])||0;
+    const prizes=(allMemberPrizes&&allMemberPrizes[key])||[];
+    allMembers[key].leave=leave+(Array.isArray(prizes)?prizes.filter(p=>p.name==='연차').length:0);
+  }
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
