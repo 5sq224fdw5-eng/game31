@@ -436,6 +436,14 @@ async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method
 async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
 async function fbDelete(path){try{await fetch(`${DB_URL}/${path}.json`,{method:'DELETE'});}catch(e){}}
 
+// Firebase 배열이 객체로 반환될 때 배열로 정규화
+function toArray(val){
+  if(!val)return[];
+  if(Array.isArray(val))return val;
+  return Object.values(val);
+}
+
+
 let currentUser=null;
 (function restoreLogin(){
   const saved=localStorage.getItem('currentUser');
@@ -492,7 +500,8 @@ async function refreshHeaderPrizes(){
   if(!currentUser||currentUser.role==='admin')return;
   const el=document.getElementById('headerPrizes');
   let prizes=await fbGet(`memberPrizes/${currentUser.key}`);
-  if(!prizes||prizes.length===0){
+  prizes=toArray(prizes);
+  if(prizes.length===0){
     const history=await fbGet('history');
     if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name).map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
   }
@@ -602,7 +611,7 @@ async function showPrizeModal(prize){
   document.getElementById('modalMsg').textContent=`${currentUser.name}님 축하합니다! 🎉`;
   document.getElementById('resultModal').classList.add('active');
   if(currentUser&&currentUser.role==='member'){
-    const current=await fbGet(`memberPrizes/${currentUser.key}`)||[];
+    const current=toArray(await fbGet(`memberPrizes/${currentUser.key}`));
     current.push({emoji:prize.emoji,name:prize.name,time:Date.now()});
     await fbSet(`memberPrizes/${currentUser.key}`,current);refreshHeaderPrizes();
   }
@@ -662,7 +671,7 @@ async function loadHistory(){
     const leaveCard=document.getElementById('myLeaveCard');const leaveLogList=document.getElementById('myLeaveLogList');
     const leaveLog=await fbGet(`leaveLog/${currentUser.key}`);
     const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
-    const prizes=await fbGet(`memberPrizes/${currentUser.key}`)||[];
+    const prizes=toArray(await fbGet(`memberPrizes/${currentUser.key}`));
     const prizeLeave=prizes.filter(p=>p.name==='연차').length;const totalLeave=manualLeave+prizeLeave;
     if(leaveLog){
       leaveCard.style.display='';
@@ -845,8 +854,8 @@ async function loadLeaveView(){
 
     leaveViewCache=Object.entries(members).map(([key,m])=>{
       const manualLeave=(allMemberLeave&&allMemberLeave[key])||0;
-      const prizes=(allMemberPrizes&&allMemberPrizes[key])||[];
-      const prizeLeave=Array.isArray(prizes)?prizes.filter(p=>p.name==='연차').length:0;
+      const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]);
+      const prizeLeave=prizes.filter(p=>p.name==='연차').length;
       const total=manualLeave+prizeLeave;
       const leaveLogRaw=allLeaveLog&&allLeaveLog[key];
       // 지급+차감 모두 날짜순 정렬
@@ -911,8 +920,8 @@ async function loadSettings(){
 async function loadMemberPrizes(){
   const key=document.getElementById('managePrizeMemberVal').value;const container=document.getElementById('memberPrizeList');
   if(!key){container.innerHTML='';return;}
-  const prizes=await fbGet(`memberPrizes/${key}`);
-  if(!prizes||prizes.length===0){container.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';return;}
+  const prizes=toArray(await fbGet(`memberPrizes/${key}`));
+  if(prizes.length===0){container.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">보유 경품 없음</div>';return;}
   const fmtDate=ts=>ts?new Date(ts).toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1):'';
   container.innerHTML=prizes.map((p,i)=>{
     const giveDate=fmtDate(p.time);
@@ -936,12 +945,12 @@ async function loadMemberPrizes(){
 async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
-  const current=await fbGet(`memberPrizes/${key}`)||[];current.push({emoji,name,time:Date.now(),deducted:false});await fbSet(`memberPrizes/${key}`,current);
+  const current=toArray(await fbGet(`memberPrizes/${key}`));current.push({emoji,name,time:Date.now(),deducted:false});await fbSet(`memberPrizes/${key}`,current);
   document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
 async function removeMemberPrize(key,index){
-  const current=await fbGet(`memberPrizes/${key}`)||[];
+  const current=toArray(await fbGet(`memberPrizes/${key}`));
   // 삭제 대신 차감 표시 + 날짜 기록
   const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
   current[index]={...current[index],deducted:true,deductDate:today};
@@ -1061,8 +1070,8 @@ async function loadLeaveIntoMembers(){
   const [allMemberLeave,allMemberPrizes]=await Promise.all([fbGet('memberLeave'),fbGet('memberPrizes')]);
   for(const key of Object.keys(allMembers)){
     const leave=(allMemberLeave&&allMemberLeave[key])||0;
-    const prizes=(allMemberPrizes&&allMemberPrizes[key])||[];
-    allMembers[key].leave=leave+(Array.isArray(prizes)?prizes.filter(p=>p.name==='연차').length:0);
+    const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]);
+    allMembers[key].leave=leave+prizes.filter(p=>p.name==='연차').length:0);
   }
 }
 
