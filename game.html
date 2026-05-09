@@ -1020,6 +1020,8 @@ animation: slideUp 0.3s ease;
 
 <!-- SETTINGS PAGE (admin) -->
 
+<!-- ★ 버그수정: 아래 pageSettings div 안에 연차내역조회/공지사항편집/경품관리 섹션을 모두 포함시킴 -->
+
 <div class="page" id="pageSettings">
   <div class="section-title">⚙️ 설정</div>
   <div class="card">
@@ -1072,7 +1074,6 @@ animation: slideUp 0.3s ease;
       <input type="text" id="leaveMemo" placeholder="📝 소진기한 메모 (예: 2025-12월)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
     </div>
     <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급 시에만 저장됩니다</div>
-    </div>
   </div>
 
   <!-- 관리자용 멤버 연차 내역 조회 -->
@@ -1082,8 +1083,10 @@ animation: slideUp 0.3s ease;
     <div id="leaveViewList" style="font-size:13px;color:rgba(255,255,255,0.5)">불러오는 중...</div>
   </div>
 
-  <div class="section-title admin-only" style="margin-top:20px;display:none">📢 공지사항 편집</div>
-  <div class="card admin-only" id="noticeEditorCard" style="display:none">
+  <!-- 공지사항 편집 -->
+
+  <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
+  <div class="card" id="noticeEditorCard">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
     <div id="noticeEditorList"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
@@ -1093,8 +1096,10 @@ animation: slideUp 0.3s ease;
     </div>
   </div>
 
-  <div class="section-title admin-only" style="margin-top:20px;display:none">🏆 경품 관리 (지급/차감)</div>
-  <div class="card admin-only" style="display:none">
+  <!-- 경품 관리 (지급/차감) -->
+
+  <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
+  <div class="card">
     <div class="search-select-wrap">
       <label>멤버 검색</label>
       <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
@@ -1108,6 +1113,9 @@ animation: slideUp 0.3s ease;
       <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
     </div>
   </div>
+
+</div>
+<!-- ★ pageSettings 닫힘 — 위 3개 섹션은 모두 이 안에 있어야 함 -->
 
 <!-- Result Modal -->
 
@@ -1144,6 +1152,9 @@ animation: slideUp 0.3s ease;
     </div>
   </div>
 </div>
+
+  </div><!-- #app 닫힘 -->
+</div><!-- #mainApp 닫힘 -->
 
 <script>
 // ===== Firebase Config =====
@@ -1382,7 +1393,8 @@ function showPage(page) {
   if (page === 'history') loadHistory();
   if (page === 'members') loadMembers();
   if (page === 'prizes') loadPrizes();
-  if (page === 'settings') { loadSettings(); setTimeout(() => loadLeaveView(), 100); }
+  // ★ 버그수정: setTimeout 제거하고 loadSettings 안에서 loadLeaveView() 직접 호출
+  if (page === 'settings') { loadSettings(); }
 }
 
 // ===== Roulette Drawing =====
@@ -1991,7 +2003,9 @@ async function loadSettings() {
   costPerRoll = (cost !== null && cost !== undefined) ? cost : 10;
   document.getElementById('costDisplay').textContent = `${costPerRoll}주`;
   document.getElementById('newCostInput').value = costPerRoll;
-  // searchable dropdowns auto-populate on focus
+
+  // ★ 버그수정: setTimeout 없이 바로 호출 (섹션이 pageSettings 안에 있으므로 정상 작동)
+  loadLeaveView();
 }
 
 function populateManagePrizeSelect() {
@@ -2182,7 +2196,6 @@ function updateBulkCount(type) {
 }
 
 // ===== Searchable Select =====
-// configs: { inputId, dropdownId, hiddenId, onSelect(callback) }
 const ssConfigs = {
   giveStockDropdown:    { inputId:'giveStockSearch',    hiddenId:'giveStockMemberVal',    onSelect: null },
   deductStockDropdown:  { inputId:'deductStockSearch',  hiddenId:'deductStockMemberVal',  onSelect: null },
@@ -2285,8 +2298,6 @@ async function loadLeaveView() {
   } catch(e) {
     container.innerHTML = `<div style="color:#FC5C65">오류: ${e.message}</div>`;
   }
-
-
 }
 
 // ===== 연차 관리 =====
@@ -2353,6 +2364,9 @@ async function adjustLeave(sign) {
   const done = keys.length - skipped;
   const action = sign > 0 ? '지급' : '차감';
   showToast(`✅ ${done}명 연차 ${amount}일 ${action} 완료${skipped > 0 ? ` (${skipped}명 연차 부족으로 건너뜀)` : ''}`);
+
+  // ★ 버그수정: 연차 지급/차감 후 내역 자동 갱신
+  loadLeaveView();
 }
 
 // ===== Notice =====
