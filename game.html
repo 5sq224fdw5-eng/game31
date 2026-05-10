@@ -635,7 +635,10 @@ async function doSpin(){
   const btn=document.getElementById('spinBtn');btn.disabled=true;isSpinning=true;
   const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
   const prize=drawPrize();
-  const prizes=Object.values(allPrizes);const total=prizes.reduce((s,p)=>s+(p.prob||0),0)||100;
+  // 룰렛 화면과 동일한 셔플 순서로 각도 계산
+  const rawPrizesForSpin=Object.values(allPrizes);
+  const prizes=window._shuffledPrizeKeys?window._shuffledPrizeKeys.map(i=>rawPrizesForSpin[i]):rawPrizesForSpin;
+  const total=prizes.reduce((s,p)=>s+(p.prob||0),0)||100;
   let cumulative=0,prizeStart=0,prizeEnd=0;
   for(const p of prizes){const sliceDeg=(p.prob/total)*360;if(p.name===prize.name&&p.emoji===prize.emoji){prizeEnd=cumulative+sliceDeg;prizeStart=cumulative;break;}cumulative+=sliceDeg;}
   const prizeMid=prizeStart+(prizeEnd-prizeStart)/2;
