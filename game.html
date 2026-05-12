@@ -1120,42 +1120,50 @@ function populateGiveStockSelect(){
 
 async function deduplicateMemberPrizes(){
   const statusEl=document.getElementById('dedupeStatus');
-  statusEl.textContent='처리 중...';
+  statusEl.textContent='데이터 불러오는 중...';
 
-  const members=await fbGet('members');
-  if(!members){statusEl.textContent='❌ 멤버 데이터 없음';return;}
+  // history + memberPrizes + members 한번에 가져오기
+  const [history, allMemberPrizes, members] = await Promise.all([
+    fbGet('history'), fbGet('memberPrizes'), fbGet('members')
+  ]);
+  if(!allMemberPrizes||!members){statusEl.textContent='✅ 중복 없음';return;}
 
+  // history를 이름별 유효한 time Set으로 만들기
+  const validTimesByName={};
+  if(history){
+    Object.values(history).forEach(h=>{
+      if(!h.name||!h.time)return;
+      if(!validTimesByName[h.name])validTimesByName[h.name]=new Set();
+      validTimesByName[h.name].add(h.time);
+    });
+  }
+
+  statusEl.textContent='중복 제거 중...';
   let fixed=0;
-  for(const[key,m] of Object.entries(members)){
-    const prizes=toArray(await fbGet('memberPrizes/'+key));
-    if(prizes.length===0)continue;
+  const updates={};
 
-    // 중복 제거: time이 같은 항목이 2개 이상이면 1개만 남김
-    // time이 없는 항목은 그대로 유지
-    const timeSeen={};
-    const deduped=[];
-    for(const p of prizes){
-      if(!p.time){
-        // time 없으면 그대로 유지
-        deduped.push(p);
-      } else {
-        const t=String(p.time);
-        if(!timeSeen[t]){
-          timeSeen[t]=true;
-          deduped.push(p);
-        }
-        // time 중복이면 버림
-      }
-    }
+  for(const[key,prizesRaw] of Object.entries(allMemberPrizes)){
+    const prizes=toArray(prizesRaw);
+    if(prizes.length===0)continue;
+    const memberName=members[key]?members[key].name:'';
+    const validTimes=validTimesByName[memberName]||new Set();
+
+    // history에 있는 time이거나, deducted이거나, time이 없는 항목만 유지
+    // history에 없는 time = 복구버튼이 새로 만든 잉여 항목 → 제거
+    const deduped=prizes.filter(p=>{
+      if(!p.time)return true; // time 없으면 유지
+      if(p.deducted)return true; // 차감된 건 유지
+      return validTimes.has(p.time); // history에 있는 것만 유지
+    });
 
     if(deduped.length<prizes.length){
-      await fbSet('memberPrizes/'+key, deduped);
+      updates[key]=deduped;
       fixed++;
-      statusEl.textContent=fixed+'명 정리 중...';
     }
   }
 
-  statusEl.textContent=fixed===0?'✅ 중복 없음 (이미 정상 상태)':'✅ '+fixed+'명의 중복 경품 제거 완료!';
+  await Promise.all(Object.entries(updates).map(([key,deduped])=>fbSet('memberPrizes/'+key,deduped)));
+  statusEl.textContent=fixed===0?'✅ 정리 없음 (이미 정상 상태)':'✅ '+fixed+'명의 잉여 경품 제거 완료!';
 }
 async function recoverMemberPrizes(){
   const statusEl=document.getElementById('recoverStatus');
