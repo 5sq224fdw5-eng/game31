@@ -1148,15 +1148,18 @@ async function deduplicateMemberPrizes(){
     const memberName=members[key]?members[key].name:'';
     const validTimes=validTimesByName[memberName]||new Set();
 
-    // 같은 time에 deducted:true와 일반 항목이 함께 있으면 일반 항목(잉여)을 제거
-    // 즉, deducted:true가 있는 time의 일반 항목은 복구버튼이 만든 것 → 제거
-    const deductedTimes=new Set(prizes.filter(p=>p.deducted&&p.time).map(p=>String(p.time)));
+    // 복구버튼 잉여 제거:
+    // 차감된 항목(deducted:true)의 time과 2000ms 이내인 일반 항목은 잉여로 제거
+    const deductedItems=prizes.filter(p=>p.deducted&&p.time);
     const deduped=prizes.filter(p=>{
-      if(!p.time)return true; // time 없으면 유지
+      if(!p.time)return true;
       if(p.deducted)return true; // 차감된 건 항상 유지
-      // 같은 time에 차감된 항목이 있으면 이건 잉여 → 제거
-      if(deductedTimes.has(String(p.time)))return false;
-      return true;
+      // 차감된 항목과 2초 이내 같은 이름+이모지면 잉여
+      const isJunk=deductedItems.some(d=>
+        d.emoji===p.emoji && d.name===p.name &&
+        Math.abs(d.time - p.time) < 2000
+      );
+      return !isJunk;
     });
 
     if(deduped.length<prizes.length){
