@@ -337,9 +337,11 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 
   <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
   <div class="card">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">당첨 기록(history) 기준으로 누락된 경품을 전체 복구합니다.</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
+    <div id="dedupeStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+    <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
     <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
-    <button class="btn-confirm" onclick="recoverMemberPrizes()" style="width:100%">📦 전체 경품 데이터 복구</button>
+    <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
   </div>
 
   <div class="section-title" style="margin-top:20px">💰 주식 지급</div>
@@ -1115,6 +1117,40 @@ function populateGiveStockSelect(){
 
 
 // ★ history 기준으로 memberPrizes 재구성 복구 함수
+
+async function deduplicateMemberPrizes(){
+  const statusEl=document.getElementById('dedupeStatus');
+  statusEl.textContent='처리 중...';
+
+  const members=await fbGet('members');
+  if(!members){statusEl.textContent='❌ 멤버 데이터 없음';return;}
+
+  let fixed=0;
+  for(const[key,m] of Object.entries(members)){
+    const prizes=toArray(await fbGet('memberPrizes/'+key));
+    if(prizes.length===0)continue;
+
+    // time 기준으로 중복 제거 (time이 같으면 같은 경품으로 판단)
+    // time이 없는 경우 emoji+name 조합으로 판단
+    const seen=new Set();
+    const deduped=[];
+    for(const p of prizes){
+      const key2=p.time?String(p.time):(p.emoji+p.name+String(deduped.length));
+      if(!seen.has(key2)){
+        seen.add(key2);
+        deduped.push(p);
+      }
+    }
+
+    if(deduped.length<prizes.length){
+      await fbSet('memberPrizes/'+key, deduped);
+      fixed++;
+      statusEl.textContent=fixed+'명 정리 중...';
+    }
+  }
+
+  statusEl.textContent=fixed===0?'✅ 중복 없음 (이미 정상 상태)':'✅ '+fixed+'명의 중복 경품 제거 완료!';
+}
 async function recoverMemberPrizes(){
   const statusEl=document.getElementById('recoverStatus');
   statusEl.textContent='불러오는 중...';
