@@ -520,7 +520,7 @@ async function refreshHeaderPrizes(){
   }
   const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
   const counts={};
-  (prizes||[]).forEach(p=>{const key=p.name;if(!counts[key])counts[key]={emoji:p.emoji,name:p.name,count:0};counts[key].count++;});
+  (prizes||[]).forEach(p=>{if(p.deducted)return;const key=p.name;if(!counts[key])counts[key]={emoji:p.emoji,name:p.name,count:0};counts[key].count++;});
   if(manualLeave>0){if(counts['연차'])counts['연차'].count+=manualLeave;else counts['연차']={emoji:'🏖️',name:'연차',count:manualLeave};}
   if(Object.keys(counts).length===0)el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
   else el.innerHTML=Object.values(counts).map(p=>`<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
@@ -688,7 +688,7 @@ async function loadHistory(){
     const leaveLog=await fbGet(`leaveLog/${currentUser.key}`);
     const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
     const prizes=toArray(await fbGet(`memberPrizes/${currentUser.key}`));
-    const prizeLeave=prizes.filter(p=>p.name==='연차').length;const totalLeave=manualLeave+prizeLeave;
+    const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;const totalLeave=manualLeave+prizeLeave;
     if(leaveLog){
       leaveCard.style.display='';
       const logs=Object.values(leaveLog).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -1004,7 +1004,7 @@ async function loadLeaveView(){
     leaveViewCache=Object.entries(members).map(([key,m])=>{
       const manualLeave=(allMemberLeave&&allMemberLeave[key])||0;
       const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]);
-      const prizeLeave=prizes.filter(p=>p.name==='연차').length;
+      const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;
       const total=manualLeave+prizeLeave;
       const leaveLogRaw=allLeaveLog&&allLeaveLog[key];
       // 지급+차감 모두 날짜순 정렬
@@ -1265,7 +1265,7 @@ async function loadLeaveIntoMembers(){
   for(const key of Object.keys(allMembers)){
     const leave=(allMemberLeave&&allMemberLeave[key])||0;
     const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]);
-    allMembers[key].leave=leave+prizes.filter(p=>p.name==='연차').length;
+    allMembers[key].leave=leave+prizes.filter(p=>p.name==='연차'&&!p.deducted).length;
   }
 }
 
