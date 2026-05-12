@@ -1233,13 +1233,38 @@ async function adjustLeave(sign){
       await fbSet(`memberLeave/${key}`,current+amount);
       if(allMembers[key])allMembers[key].leave=current+amount;
     }else{
-      // 차감: type:'deduct', leaveLog에도 기록
-      const current=await fbGet(`memberLeave/${key}`)||0;
-      const next=current-amount;
-      if(next<0){skipped++;continue;}
+      // 차감: 수동+경품 연차 합산 후 잔여 확인, 수동 먼저 차감 후 경품에서 차감
+      const manualLeave=await fbGet(`memberLeave/${key}`)||0;
+      const memberPrizesArr=toArray(await fbGet(`memberPrizes/${key}`));
+      const prizeLeaveCount=memberPrizesArr.filter(p=>p.name==='연차'&&!p.deducted).length;
+      const totalLeave=manualLeave+prizeLeaveCount;
+      if(totalLeave<amount){skipped++;continue;}
+
       await fbPush(`leaveLog/${key}`,{type:'deduct',amount,date:today,memo:memo||''});
-      await fbSet(`memberLeave/${key}`,next);
-      if(allMembers[key])allMembers[key].leave=next;
+      let remaining=amount;
+
+      // 수동 연차에서 먼저 차감
+      if(manualLeave>0){
+        const fromManual=Math.min(manualLeave,remaining);
+        await fbSet(`memberLeave/${key}`,manualLeave-fromManual);
+        remaining-=fromManual;
+      }
+
+      // 부족분은 경품 연차에서 차감 (오래된 것부터)
+      if(remaining>0){
+        const today2=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
+        let cnt=0;
+        for(let i=0;i<memberPrizesArr.length;i++){
+          if(cnt>=remaining)break;
+          const p=memberPrizesArr[i];
+          if(p.name==='연차'&&!p.deducted){
+            memberPrizesArr[i]={...p,deducted:true,deductDate:today2};
+            cnt++;
+          }
+        }
+        await fbSet(`memberPrizes/${key}`,memberPrizesArr);
+      }
+      if(allMembers[key])allMembers[key].leave=totalLeave-amount;
     }
   }
 
