@@ -438,7 +438,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
     </div>
-    <input type="text" id="addPrizeMemo" placeholder="📝 소진기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
+    <input type="text" id="addPrizeMemo" placeholder="📝 만료 기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
     <div style="display:none">
     </div>
   </div>
@@ -770,7 +770,7 @@ function renderMemberPrizeHistory(items){
       +'<div class="history-emoji">'+item.emoji+'</div>'
       +'<div class="history-info" style="min-width:0;flex:1;">'
       +'<div class="history-prize" style="font-size:14px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
-      +(giveDate?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">지급 '+giveDate+' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">소진기한 '+(item.memo?escHtml(item.memo):'무제한')+'</span></div>':'')
+      +(giveDate?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">지급 '+giveDate+' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">만료 기한 '+(item.memo?escHtml(item.memo):'무제한')+'</span></div>':'')
       +(isDeducted&&item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
       +'</div>'
       +'</div>';
