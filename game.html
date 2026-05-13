@@ -332,7 +332,8 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
         <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:12px">
+      <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
         <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
         <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="deductStockSelected">선택: 0명</div>
@@ -341,6 +342,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
         <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
       </div>
+      <input type="text" id="deductStockMemo" placeholder="📝 메모 (예: 경품 차감)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
     </div>
     <div class="section-title" style="margin-top:20px">📋 멤버별 주식 현황</div>
     <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
@@ -631,6 +633,8 @@ async function deductStockAndCheck(){
     const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
     await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
+    const today=new Date().toISOString().slice(0,10);
+    await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,memo:'경품 뽑기 사용'});
   }
   return true;
 }
@@ -1333,7 +1337,8 @@ async function giveStock(){
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
-    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today});
+    const giveMemo=document.getElementById('giveStockMemo')?.value.trim()||'';
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,memo:giveMemo});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
@@ -1353,7 +1358,8 @@ async function deductStock(){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     if(amount>current){skipped++;continue;}
     await fbSet(`members/${key}/stock`, current-amount);
-    await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today});
+    const deductMemo=document.getElementById('deductStockMemo')?.value.trim()||'';
+    await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today,memo:deductMemo});
   }
   allMembers=(await fbGet('members'))||{};
   const dav=document.getElementById('deductStockAmount');if(dav)dav.value='';
