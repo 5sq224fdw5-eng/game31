@@ -262,12 +262,9 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 
 <div class="page active" id="pageGacha">
   <div class="notice-card" id="noticeCard"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px">
-    <div class="stock-badge">
-      <div class="label">보유 주식</div>
-      <div class="value" id="myStockDisplay">0 주</div>
-      <div class="cost-info" id="costInfo">1판 = ? 주</div>
-    </div>
+  <div style="display:flex;flex-direction:column;align-items:center;padding-top:12px">
+    <div id="costInfo" style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:12px;">1판 = ? 주</div>
+    <input type="hidden" id="myStockDisplay">
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeRoulette" onclick="switchMode('roulette')">🎡 룰렛</button>
       <button class="mode-btn" id="modeGacha" onclick="switchMode('gacha')">🎰 가챠</button>
@@ -643,7 +640,6 @@ async function refreshGachaPage(){
   const prizes=await fbGet('prizes');allPrizes=prizes||allPrizes;
   if(currentUser.role==='member'){
     const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
-    document.getElementById('myStockDisplay').textContent=`${stock} 주`;
     const noStock=stock<costPerRoll;document.getElementById('spinBtn').disabled=noStock;document.getElementById('gachaSlotBtn').disabled=noStock;
   }else{document.getElementById('myStockDisplay').textContent='∞ 주';document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;}
   drawRoulette();renderPrizeLegend();
@@ -662,7 +658,7 @@ async function deductStockAndCheck(){
 
 function refreshStockDisplay(enableBtns){
   if(currentUser.role==='member'){
-    fbGet(`members/${currentUser.key}`).then(m=>{const s=m?(m.stock||0):0;document.getElementById('myStockDisplay').textContent=`${s} 주`;const noStock=s<costPerRoll;document.getElementById('spinBtn').disabled=noStock;document.getElementById('gachaSlotBtn').disabled=noStock;});
+    fbGet(`members/${currentUser.key}`).then(m=>{const s=m?(m.stock||0):0;const noStock=s<costPerRoll;document.getElementById('spinBtn').disabled=noStock;document.getElementById('gachaSlotBtn').disabled=noStock;refreshHeaderStock();});
   }else if(enableBtns){document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;}
 }
 
