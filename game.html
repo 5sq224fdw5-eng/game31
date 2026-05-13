@@ -240,8 +240,10 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <div class="nav" id="mainNav">
   <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha"><span>🎡</span>뽑기</button>
   <button class="nav-btn" onclick="showPage('history')" data-page="history"><span>📜</span>기록</button>
+  <button class="nav-btn member-stock-btn" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
   <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none"><span>👥</span>멤버</button>
   <button class="nav-btn admin-only" onclick="showPage('prizes')" data-page="prizes" style="display:none"><span>🎁</span>경품</button>
+  <button class="nav-btn admin-only" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
   <button class="nav-btn admin-only" onclick="showPage('leave')" data-page="leave" style="display:none"><span>🏖️</span>연차</button>
   <button class="nav-btn admin-only" onclick="showPage('settings')" data-page="settings" style="display:none"><span>⚙️</span>설정</button>
 </div>
@@ -312,6 +314,45 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
   <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
 </div>
 
+<!-- 주식 탭 -->
+<div class="page" id="pageStock">
+  <!-- 관리자용 -->
+  <div id="stockAdminView" style="display:none">
+    <div class="section-title">💰 주식 지급/차감</div>
+    <div class="card">
+      <input class="bulk-search" id="stockMgmtSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock');renderBulkList('deductStock')">
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--gold);margin-bottom:4px;font-family:'Jua',cursive;">💰 지급 대상</div>
+          <div class="bulk-member-list" id="giveStockBulkList" style="max-height:180px"></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="giveStockSelected">선택: 0명</div>
+        </div>
+      </div>
+      <div class="bulk-actions" style="margin-bottom:12px">
+        <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+        <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
+        <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="deductStockSelected">선택: 0명</div>
+      </div>
+      <div class="bulk-actions">
+        <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+        <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:20px">📋 멤버별 주식 현황</div>
+    <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
+    <div id="stockViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  </div>
+  <!-- 멤버용 -->
+  <div id="stockMemberView" style="display:none">
+    <div class="section-title">💰 내 주식 현황</div>
+    <div id="stockMemberContent"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  </div>
+</div>
+
 <!-- 연차 탭 -->
 <div class="page" id="pageLeave">
   <div class="section-title">🏖️ 연차 내역 조회</div>
@@ -342,28 +383,6 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
     <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
     <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
-  </div>
-
-  <div class="section-title" style="margin-top:20px">💰 주식 지급</div>
-  <div class="card">
-    <input class="bulk-search" id="giveStockSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock')">
-    <div class="bulk-member-list" id="giveStockBulkList"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="giveStockSelected">선택된 멤버: 0명</div>
-    <div class="bulk-actions">
-      <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="100" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
-    </div>
-  </div>
-
-  <div class="section-title" style="margin-top:20px">📉 주식 차감</div>
-  <div class="card">
-    <input class="bulk-search" id="deductStockSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('deductStock')">
-    <div class="bulk-member-list" id="deductStockBulkList"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="deductStockSelected">선택된 멤버: 0명</div>
-    <div class="bulk-actions">
-      <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="100" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
-    </div>
   </div>
 
   <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
@@ -506,6 +525,7 @@ function enterApp(){
   document.getElementById('headerRole').textContent=currentUser.role==='admin'?'관리자':'참여자';
   const isAdmin=currentUser.role==='admin';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  document.querySelectorAll('.member-stock-btn').forEach(el=>el.style.display=isAdmin?'none':'');
   if(!isAdmin){document.getElementById('headerPrizesWrap').style.display='';refreshHeaderPrizes();}
   else document.getElementById('headerPrizesWrap').style.display='none';
   loadNotice();showPage('gacha');
@@ -544,6 +564,7 @@ function showPage(page){
   if(page==='history')loadHistory();
   if(page==='members')loadMembers();
   if(page==='prizes')loadPrizes();
+  if(page==='stock')loadStockPage();
   if(page==='leave')loadLeaveView();
   if(page==='settings')loadSettings();
 }
@@ -1216,18 +1237,108 @@ async function recoverMemberPrizes(){
 }
 async function saveCost(){const val=parseInt(document.getElementById('newCostInput').value);if(isNaN(val)||val<1){showToast('올바른 숫자를 입력하세요');return;}costPerRoll=val;await fbSet('costPerRoll',val);document.getElementById('costDisplay').textContent=`${val}주`;showToast(`✅ 1판 = ${val}주로 설정됨`);}
 
+
+let stockViewCache=null;
+
+async function loadStockPage(){
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  document.getElementById('stockAdminView').style.display=isAdmin?'':'none';
+  document.getElementById('stockMemberView').style.display=isAdmin?'none':'';
+
+  if(isAdmin){
+    // 관리자: 멤버 목록 + 주식 현황 로드
+    const members=await fbGet('members');allMembers=members||{};
+    await loadLeaveIntoMembers();
+    bulkSelected.giveStock.clear();bulkSelected.deductStock.clear();
+    renderBulkList('giveStock');renderBulkList('deductStock');
+    loadStockView();
+  }else{
+    // 멤버: 본인 주식 현황
+    loadMemberStockView();
+  }
+}
+
+async function loadStockView(){
+  const container=document.getElementById('stockViewList');
+  container.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const [members, allStockLog]=await Promise.all([fbGet('members'), fbGet('stockLog')]);
+  if(!members){container.innerHTML='<div class="empty"><div class="empty-icon">👥</div>멤버 없음</div>';return;}
+  stockViewCache=Object.entries(members).map(([key,m])=>{
+    const logs=allStockLog&&allStockLog[key]?Object.values(allStockLog[key]).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
+    return {key,name:m.name,stock:m.stock||0,logs};
+  }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  renderStockView('');
+}
+
+function renderStockView(q){
+  const container=document.getElementById('stockViewList');
+  if(!container||!stockViewCache)return;
+  const filtered=q?stockViewCache.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())):stockViewCache;
+  if(filtered.length===0){container.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과 없음</div>';return;}
+  container.innerHTML=filtered.map(m=>{
+    let inner='';
+    if(m.logs.length>0){
+      inner=m.logs.map(l=>`<div class="leave-item-row">
+        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span>
+      </div>`).join('');
+    }else{
+      inner='<div class="leave-item-empty">내역 없음 (오늘부터 기록됩니다)</div>';
+    }
+    return `<div class="leave-item">
+      <div class="leave-item-header">
+        <span class="leave-item-name">${escHtml(m.name)}</span>
+        <span class="leave-item-total">💰 ${m.stock}주</span>
+      </div>${inner}
+    </div>`;
+  }).join('');
+}
+
+function filterStockView(){
+  const q=document.getElementById('stockViewSearch').value;
+  if(stockViewCache)renderStockView(q);
+}
+
+async function loadMemberStockView(){
+  const container=document.getElementById('stockMemberContent');
+  const [member, stockLog]=await Promise.all([
+    fbGet('members/'+currentUser.key),
+    fbGet('stockLog/'+currentUser.key)
+  ]);
+  const stock=(member&&member.stock)||0;
+  const logs=stockLog?Object.values(stockLog).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
+  let html=`<div style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border:1px solid var(--gold);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px;">
+    <div style="font-size:12px;color:rgba(255,255,255,0.6);">현재 보유 주식</div>
+    <div style="font-family:'Jua',cursive;font-size:40px;color:var(--gold);">${stock}주</div>
+  </div>`;
+  if(logs.length>0){
+    html+=`<div style="font-family:'Jua',cursive;font-size:16px;color:var(--gold);margin-bottom:10px;">📋 내역</div>`;
+    html+=logs.map(l=>`<div class="leave-item" style="margin-bottom:6px;">
+      <div class="leave-item-row" style="border:none;padding:6px 0;">
+        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'};font-weight:700;">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div>
+        <span style="color:rgba(255,255,255,0.35);font-size:11px;">${l.date||''}</span>
+      </div>
+    </div>`).join('');
+  }else{
+    html+='<div class="empty"><div class="empty-icon">📭</div><div style="font-size:13px;">내역 없음<br><span style="font-size:11px;opacity:0.6">오늘부터 기록됩니다</span></div></div>';
+  }
+  container.innerHTML=html;
+}
 async function giveStock(){
   const keys=[...bulkSelected.giveStock];const amount=parseInt(document.getElementById('giveStockAmount').value);
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
   // 최신 전체 멤버 한번에 읽고, 각 멤버 stock을 로컬 값 기준으로 순차 write
   const freshMembers=await fbGet('members')||{};
+  const today=new Date().toISOString().slice(0,10);
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today});
   }
   allMembers=(await fbGet('members'))||{};
-  document.getElementById('giveStockAmount').value='';document.getElementById('giveStockSearch').value='';
+  const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
   bulkSelected.giveStock.clear();renderBulkList('giveStock');
+  stockViewCache=null;
   showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료!`);
 }
 
@@ -1236,15 +1347,18 @@ async function deductStock(){
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
   // 최신 전체 멤버 한번에 읽고 순차 처리
   const freshMembers=await fbGet('members')||{};
+  const today=new Date().toISOString().slice(0,10);
   let skipped=0;
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     if(amount>current){skipped++;continue;}
     await fbSet(`members/${key}/stock`, current-amount);
+    await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today});
   }
   allMembers=(await fbGet('members'))||{};
-  document.getElementById('deductStockAmount').value='';document.getElementById('deductStockSearch').value='';
+  const dav=document.getElementById('deductStockAmount');if(dav)dav.value='';
   bulkSelected.deductStock.clear();renderBulkList('deductStock');
+  stockViewCache=null;
   showToast(`📉 ${keys.length-skipped}명 ${amount}주 차감 완료${skipped>0?` (${skipped}명 주식 부족으로 건너뜀)`:''}`);
 }
 
