@@ -197,6 +197,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
   <div class="login-logo">🎡</div>
   <div class="login-title">(주) 떠리원</div>
   <div class="login-sub">사내 오락실</div>
+  <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="display:flex;align-items:center;gap:6px;background:rgba(255,127,110,0.12);border:1.5px solid rgba(255,127,110,0.3);color:#FF7F6E;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;margin-bottom:16px;">📋 사무실 바로가기</a>
   <div class="login-card">
     <div class="login-tabs">
       <button class="login-tab active" onclick="switchLoginTab('member')">👤 참여자</button>
@@ -224,7 +225,10 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <div class="header-top-row">
         <div style="width:60px"></div>
         <div class="header-title">🎡 사내 오락실</div>
-        <button class="btn-logout" onclick="logout()">나가기</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="background:rgba(255,127,110,0.15);border:none;color:#FF7F6E;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📋 사무실</a>
+          <button class="btn-logout" onclick="logout()">나가기</button>
+        </div>
       </div>
       <div class="header-user">
         <strong id="headerName">-</strong>
@@ -473,6 +477,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 
 <script>
 const DB_URL='https://gacha-31-default-rtdb.firebaseio.com';
+function getKSTDate(){const d=new Date();d.setHours(d.getHours()+9);return d.toISOString().slice(0,10);}
 async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
 async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
 async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
@@ -650,7 +655,7 @@ async function deductStockAndCheck(){
     const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
     await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
-    const today=new Date().toISOString().slice(0,10);
+    const today=getKSTDate();
     await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,memo:'경품 뽑기 사용'});
   }
   return true;
@@ -1352,7 +1357,7 @@ async function giveStock(){
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
   // 최신 전체 멤버 한번에 읽고, 각 멤버 stock을 로컬 값 기준으로 순차 write
   const freshMembers=await fbGet('members')||{};
-  const today=new Date().toISOString().slice(0,10);
+  const today=getKSTDate();
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
@@ -1371,7 +1376,7 @@ async function deductStock(){
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
   // 최신 전체 멤버 한번에 읽고 순차 처리
   const freshMembers=await fbGet('members')||{};
-  const today=new Date().toISOString().slice(0,10);
+  const today=getKSTDate();
   let skipped=0;
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
@@ -1418,7 +1423,7 @@ async function adjustLeave(sign){
   const keys=[...bulkSelected.leave];const amount=parseInt(document.getElementById('leaveAmount').value);
   const memo=document.getElementById('leaveMemo')?document.getElementById('leaveMemo').value.trim():'';
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1){showToast('일수를 입력하세요');return;}
-  let skipped=0;const today=new Date().toISOString().slice(0,10);
+  let skipped=0;const today=getKSTDate();
 
   for(const key of keys){
     if(sign>0){
