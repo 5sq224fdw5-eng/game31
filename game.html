@@ -230,6 +230,19 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <strong id="headerName">-</strong>
         <span id="headerRole" style="font-size:11px;opacity:0.7;margin-left:4px;"></span>
       </div>
+      <!-- 멤버용 주식 드롭다운 버튼 -->
+      <div id="headerStockWrap" style="display:none;width:100%;margin-top:4px;">
+        <div style="position:relative;">
+          <button onclick="toggleStockDropdown()" style="width:100%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;color:white;padding:5px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <span>💰</span><span id="headerStockCount">0주</span><span style="font-size:10px;opacity:0.7">▼</span>
+          </button>
+          <div id="stockDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);width:280px;background:linear-gradient(160deg,#2d1b69,#1a0a2e);border:1px solid var(--border);border-radius:16px;padding:14px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="font-family:'Jua',cursive;font-size:14px;color:var(--gold);margin-bottom:10px;text-align:center;">💰 내 주식 현황</div>
+            <div id="stockDropdownContent" style="font-size:12px;"></div>
+            <button onclick="toggleStockDropdown()" style="width:100%;margin-top:10px;padding:8px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;cursor:pointer;">닫기</button>
+          </div>
+        </div>
+      </div>
       <div id="headerPrizesWrap" style="display:none;width:100%">
         <span class="header-prizes-label" style="text-align:center;display:block;">내 당첨</span>
         <div class="header-prizes" id="headerPrizes" style="justify-content:center;max-width:100%;flex-wrap:wrap;">-</div>
@@ -240,7 +253,6 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <div class="nav" id="mainNav">
   <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha"><span>🎡</span>뽑기</button>
   <button class="nav-btn" onclick="showPage('history')" data-page="history"><span>📜</span>기록</button>
-  <button class="nav-btn member-stock-btn" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
   <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none"><span>👥</span>멤버</button>
   <button class="nav-btn admin-only" onclick="showPage('prizes')" data-page="prizes" style="display:none"><span>🎁</span>경품</button>
   <button class="nav-btn admin-only" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
@@ -429,6 +441,9 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
     </div>
+    <input type="text" id="addPrizeMemo" placeholder="📝 소진기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
+    <div style="display:none">
+    </div>
   </div>
 </div>
 ```
@@ -527,9 +542,15 @@ function enterApp(){
   document.getElementById('headerRole').textContent=currentUser.role==='admin'?'관리자':'참여자';
   const isAdmin=currentUser.role==='admin';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
-  document.querySelectorAll('.member-stock-btn').forEach(el=>el.style.display=isAdmin?'none':'');
-  if(!isAdmin){document.getElementById('headerPrizesWrap').style.display='';refreshHeaderPrizes();}
-  else document.getElementById('headerPrizesWrap').style.display='none';
+  if(!isAdmin){
+    document.getElementById('headerPrizesWrap').style.display='';
+    document.getElementById('headerStockWrap').style.display='';
+    refreshHeaderPrizes();
+    refreshHeaderStock();
+  }else{
+    document.getElementById('headerStockWrap').style.display='none';
+    document.getElementById('headerPrizesWrap').style.display='none';
+  }
   loadNotice();showPage('gacha');
 }
 
@@ -735,7 +756,7 @@ async function loadHistory(){
     const memberPrizes=toArray(await fbGet('memberPrizes/'+currentUser.key));
     const prizeItems=memberPrizes
       .sort((a,b)=>(b.time||0)-(a.time||0))
-      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate}));
+      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate,memo:p.memo||''}));
     renderMemberPrizeHistory(prizeItems);
   }else{
     // 관리자: memberPrizes 전체 기준으로 표시
@@ -748,13 +769,14 @@ function renderMemberPrizeHistory(items){
   if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
   list.innerHTML=items.map(item=>{
     const isDeducted=!!item.deducted;
-    return '<div class="history-item" style="'+( isDeducted?'opacity:0.5;':'')+'">'
+    const giveDate=item.time?new Date(item.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/').replace('.',''):'';
+    return '<div class="history-item" style="'+(isDeducted?'opacity:0.5;':'')+'">'
       +'<div class="history-emoji">'+item.emoji+'</div>'
-      +'<div class="history-info">'
-      +'<div class="history-prize" style="font-size:15px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:11px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
-      +(item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
+      +'<div class="history-info" style="min-width:0;flex:1;">'
+      +'<div class="history-prize" style="font-size:14px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
+      +(giveDate?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">지급 '+giveDate+' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">소진기한 '+(item.memo?escHtml(item.memo):'무제한')+'</span></div>':'')
+      +(isDeducted&&item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
       +'</div>'
-      +'<div class="history-time">'+formatTime(item.time)+'</div>'
       +'</div>';
   }).join('');
 }
@@ -1121,8 +1143,9 @@ async function loadMemberPrizes(){
 async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
-  const current=toArray(await fbGet(`memberPrizes/${key}`));current.push({emoji,name,time:Date.now(),deducted:false});await fbSet(`memberPrizes/${key}`,current);
-  document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';
+  const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
+  const current=toArray(await fbGet(`memberPrizes/${key}`));current.push({emoji,name,time:Date.now(),deducted:false,memo});await fbSet(`memberPrizes/${key}`,current);
+  document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';if(document.getElementById('addPrizeMemo'))document.getElementById('addPrizeMemo').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
 async function removeMemberPrize(key,index){
@@ -1470,6 +1493,54 @@ async function loadLeaveIntoMembers(){
   }
 }
 
+
+let _stockDropdownOpen=false;
+
+async function refreshHeaderStock(){
+  if(!currentUser||currentUser.role==='admin')return;
+  const member=await fbGet('members/'+currentUser.key);
+  const stock=(member&&member.stock)||0;
+  document.getElementById('headerStockCount').textContent=stock+'주';
+}
+
+async function toggleStockDropdown(){
+  _stockDropdownOpen=!_stockDropdownOpen;
+  const dd=document.getElementById('stockDropdown');
+  dd.style.display=_stockDropdownOpen?'block':'none';
+  if(_stockDropdownOpen){
+    const [member, stockLog]=await Promise.all([
+      fbGet('members/'+currentUser.key),
+      fbGet('stockLog/'+currentUser.key)
+    ]);
+    const stock=(member&&member.stock)||0;
+    document.getElementById('headerStockCount').textContent=stock+'주';
+    const logs=stockLog?Object.values(stockLog).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
+    const content=document.getElementById('stockDropdownContent');
+    let html='<div style="text-align:center;padding:8px 0;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;">';
+    html+='<div style="font-family:Jua,cursive;font-size:28px;color:var(--gold);">'+stock+'주</div></div>';
+    if(logs.length>0){
+      html+=logs.slice(0,10).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div>
+          <span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.memo?'<span style="color:rgba(255,215,0,0.8);font-size:10px;">'+escHtml(l.memo)+'</span>':''}</span>
+        </div>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px;">${l.date||''}</span>
+      </div>`).join('');
+      if(logs.length>10)html+='<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:10px;padding-top:4px;">최근 10건 표시</div>';
+    }else{
+      html+='<div style="text-align:center;color:rgba(255,255,255,0.3);padding:12px 0;">내역 없음<br><span style="font-size:10px">오늘부터 기록됩니다</span></div>';
+    }
+    content.innerHTML=html;
+  }
+}
+
+// 드롭다운 외부 클릭 시 닫기
+document.addEventListener('click',function(e){
+  if(_stockDropdownOpen&&!e.target.closest('#headerStockWrap')){
+    _stockDropdownOpen=false;
+    const dd=document.getElementById('stockDropdown');
+    if(dd)dd.style.display='none';
+  }
+});
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function formatTime(ts){if(!ts)return'';const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
