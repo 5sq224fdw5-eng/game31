@@ -1395,7 +1395,9 @@ async function deductStock(){
 const bulkSelected={giveStock:new Set(),deductStock:new Set(),leave:new Set()};
 
 function renderBulkList(type){
-  const q=(document.getElementById(type+'Search')?.value||'').toLowerCase();
+  // 주식 탭은 공통 검색창 stockMgmtSearch, 연차는 leaveSearch
+  const searchId=type==='leave'?'leaveSearch':'stockMgmtSearch';
+  const q=(document.getElementById(searchId)?.value||'').toLowerCase();
   const list=document.getElementById(type+'BulkList');if(!list)return;
   const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
   const allKeys=sorted.map(([k])=>k);const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
