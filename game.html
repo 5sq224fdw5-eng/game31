@@ -323,7 +323,6 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     <div id="totalProb" style="font-family:'Jua',cursive;font-size:16px;color:var(--gold)">합계: 0%</div>
   </div>
   <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-  <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
 
   <div class="section-title" style="margin-top:28px">🏆 경품 지급 / 차감</div>
   <div class="card" style="padding:16px">
@@ -445,21 +444,12 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     </div>
   </div>
 
-  <div class="section-title" style="margin-top:20px">🎯 경품 확률 빠른 조정</div>
-  <div class="card" style="padding:16px">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">각 경품의 확률을 수정 후 저장하세요. 합계가 정확히 100%여야 합니다.</div>
-    <div id="probAdjustStatus" style="font-family:'Jua',cursive;font-size:15px;margin-bottom:10px;color:var(--gold)">합계: 0%</div>
-    <div id="probAdjustList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-    <button class="btn-confirm" onclick="saveProbAll()" style="width:100%;margin-top:12px">💾 확률 일괄 저장</button>
-  </div>
-
-  <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
-  <div class="card">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
-    <div id="dedupeStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
-    <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
-    <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
-    <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
+  <div class="section-title" style="margin-top:20px">🎁 경품 관리</div>
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
+    <div id="settingsTotalProb" style="font-family:'Jua',cursive;font-size:15px;color:var(--gold);margin-bottom:12px">합계: 0%</div>
+    <div id="settingsPrizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+    <button class="btn-confirm" onclick="openAddPrize()" style="width:100%;margin-top:10px">+ 경품 추가</button>
   </div>
 
   <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
@@ -581,6 +571,49 @@ function enterApp(){
     document.getElementById('headerPrizesWrap').style.display='none';
   }
   loadNotice();showPage('gacha');
+  // 만료일 자동 소멸 체크
+  setTimeout(()=>checkExpiredPrizes(),1500);
+}
+
+// ── 만료일 자동 소멸 ──
+// memo에 날짜(일 단위)가 있고 그 날짜의 다음날 00시 이후면 자동 deducted:true
+// 지원 형식: 26-05-28 / 2026-05-28 / 26.05.28 / 2026.05.28 / 26/05/28
+async function checkExpiredPrizes(){
+  try{
+    const allPrizesData=await fbGet('memberPrizes');
+    if(!allPrizesData)return;
+    // 오늘 00:00:00 기준 타임스탬프
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const todayTs=today.getTime();
+    let changed=0;
+    for(const [mk,raw] of Object.entries(allPrizesData)){
+      if(!raw)continue;
+      const arr=Array.isArray(raw)?[...raw]:Object.values(raw);
+      let modified=false;
+      arr.forEach((p,i)=>{
+        if(!p||p.deducted)return;
+        const memo=(p.memo||'').trim();
+        if(!memo)return;
+        // 날짜 파싱: YY-MM-DD 또는 YYYY-MM-DD (구분자: - . /)
+        const m=memo.match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+        if(!m)return;
+        let year=parseInt(m[1]);
+        if(year<100)year+=2000; // 26 → 2026
+        const month=parseInt(m[2])-1; // 0-indexed
+        const day=parseInt(m[3]);
+        // 만료일 다음날 00:00 = 만료일+1일
+        const expDate=new Date(year,month,day+1,0,0,0,0);
+        if(todayTs>=expDate.getTime()){
+          const expStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          arr[i]={...p,deducted:true,deductDate:expStr,deductReason:`만료일(${expStr}) 자동 소멸`};
+          modified=true;changed++;
+        }
+      });
+      if(modified)await fbSet(`memberPrizes/${mk}`,arr);
+    }
+    if(changed>0)showToast(`⏰ 만료된 경품 ${changed}개가 자동 소멸됐습니다`);
+  }catch(e){console.warn('checkExpiredPrizes error',e);}
 }
 
 async function refreshHeaderPrizes(){
@@ -1052,7 +1085,7 @@ async function loadPrizes(){
   const list=document.getElementById('prizeList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const prizes=await fbGet('prizes');allPrizes=prizes||{};updateTotalProb();
   if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';renderPrizePicker();return;}
-  list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="openEditPrize('${k}')">수정</button><button class="btn-sm btn-del" onclick="deletePrize('${k}')">삭제</button></div></div>`).join('');
+  list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div></div>`).join('');
   drawRoulette();renderPrizeLegend();
   renderPrizePicker();
 }
@@ -1098,7 +1131,9 @@ async function savePrize(){
   const emoji=document.getElementById('editPrizeEmoji').value.trim();const prob=parseFloat(document.getElementById('editPrizeProb').value);
   if(!name||!emoji||isNaN(prob)){showToast('모든 항목을 입력하세요');return;}if(prob<0||prob>100){showToast('확률은 0~100 사이');return;}
   if(key)await fbSet(`prizes/${key}`,{name,emoji,prob});else await fbPush('prizes',{name,emoji,prob});
-  closePrizeModal();showToast('✅ 저장됨');loadPrizes();
+  closePrizeModal();showToast('✅ 저장됨');
+  loadPrizes();
+  renderSettingsPrizeList();
 }
 async function deletePrize(key){if(!confirm('경품을 삭제하시겠습니까?'))return;await fbDelete(`prizes/${key}`);showToast('🗑️ 삭제됨');loadPrizes();}
 
@@ -1185,8 +1220,51 @@ async function loadSettings(){
   const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   document.getElementById('costDisplay').textContent=`${costPerRoll}주`;
   document.getElementById('newCostInput').value=costPerRoll;
-  // 확률 빠른 조정 렌더링
-  await renderProbAdjust();
+  // 설정 탭 경품 관리 목록 렌더링
+  await renderSettingsPrizeList();
+}
+
+// 설정 탭 경품 관리 목록 (수정/삭제 포함)
+async function renderSettingsPrizeList(){
+  const el=document.getElementById('settingsPrizeList');
+  const totalEl=document.getElementById('settingsTotalProb');
+  if(!el)return;
+  const prizes=await fbGet('prizes');
+  if(!prizes||Object.keys(prizes).length===0){
+    el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">등록된 경품이 없습니다</div>';
+    if(totalEl)totalEl.textContent='합계: 0%';
+    return;
+  }
+  const total=Object.values(prizes).reduce((s,p)=>s+(p.prob||0),0);
+  if(totalEl){
+    totalEl.textContent=`합계: ${Math.round(total*10)/10}%`;
+    totalEl.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';
+  }
+  el.innerHTML=Object.entries(prizes).map(([k,p])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:22px;flex-shrink:0">${p.emoji}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4)">${p.prob}%</div>
+        <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:3px">
+          <div style="height:4px;background:var(--gold);border-radius:2px;width:${Math.min(p.prob,100)}%"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button class="btn-sm btn-edit" onclick="openEditPrize('${k}');_afterSavePrize='settings'">수정</button>
+        <button class="btn-sm btn-del" onclick="deletePrizeFromSettings('${k}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+async function deletePrizeFromSettings(key){
+  if(!confirm('경품을 삭제하시겠습니까?'))return;
+  await fbDelete(`prizes/${key}`);
+  showToast('🗑️ 삭제됨');
+  const prizes=await fbGet('prizes');allPrizes=prizes||{};
+  renderSettingsPrizeList();
+  renderPrizePicker();
+  updateTotalProb();
 }
 
 // 경품 확률 빠른 조정 렌더
