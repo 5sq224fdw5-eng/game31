@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -253,201 +252,199 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       </div>
     </div>
 
-```
-<div class="nav" id="mainNav">
-  <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha"><span>🎡</span>뽑기</button>
-  <button class="nav-btn" onclick="showPage('history')" data-page="history"><span>📜</span>기록</button>
-  <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none"><span>👥</span>멤버</button>
-  <button class="nav-btn admin-only" onclick="showPage('prizes')" data-page="prizes" style="display:none"><span>🎁</span>경품</button>
-  <button class="nav-btn admin-only" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
-  <button class="nav-btn admin-only" onclick="showPage('leave')" data-page="leave" style="display:none"><span>🏖️</span>연차</button>
-  <button class="nav-btn admin-only" onclick="showPage('settings')" data-page="settings" style="display:none"><span>⚙️</span>설정</button>
-</div>
-
-<div class="page active" id="pageGacha">
-  <div class="notice-card" id="noticeCard"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;padding-top:12px">
-    <div id="costInfo" style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:12px;">1판 = ? 주</div>
-    <input type="hidden" id="myStockDisplay">
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="modeRoulette" onclick="switchMode('roulette')">🎡 룰렛</button>
-      <button class="mode-btn" id="modeGacha" onclick="switchMode('gacha')">🎰 가챠</button>
+    <div class="nav" id="mainNav">
+      <button class="nav-btn active" onclick="showPage('gacha')" data-page="gacha"><span>🎡</span>뽑기</button>
+      <button class="nav-btn" onclick="showPage('history')" data-page="history"><span>📜</span>기록</button>
+      <button class="nav-btn admin-only" onclick="showPage('members')" data-page="members" style="display:none"><span>👥</span>멤버</button>
+      <button class="nav-btn admin-only" onclick="showPage('stock')" data-page="stock" style="display:none"><span>💰</span>주식</button>
+      <button class="nav-btn admin-only" onclick="showPage('leave')" data-page="leave" style="display:none"><span>🏖️</span>연차</button>
+      <button class="nav-btn admin-only" onclick="showPage('settings')" data-page="settings" style="display:none"><span>⚙️</span>설정</button>
     </div>
-  </div>
-  <div id="modeRouletteWrap" class="roulette-wrap" style="padding-top:0">
-    <div class="roulette-container">
-      <div class="roulette-pointer"></div>
-      <canvas class="roulette-canvas" id="rouletteCanvas" width="300" height="300"></canvas>
-      <div class="roulette-center"></div>
-    </div>
-    <button class="btn-spin" id="spinBtn" onclick="doSpin()">🎡 돌리기!</button>
-    <div class="prize-legend" id="prizeLegend"></div>
-  </div>
-  <div id="modeGachaWrap" class="gacha-machine-wrap" style="display:none;padding-top:4px">
-    <div class="machine-body" id="machineBody">
-      <div class="machine-label">✨ LUCKY GACHA ✨</div>
-      <div class="machine-screen"><div id="screenContent" class="screen-idle">🎰</div></div>
-      <div class="machine-ball"></div>
-      <button class="btn-gacha" id="gachaSlotBtn" onclick="doGachaSlot()">뽑 기 !</button>
-    </div>
-  </div>
-</div>
 
-<div class="page" id="pageHistory">
-  <div id="myLeaveCard" style="display:none;margin-bottom:12px;">
-    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
-      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 내역</div>
-      <div id="myLeaveLogList" style="font-size:12px;"></div>
-    </div>
-  </div>
-  <div class="section-title">📜 당첨 기록</div>
-  <div class="filter-tabs" id="historyFilterTabs"></div>
-  <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-</div>
-
-<div class="page" id="pageMembers">
-  <div class="section-title">👥 멤버 관리</div>
-  <div class="card">
-    <div class="input-group" style="margin-bottom:10px">
-      <label>새 멤버 이름</label>
-      <input type="text" id="newMemberName" placeholder="이름 입력">
-    </div>
-    <button class="btn-primary" onclick="addMember()">+ 멤버 추가</button>
-  </div>
-  <div id="memberList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-</div>
-
-<div class="page" id="pagePrizes">
-  <div class="section-title">🎁 경품 관리</div>
-  <div class="card" style="padding:14px 16px">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
-    <div id="totalProb" style="font-family:'Jua',cursive;font-size:16px;color:var(--gold)">합계: 0%</div>
-  </div>
-  <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-  <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
-</div>
-
-<!-- 주식 탭 -->
-<div class="page" id="pageStock">
-  <!-- 관리자용 -->
-  <div id="stockAdminView" style="display:none">
-    <div class="section-title">💰 주식 지급/차감</div>
-    <div class="card">
-      <input class="bulk-search" id="stockMgmtSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock');renderBulkList('deductStock')">
-      <div style="display:flex;gap:8px;margin-bottom:6px">
-        <div style="flex:1">
-          <div style="font-size:11px;color:var(--gold);margin-bottom:4px;font-family:'Jua',cursive;">💰 지급 대상</div>
-          <div class="bulk-member-list" id="giveStockBulkList" style="max-height:180px"></div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="giveStockSelected">선택: 0명</div>
+    <div class="page active" id="pageGacha">
+      <div class="notice-card" id="noticeCard"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding-top:12px">
+        <div id="costInfo" style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:12px;">1판 = ? 주</div>
+        <input type="hidden" id="myStockDisplay">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="modeRoulette" onclick="switchMode('roulette')">🎡 룰렛</button>
+          <button class="mode-btn" id="modeGacha" onclick="switchMode('gacha')">🎰 가챠</button>
         </div>
       </div>
-      <div class="bulk-actions" style="margin-bottom:12px">
-        <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
-        <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
+      <div id="modeRouletteWrap" class="roulette-wrap" style="padding-top:0">
+        <div class="roulette-container">
+          <div class="roulette-pointer"></div>
+          <canvas class="roulette-canvas" id="rouletteCanvas" width="300" height="300"></canvas>
+          <div class="roulette-center"></div>
+        </div>
+        <button class="btn-spin" id="spinBtn" onclick="doSpin()">🎡 돌리기!</button>
+        <div class="prize-legend" id="prizeLegend"></div>
       </div>
-      <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-        <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
-        <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="deductStockSelected">선택: 0명</div>
+      <div id="modeGachaWrap" class="gacha-machine-wrap" style="display:none;padding-top:4px">
+        <div class="machine-body" id="machineBody">
+          <div class="machine-label">✨ LUCKY GACHA ✨</div>
+          <div class="machine-screen"><div id="screenContent" class="screen-idle">🎰</div></div>
+          <div class="machine-ball"></div>
+          <button class="btn-gacha" id="gachaSlotBtn" onclick="doGachaSlot()">뽑 기 !</button>
+        </div>
       </div>
-      <div class="bulk-actions">
-        <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
-        <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
+    </div>
+
+    <div class="page" id="pageHistory">
+      <div id="myLeaveCard" style="display:none;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
+          <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 내역</div>
+          <div id="myLeaveLogList" style="font-size:12px;"></div>
+        </div>
       </div>
-      <input type="text" id="deductStockMemo" placeholder="📝 메모 (예: 경품 차감)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+      <div class="section-title">📜 당첨 기록</div>
+      <div class="filter-tabs" id="historyFilterTabs"></div>
+      <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
     </div>
-    <div class="section-title" style="margin-top:20px">📋 멤버별 주식 현황</div>
-    <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
-    <div id="stockViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-  </div>
-  <!-- 멤버용 -->
-  <div id="stockMemberView" style="display:none">
-    <div class="section-title">💰 내 주식 현황</div>
-    <div id="stockMemberContent"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-  </div>
-</div>
 
-<!-- 연차 탭 -->
-<div class="page" id="pageLeave">
-  <div class="section-title">🏖️ 연차 내역 조회</div>
-  <input class="leave-search-bar" id="leaveViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterLeaveView()">
-  <div id="leaveViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-</div>
-
-<div class="page" id="pageSettings">
-  <div class="section-title">⚙️ 설정</div>
-  <div class="card">
-    <div class="setting-row">
-      <div>
-        <div class="setting-label">1판 필요 주식</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">뽑기 1회에 필요한 주식 수</div>
+    <div class="page" id="pageMembers">
+      <div class="section-title">👥 멤버 관리</div>
+      <div class="card">
+        <div class="input-group" style="margin-bottom:10px">
+          <label>새 멤버 이름</label>
+          <input type="text" id="newMemberName" placeholder="이름 입력">
+        </div>
+        <button class="btn-primary" onclick="addMember()">+ 멤버 추가</button>
       </div>
-      <div class="setting-value" id="costDisplay">-</div>
+      <div id="memberList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
     </div>
-    <div class="stock-input-row" style="margin-top:4px">
-      <input type="number" id="newCostInput" placeholder="주식 수 입력" min="1" max="100">
-      <button class="btn-confirm" onclick="saveCost()">저장</button>
-    </div>
-  </div>
 
-  <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
-  <div class="card">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
-    <div id="dedupeStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
-    <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
-    <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
-    <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
-  </div>
 
-  <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
-  <div class="card">
-    <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
-    <div class="bulk-member-list" id="leaveBulkList"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
-    <div class="bulk-actions">
-      <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
-      <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-    </div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
-  </div>
 
-  <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
-  <div class="card" id="noticeEditorCard">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
-    <div id="noticeEditorList"></div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <input type="text" id="newNoticeBadge" placeholder="+1주" style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive;">
-      <input type="text" id="newNoticeText" placeholder="내용 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
+    <!-- 주식 탭 -->
+    <div class="page" id="pageStock">
+      <!-- 관리자용 -->
+      <div id="stockAdminView" style="display:none">
+        <div class="section-title">💰 주식 지급/차감</div>
+        <div class="card">
+          <input class="bulk-search" id="stockMgmtSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock');renderBulkList('deductStock')">
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <div style="flex:1">
+              <div style="font-size:11px;color:var(--gold);margin-bottom:4px;font-family:'Jua',cursive;">💰 지급 대상</div>
+              <div class="bulk-member-list" id="giveStockBulkList" style="max-height:180px"></div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="giveStockSelected">선택: 0명</div>
+            </div>
+          </div>
+          <div class="bulk-actions" style="margin-bottom:12px">
+            <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+            <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
+          </div>
+          <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+          <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+            <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
+            <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="deductStockSelected">선택: 0명</div>
+          </div>
+          <div class="bulk-actions">
+            <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+            <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
+          </div>
+          <input type="text" id="deductStockMemo" placeholder="📝 메모 (예: 경품 차감)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+        </div>
+        <div class="section-title" style="margin-top:20px">📋 멤버별 주식 현황</div>
+        <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
+        <div id="stockViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      </div>
+      <!-- 멤버용 -->
+      <div id="stockMemberView" style="display:none">
+        <div class="section-title">💰 내 주식 현황</div>
+        <div id="stockMemberContent"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      </div>
     </div>
-  </div>
 
-  <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
-  <div class="card">
-    <div class="search-select-wrap">
-      <label>멤버 검색</label>
-      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
-      <input type="hidden" id="managePrizeMemberVal">
-      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
+    <!-- 연차 탭 -->
+    <div class="page" id="pageLeave">
+      <div class="section-title">✏️ 연차 지급/차감</div>
+      <div class="card">
+        <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
+        <div class="bulk-member-list" id="leaveBulkList"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
+        <div class="bulk-actions">
+          <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+          <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
+          <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 26-10-11)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
+      </div>
+      <div class="section-title" style="margin-top:16px">🏖️ 연차 내역 조회</div>
+      <input class="leave-search-bar" id="leaveViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterLeaveView()">
+      <div id="leaveViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
     </div>
-    <div id="memberPrizeList" style="margin-top:8px"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:8px">경품명으로 직접 지급 (이모지 + 이름 입력)</div>
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
-      <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
+
+    <div class="page" id="pageSettings">
+      <div class="section-title">🎁 경품 비율 설정</div>
+      <div class="card" style="padding:14px 16px">
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
+        <div id="totalProb" style="font-family:'Jua',cursive;font-size:16px;color:var(--gold)">합계: 0%</div>
+      </div>
+      <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px;margin-bottom:16px">+ 경품 추가</button>
+
+      <div class="section-title" style="margin-top:4px">⚙️ 설정</div>
+      <div class="card">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">1판 필요 주식</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">뽑기 1회에 필요한 주식 수</div>
+          </div>
+          <div class="setting-value" id="costDisplay">-</div>
+        </div>
+        <div class="stock-input-row" style="margin-top:4px">
+          <input type="number" id="newCostInput" placeholder="주식 수 입력" min="1" max="100">
+          <button class="btn-confirm" onclick="saveCost()">저장</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
+      <div class="card">
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
+        <div id="dedupeStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+        <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
+        <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+        <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
+      </div>
+
+
+
+      <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
+      <div class="card" id="noticeEditorCard">
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
+        <div id="noticeEditorList"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <input type="text" id="newNoticeBadge" placeholder="+1주" style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive;">
+          <input type="text" id="newNoticeText" placeholder="내용 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+          <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
+      <div class="card">
+        <div class="search-select-wrap">
+          <label>멤버 검색</label>
+          <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
+          <input type="hidden" id="managePrizeMemberVal">
+          <div class="search-select-dropdown" id="managePrizeDropdown"></div>
+        </div>
+        <div id="memberPrizeList" style="margin-top:8px"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:8px">경품명으로 직접 지급 (이모지 + 이름 입력)</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
+          <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+          <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
+        </div>
+        <input type="text" id="addPrizeMemo" placeholder="📝 만료 기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
+        <div style="display:none">
+        </div>
+      </div>
     </div>
-    <input type="text" id="addPrizeMemo" placeholder="📝 만료 기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
-    <div style="display:none">
-    </div>
-  </div>
-</div>
-```
 
   </div>
 </div>
@@ -554,6 +551,7 @@ function enterApp(){
     document.getElementById('headerPrizesWrap').style.display='none';
   }
   loadNotice();showPage('gacha');
+  autoDeleteExpired();
 }
 
 async function refreshHeaderPrizes(){
@@ -588,9 +586,12 @@ function showPage(page){
   if(page==='gacha'){refreshGachaPage();loadNotice();}
   if(page==='history')loadHistory();
   if(page==='members')loadMembers();
-  if(page==='prizes')loadPrizes();
   if(page==='stock')loadStockPage();
-  if(page==='leave')loadLeaveView();
+  if(page==='leave'){
+    loadLeaveView();
+    if(allMembers&&Object.keys(allMembers).length>0)renderBulkList('leave');
+    else fbGet('members').then(m=>{allMembers=m||{};renderBulkList('leave');});
+  }
   if(page==='settings')loadSettings();
 }
 
@@ -1395,9 +1396,7 @@ async function deductStock(){
 const bulkSelected={giveStock:new Set(),deductStock:new Set(),leave:new Set()};
 
 function renderBulkList(type){
-  // 주식 탭은 공통 검색창 stockMgmtSearch, 연차는 leaveSearch
-  const searchId=type==='leave'?'leaveSearch':'stockMgmtSearch';
-  const q=(document.getElementById(searchId)?.value||'').toLowerCase();
+  const q=(document.getElementById(type+'Search')?.value||'').toLowerCase();
   const list=document.getElementById(type+'BulkList');if(!list)return;
   const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
   const allKeys=sorted.map(([k])=>k);const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
@@ -1544,12 +1543,57 @@ document.addEventListener('click',function(e){
     if(dd)dd.style.display='none';
   }
 });
+
+// ── 만료일 자동 삭제 ──
+function parseExpireDate(memo){
+  if(!memo||memo==='무기한'||memo==='무제한')return null;
+  // YY-MM-DD 형식 → Date
+  const m=memo.match(/(\d{2})-(\d{2})-(\d{2})/);
+  if(!m)return null;
+  return new Date('20'+m[1]+'-'+m[2]+'-'+m[3]);
+}
+
+async function autoDeleteExpired(){
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const [allPrizes,allStockLog]=await Promise.all([
+    fbGet('memberPrizes'),fbGet('stockLog')
+  ]);
+
+  let deletedCount=0;
+
+  // 경품 만료 삭제
+  if(allPrizes){
+    for(const [memberKey,prizes] of Object.entries(allPrizes)){
+      if(!prizes)continue;
+      const updated={...prizes};
+      let changed=false;
+      for(const [pk,p] of Object.entries(prizes)){
+        if(!p||!p.memo)continue;
+        const exp=parseExpireDate(p.memo);
+        if(exp&&exp<today){
+          delete updated[pk];
+          changed=true;
+          deletedCount++;
+        }
+      }
+      if(changed)await fbSet('memberPrizes/'+memberKey,updated);
+    }
+  }
+
+  // 주식 내역에서 메모에 만료일 있는 것들 삭제 (stockLog는 기록이라 삭제 안 함)
+
+  if(deletedCount>0){
+    showToast('🗑️ 만료된 경품 '+deletedCount+'개 자동 삭제됨');
+    refreshHeaderPrizes();
+  }
+}
+
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function formatTime(ts){if(!ts)return'';const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 init();
 </script>
-
 </body>
 </html>
