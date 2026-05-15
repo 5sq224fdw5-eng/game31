@@ -317,13 +317,47 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 </div>
 
 <div class="page" id="pagePrizes">
-  <div class="section-title">🎁 경품 관리</div>
+  <div class="section-title">🎁 경품 목록</div>
   <div class="card" style="padding:14px 16px">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
     <div id="totalProb" style="font-family:'Jua',cursive;font-size:16px;color:var(--gold)">합계: 0%</div>
   </div>
   <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
   <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
+
+  <div class="section-title" style="margin-top:28px">🏆 경품 지급 / 차감</div>
+  <div class="card" style="padding:16px">
+    <!-- 멤버 선택 -->
+    <div class="search-select-wrap" style="margin-bottom:12px">
+      <label style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:block">멤버 검색</label>
+      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off"
+        oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')"
+        onfocus="openDropdown('managePrizeDropdown')"
+        onblur="closeDropdownDelay('managePrizeDropdown')">
+      <input type="hidden" id="managePrizeMemberVal">
+      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
+    </div>
+    <!-- 선택한 멤버의 현재 경품 목록 -->
+    <div id="memberPrizeList" style="margin-bottom:10px"></div>
+    <!-- 경품 목록에서 선택해서 지급 -->
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:12px;color:var(--gold);font-family:'Jua',cursive;margin-bottom:8px">📋 경품 선택해서 지급</div>
+      <div id="prizePickList" style="margin-bottom:10px">
+        <div style="font-size:12px;color:rgba(255,255,255,0.3)">경품 탭 로드 후 목록이 표시됩니다</div>
+      </div>
+      <input type="text" id="addPrizeMemo" placeholder="📝 만료기한 (예: 2025-12월) — 미입력 시 무제한"
+        style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:8px">
+      <!-- 직접입력 폴백 -->
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:6px">위 목록에 없으면 직접 입력:</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="addPrizeEmoji" placeholder="🎁"
+          style="width:50px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none">
+        <input type="text" id="addPrizeName" placeholder="경품명 직접 입력"
+          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none">
+        <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 주식 탭 -->
@@ -369,7 +403,28 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 
 <!-- 연차 탭 -->
 <div class="page" id="pageLeave">
-  <div class="section-title">🏖️ 연차 내역 조회</div>
+  <!-- 관리자 전용: 연차 관리 -->
+  <div id="leaveAdminPanel" style="display:none">
+    <div class="section-title">🏖️ 연차 관리</div>
+    <div class="card">
+      <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
+      <div class="bulk-member-list" id="leaveBulkList"></div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
+      <div class="bulk-actions">
+        <input type="number" id="leaveAmount" placeholder="일수 입력" min="1"
+          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none">
+        <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
+        <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)"
+          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none">
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
+    </div>
+    <div class="section-title" style="margin-top:20px">📋 연차 내역 조회</div>
+  </div>
+  <!-- 공통: 조회 -->
   <input class="leave-search-bar" id="leaveViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterLeaveView()">
   <div id="leaveViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
@@ -390,6 +445,14 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     </div>
   </div>
 
+  <div class="section-title" style="margin-top:20px">🎯 경품 확률 빠른 조정</div>
+  <div class="card" style="padding:16px">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">각 경품의 확률을 수정 후 저장하세요. 합계가 정확히 100%여야 합니다.</div>
+    <div id="probAdjustStatus" style="font-family:'Jua',cursive;font-size:15px;margin-bottom:10px;color:var(--gold)">합계: 0%</div>
+    <div id="probAdjustList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+    <button class="btn-confirm" onclick="saveProbAll()" style="width:100%;margin-top:12px">💾 확률 일괄 저장</button>
+  </div>
+
   <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
   <div class="card">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
@@ -399,50 +462,16 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
   </div>
 
-  <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
-  <div class="card">
-    <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
-    <div class="bulk-member-list" id="leaveBulkList"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
-    <div class="bulk-actions">
-      <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
-      <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-    </div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
-  </div>
-
   <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
   <div class="card" id="noticeEditorCard">
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
     <div id="noticeEditorList"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <input type="text" id="newNoticeBadge" placeholder="+1주" style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive;">
-      <input type="text" id="newNoticeText" placeholder="내용 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <input type="text" id="newNoticeBadge" placeholder="+1주"
+        style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive">
+      <input type="text" id="newNoticeText" placeholder="내용 입력"
+        style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none">
       <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
-    </div>
-  </div>
-
-  <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
-  <div class="card">
-    <div class="search-select-wrap">
-      <label>멤버 검색</label>
-      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
-      <input type="hidden" id="managePrizeMemberVal">
-      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
-    </div>
-    <div id="memberPrizeList" style="margin-top:8px"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:8px">경품명으로 직접 지급 (이모지 + 이름 입력)</div>
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
-      <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
-      <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
-    </div>
-    <input type="text" id="addPrizeMemo" placeholder="📝 만료 기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
-    <div style="display:none">
     </div>
   </div>
 </div>
@@ -1022,9 +1051,43 @@ async function editMemberName(key,currentName){
 async function loadPrizes(){
   const list=document.getElementById('prizeList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const prizes=await fbGet('prizes');allPrizes=prizes||{};updateTotalProb();
-  if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';return;}
+  if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';renderPrizePicker();return;}
   list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="openEditPrize('${k}')">수정</button><button class="btn-sm btn-del" onclick="deletePrize('${k}')">삭제</button></div></div>`).join('');
   drawRoulette();renderPrizeLegend();
+  renderPrizePicker();
+}
+
+// 경품 목록에서 선택해서 지급하는 UI 렌더링
+function renderPrizePicker(){
+  const el=document.getElementById('prizePickList');if(!el)return;
+  const prizes=Object.values(allPrizes);
+  if(prizes.length===0){el.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.3)">등록된 경품이 없습니다</div>';return;}
+  el.innerHTML=prizes.map((p,i)=>{
+    const key=Object.keys(allPrizes)[i];
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:22px">${p.emoji}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>
+        </div>
+      </div>
+      <button class="btn-confirm" onclick="givePickedPrize('${escHtml(p.emoji)}','${escHtml(p.name)}')"
+        style="font-size:12px;padding:6px 14px">지급</button>
+    </div>`;
+  }).join('');
+}
+
+// 경품 목록에서 선택해 지급
+async function givePickedPrize(emoji,name){
+  const key=document.getElementById('managePrizeMemberVal').value;
+  if(!key){showToast('먼저 멤버를 선택하세요');return;}
+  const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
+  const current=toArray(await fbGet(`memberPrizes/${key}`));
+  current.push({emoji,name,time:Date.now(),deducted:false,memo});
+  await fbSet(`memberPrizes/${key}`,current);
+  showToast(`✅ ${allMembers[key]?.name||''}에게 ${emoji} ${name} 지급!`);
+  loadMemberPrizes();
 }
 function updateTotalProb(){const total=Object.values(allPrizes).reduce((s,p)=>s+(p.prob||0),0);const el=document.getElementById('totalProb');el.textContent=`합계: ${total}%`;el.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';}
 function openAddPrize(){['editPrizeKey','editPrizeName','editPrizeEmoji','editPrizeProb'].forEach(id=>document.getElementById(id).value='');document.getElementById('prizeModalTitle').textContent='경품 추가';document.getElementById('prizeModal').classList.add('active');}
@@ -1039,8 +1102,19 @@ async function savePrize(){
 }
 async function deletePrize(key){if(!confirm('경품을 삭제하시겠습니까?'))return;await fbDelete(`prizes/${key}`);showToast('🗑️ 삭제됨');loadPrizes();}
 
-// ★ 연차 탭 - 지급/차감 내역 모두 표시
+// ★ 연차 탭
 async function loadLeaveView(){
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  // 관리자 패널 표시/숨김
+  const adminPanel=document.getElementById('leaveAdminPanel');
+  if(adminPanel)adminPanel.style.display=isAdmin?'block':'none';
+  // 관리자 연차 bulk list 초기화
+  if(isAdmin){
+    const members=await fbGet('members');allMembers=members||{};
+    await loadLeaveIntoMembers();
+    bulkSelected.leave.clear();
+    renderBulkList('leave');
+  }
   const container=document.getElementById('leaveViewList');if(!container)return;
   container.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   try{
@@ -1055,7 +1129,6 @@ async function loadLeaveView(){
       const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;
       const total=manualLeave+prizeLeave;
       const leaveLogRaw=allLeaveLog&&allLeaveLog[key];
-      // 지급+차감 모두 날짜순 정렬
       const logs=leaveLogRaw
         ? Object.values(leaveLogRaw).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
         : [];
@@ -1108,10 +1181,75 @@ async function loadSettings(){
   loadNoticeEditor();
   bulkSelected.giveStock.clear();bulkSelected.deductStock.clear();bulkSelected.leave.clear();
   await loadLeaveIntoMembers();
-  renderBulkList('giveStock');renderBulkList('deductStock');renderBulkList('leave');
+  renderBulkList('giveStock');renderBulkList('deductStock');
   const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   document.getElementById('costDisplay').textContent=`${costPerRoll}주`;
   document.getElementById('newCostInput').value=costPerRoll;
+  // 확률 빠른 조정 렌더링
+  await renderProbAdjust();
+}
+
+// 경품 확률 빠른 조정 렌더
+async function renderProbAdjust(){
+  const el=document.getElementById('probAdjustList');
+  const statusEl=document.getElementById('probAdjustStatus');
+  if(!el)return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const prizes=await fbGet('prizes');
+  if(!prizes||Object.keys(prizes).length===0){
+    el.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.4)">등록된 경품이 없습니다</div>';
+    return;
+  }
+  // 각 경품을 input으로 렌더
+  el.innerHTML=Object.entries(prizes).map(([k,p])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px;flex-shrink:0">${p.emoji}</span>
+      <span style="flex:1;font-size:13px;font-weight:700">${escHtml(p.name)}</span>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="prob_${k}" value="${p.prob}" min="0" max="100" step="1"
+          oninput="updateProbTotal()"
+          style="width:64px;padding:7px 10px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;color:white;font-size:14px;font-family:'Jua',cursive;text-align:center;outline:none">
+        <span style="font-size:13px;color:rgba(255,255,255,0.5)">%</span>
+      </div>
+    </div>`).join('');
+  // 합계 초기 표시
+  updateProbTotal();
+}
+
+function updateProbTotal(){
+  const statusEl=document.getElementById('probAdjustStatus');if(!statusEl)return;
+  // 모든 prob_ input 수집
+  const inputs=document.querySelectorAll('[id^="prob_"]');
+  let total=0;
+  inputs.forEach(inp=>total+=parseFloat(inp.value)||0);
+  total=Math.round(total*10)/10;
+  statusEl.textContent=`합계: ${total}%`;
+  statusEl.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';
+}
+
+async function saveProbAll(){
+  const inputs=document.querySelectorAll('[id^="prob_"]');
+  if(inputs.length===0){showToast('경품 목록을 불러오세요');return;}
+  let total=0;
+  const updates={};
+  inputs.forEach(inp=>{
+    const key=inp.id.replace('prob_','');
+    const val=parseFloat(inp.value)||0;
+    total+=val;
+    updates[key]=val;
+  });
+  total=Math.round(total*10)/10;
+  if(total!==100){showToast(`❌ 합계가 ${total}%입니다. 정확히 100%가 되어야 합니다`);return;}
+  // 기존 prizes 읽어서 prob만 업데이트
+  const prizes=await fbGet('prizes');
+  for(const [k,newProb] of Object.entries(updates)){
+    if(prizes[k])await fbSet(`prizes/${k}/prob`,newProb);
+  }
+  allPrizes=await fbGet('prizes')||{};
+  showToast('✅ 확률이 저장됐습니다!');
+  updateProbTotal();
+  // 룰렛에도 반영
+  drawRoulette();renderPrizeLegend();
 }
 
 async function loadMemberPrizes(){
