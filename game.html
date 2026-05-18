@@ -1506,7 +1506,7 @@ async function loadStockView(){
   const [members, allStockLog]=await Promise.all([fbGet('members'), fbGet('stockLog')]);
   if(!members){container.innerHTML='<div class="empty"><div class="empty-icon">👥</div>멤버 없음</div>';return;}
   stockViewCache=Object.entries(members).map(([key,m])=>{
-    const logs=allStockLog&&allStockLog[key]?Object.values(allStockLog[key]).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
+    const logs=allStockLog&&allStockLog[key]?Object.values(allStockLog[key]).sort((a,b)=>{ if(a.time&&b.time)return b.time-a.time; return (b.date||'').localeCompare(a.date||''); }):[];
     return {key,name:m.name,stock:m.stock||0,logs};
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   renderStockView('');
@@ -1548,7 +1548,7 @@ async function loadMemberStockView(){
     fbGet('stockLog/'+currentUser.key)
   ]);
   const stock=(member&&member.stock)||0;
-  const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return a.time-b.time; return (a.date||'').localeCompare(b.date||''); }):[];
+  const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return b.time-a.time; return (b.date||'').localeCompare(a.date||''); }):[];
   let html=`<div style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border:1px solid var(--gold);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px;">
     <div style="font-size:12px;color:rgba(255,255,255,0.6);">현재 보유 주식</div>
     <div style="font-family:'Jua',cursive;font-size:40px;color:var(--gold);">${stock}주</div>
@@ -1760,7 +1760,7 @@ async function toggleStockDropdown(){
     ]);
     const stock=(member&&member.stock)||0;
     document.getElementById('headerStockCount').textContent=stock+'주';
-    const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return a.time-b.time; return (a.date||'').localeCompare(b.date||''); }):[];
+    const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return b.time-a.time; return (b.date||'').localeCompare(a.date||''); }):[];
     const content=document.getElementById('stockDropdownContent');
     let html='<div style="text-align:center;padding:8px 0;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;">';
     html+='<div style="font-family:Jua,cursive;font-size:28px;color:var(--gold);">'+stock+'주</div></div>';
