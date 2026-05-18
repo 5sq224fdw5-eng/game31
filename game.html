@@ -358,6 +358,13 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
   <div id="stockAdminView" style="display:none">
     <div class="section-title">💰 주식 지급/차감</div>
     <div class="card">
+      <!-- 그룹 필터 -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <button onclick="setStockGroup('all')" id="stockGrpAll" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:1">전체</button>
+        <button onclick="setStockGroup('좋아요')" id="stockGrp좋아요" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">좋아요</button>
+        <button onclick="setStockGroup('댓글')" id="stockGrp댓글" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">댓글</button>
+        <button onclick="setStockGroup('시크릿')" id="stockGrp시크릿" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">시크릿</button>
+      </div>
       <input class="bulk-search" id="stockMgmtSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock');renderBulkList('deductStock')">
       <div style="display:flex;gap:8px;margin-bottom:6px">
         <div style="flex:1">
@@ -1601,13 +1608,42 @@ async function deductStock(){
 
 const bulkSelected={giveStock:new Set(),deductStock:new Set(),leave:new Set()};
 
+let _stockGroup = 'all'; // 현재 선택된 그룹 필터
+
+function setStockGroup(group) {
+  _stockGroup = group;
+  // 버튼 스타일 업데이트
+  ['all','좋아요','댓글','시크릿'].forEach(g => {
+    const btn = document.getElementById('stockGrp' + g);
+    if(btn) btn.style.opacity = g === group ? '1' : '0.4';
+  });
+  // 선택 초기화 후 목록 재렌더
+  bulkSelected.giveStock.clear();
+  bulkSelected.deductStock.clear();
+  renderBulkList('giveStock');
+  renderBulkList('deductStock');
+}
+
 function renderBulkList(type){
-  // 주식 탭은 공통 검색창 stockMgmtSearch, 연차는 leaveSearch
   const searchId=type==='leave'?'leaveSearch':'stockMgmtSearch';
   const q=(document.getElementById(searchId)?.value||'').toLowerCase();
   const list=document.getElementById(type+'BulkList');if(!list)return;
-  const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
-  const allKeys=sorted.map(([k])=>k);const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
+
+  // 그룹 필터 적용 (주식 탭만)
+  const GROUPS=['좋아요','댓글','시크릿'];
+  let sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko'));
+
+  if(type!=='leave' && _stockGroup !== 'all'){
+    sorted = sorted.filter(([k,m]) => {
+      const name = m.name || '';
+      return name.startsWith(_stockGroup) || name.startsWith('*'+_stockGroup);
+    });
+  }
+
+  if(q) sorted = sorted.filter(([k,m]) => (m.name||'').toLowerCase().includes(q));
+
+  const allKeys=sorted.map(([k])=>k);
+  const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
   list.innerHTML=`<div class="bulk-select-all" onclick="toggleBulkAll('${type}',${JSON.stringify(allKeys)})"><div class="bulk-checkbox ${allChecked?'checked':''}">${allChecked?'✓':''}</div><span>전체 선택 (${sorted.length}명)</span></div>${sorted.map(([k,m])=>{const checked=bulkSelected[type].has(k);const subInfo=type==='leave'?`🏖️ ${m.leave||0}일`:`💰 ${m.stock||0}주`;return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')"><div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div><div class="bulk-member-name">${escHtml(m.name)}</div><div class="bulk-member-stock">${subInfo}</div></div>`;}).join('')}`;
   updateBulkCount(type);
 }
