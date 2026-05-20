@@ -28,7 +28,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 .btn-logout:hover { background: rgba(255,255,255,0.3); }
 .nav { display: flex; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); position: sticky; top: 0px; z-index: 99; overflow-x: auto; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
-.nav-btn { flex: 1; min-width: 60px; padding: 10px 6px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 10px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav-btn { flex: 0 0 auto; min-width: 56px; padding: 10px 6px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 10px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(255,215,0,0.05); }
 .nav-btn span { display: block; font-size: 18px; margin-bottom: 2px; }
 .page { display: none; padding: 20px; }
@@ -648,7 +648,7 @@ function showPage(page){
   if(page==='gacha'){refreshGachaPage();loadNotice();}
   if(page==='history')loadHistory();
   if(page==='members')loadMembers();
-  if(page==='prizes')loadPrizes();
+  if(page==='prizes'){loadPrizes();if(Object.keys(allPrizes).length>0)renderPrizePicker();}
   if(page==='stock')loadStockPage();
   if(page==='leave')loadLeaveView();
   if(page==='settings')loadSettings();
