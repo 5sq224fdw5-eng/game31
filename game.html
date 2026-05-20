@@ -1331,6 +1331,12 @@ async function saveProbAll(){
 }
 
 async function loadMemberPrizes(){
+  // allPrizes 없으면 먼저 로드
+  if(!allPrizes||Object.keys(allPrizes).length===0){
+    const prizes=await fbGet('prizes');
+    allPrizes=prizes||{};
+    renderPrizePicker();
+  }
   const key=document.getElementById('managePrizeMemberVal').value;const container=document.getElementById('memberPrizeList');
   if(!key){container.innerHTML='';return;}
   const prizes=toArray(await fbGet(`memberPrizes/${key}`));
