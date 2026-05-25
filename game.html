@@ -1389,7 +1389,7 @@ async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
   const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
-  const current=toArray(await fbGet(`memberPrizes/${key}`));current.push({emoji,name,time:Date.now(),deducted:false,memo});await fbSet(`memberPrizes/${key}`,current);
+  await fbPush(`memberPrizes/${key}`,{emoji,name,time:Date.now(),deducted:false,memo});
   document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';if(document.getElementById('addPrizeMemo'))document.getElementById('addPrizeMemo').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
@@ -1584,10 +1584,17 @@ async function loadMemberStockView(){
     <div style="font-family:'Jua',cursive;font-size:40px;color:var(--gold);">${stock}주</div>
   </div>`;
   if(logs.length>0){
+    // 잔여 계산
+    let running=0;
+    const logsWithBalance=logs.map(l=>{
+      if(l.type==='give') running+=(l.amount||0);
+      else if(l.type==='deduct') running-=(l.amount||0);
+      return {...l, balance:running};
+    });
     html+=`<div style="font-family:'Jua',cursive;font-size:16px;color:var(--gold);margin-bottom:10px;">📋 내역</div>`;
-    html+=logs.map(l=>`<div class="leave-item" style="margin-bottom:6px;">
+    html+=logsWithBalance.map(l=>`<div class="leave-item" style="margin-bottom:6px;">
       <div class="leave-item-row" style="border:none;padding:6px 0;">
-        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'};font-weight:700;">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div>
+        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'};font-weight:700;">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}<span style="color:rgba(255,255,255,0.5);font-size:11px;margin-left:8px">잔여 ${l.balance}주</span></div>
         <span style="color:rgba(255,255,255,0.35);font-size:11px;">${(l.date||'')} ${fmtTime(l.time)}</span>
       </div>
     </div>`).join('');
@@ -1795,9 +1802,16 @@ async function toggleStockDropdown(){
     let html='<div style="text-align:center;padding:8px 0;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;">';
     html+='<div style="font-family:Jua,cursive;font-size:28px;color:var(--gold);">'+stock+'주</div></div>';
     if(logs.length>0){
-      html+=logs.slice(0,10).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+      let running=0;
+      const logsWithBal=logs.map(l=>{
+        if(l.type==='give') running+=(l.amount||0);
+        else if(l.type==='deduct') running-=(l.amount||0);
+        return {...l,balance:running};
+      });
+      html+=logsWithBal.slice(-10).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
         <div>
           <span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.memo?'<span style="color:rgba(255,215,0,0.8);font-size:10px;">'+escHtml(l.memo)+'</span>':''}</span>
+          <span style="color:rgba(255,255,255,0.4);font-size:10px;margin-left:6px">잔여 ${l.balance}주</span>
         </div>
         <span style="color:rgba(255,255,255,0.35);font-size:10px;">${(l.date||'')} ${fmtTime(l.time)}</span>
       </div>`).join('');
