@@ -741,6 +741,7 @@ async function deductStockAndCheck(){
     await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
     const today=getKSTDate();
     await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,time:Date.now(),memo:'경품 뽑기 사용'});
+    showToast(`✅ ${stock}주 → ${stock-costPerRoll}주 차감완료`);
   }
   return true;
 }
@@ -758,7 +759,7 @@ async function showPrizeModal(prize){
   document.getElementById('resultModal').classList.add('active');
   if(currentUser&&currentUser.role==='member'){
     // fbPush로 개별 저장 - 동시 저장 시 덮어쓰기 방지
-    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now()});
+    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now(),deducted:false});
     refreshHeaderPrizes();
   }
 }
