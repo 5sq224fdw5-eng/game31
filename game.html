@@ -8,42 +8,43 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
 :root {
---gold: #FFE030; --gold2: #FFC700; --dark: #fff; --purple: #FFB3D9;
---pink: #FFB3D9; --cyan: #A8EEE0; --card: rgba(255,255,255,0.9); --border: rgba(255,180,210,0.4);
+--gold: #FFD700; --gold2: #FFA500; --dark: #1a0a2e; --purple: #6C35DE;
+--pink: #FF6B9D; --cyan: #00F5FF; --card: rgba(255,255,255,0.07); --border: rgba(255,255,255,0.12);
 }
-html { background-color: #FFFEF7; }
+html { background-color: #1a0a2e; }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
-font-family: 'Pretendard', sans-serif; background-color: #FFFEF7;
-background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden;
+font-family: 'Noto Sans KR', sans-serif; background-color: #1a0a2e;
+background-image: radial-gradient(ellipse at 20% 20%, rgba(108,53,222,0.5) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,107,157,0.4) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(0,245,255,0.15) 0%, transparent 70%);
+background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden;
 }
 #app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 80px; min-height: 100vh; }
-.header { background: #FFB3D9; backdrop-filter: blur(20px); padding: 10px 16px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.header { background: linear-gradient(135deg, rgba(108,53,222,0.9), rgba(255,107,157,0.9)); backdrop-filter: blur(20px); padding: 10px 16px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
 .header-top-row { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
 .header-title { font-family: 'Jua', cursive; font-size: 22px; letter-spacing: 1px; text-align: center; }
 .header-user { font-size: 12px; opacity: 0.9; text-align: center; margin-bottom: 2px; }
 .header-user strong { color: white; display: inline; font-size: 14px; font-weight: 700; }
 .btn-logout { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
 .btn-logout:hover { background: rgba(255,255,255,0.3); }
-.nav { display: flex; background: white; border-bottom: 2px solid #FFD6EC; border-bottom: 1px solid var(--border); position: sticky; top: 0px; z-index: 99; overflow-x: auto; scrollbar-width: none; }
+.nav { display: flex; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); position: sticky; top: 0px; z-index: 99; overflow-x: auto; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
-.nav-btn { flex: 0 0 auto; min-width: 56px; padding: 10px 6px; background: none; border: none; color: #ccc; font-size: 10px; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
-.nav-btn.active { color: #FFB3D9; border-bottom-color: #FFB3D9; background: #FFF0F7; }
+.nav-btn { flex: 1; min-width: 60px; padding: 10px 6px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 10px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(255,215,0,0.05); }
 .nav-btn span { display: block; font-size: 18px; margin-bottom: 2px; }
 .page { display: none; padding: 20px; }
 .page.active { display: block; }
-.login-wrap { background: linear-gradient(160deg, #FFE8F5 0%, #E8FBF5 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; min-height: -webkit-fill-available; padding: 40px 24px; position: relative; z-index: 1; }
+.login-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; min-height: -webkit-fill-available; padding: 40px 24px; position: relative; z-index: 1; }
 .login-logo { font-family: 'Jua', cursive; font-size: 56px; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-.login-title { font-family: 'Jua', cursive; font-size: 18px; margin-bottom: 4px; color: #FFB3D9; }
+.login-title { font-family: 'Jua', cursive; font-size: 18px; margin-bottom: 4px; color: var(--gold); }
 .login-sub { font-size: 32px; color: white; margin-bottom: 40px; font-family: 'Jua', cursive; letter-spacing: 2px; }
-.login-card { width: 100%; max-width: 360px; background: rgba(255,255,255,0.9); border: 1.5px solid #FFB3D9; border-radius: 24px; padding: 28px; box-shadow: 0 4px 24px rgba(255,179,217,0.3); overflow: visible; }
+.login-card { width: 100%; max-width: 360px; background: rgba(255,255,255,0.07); background-color: rgba(30,15,60,0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 28px; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); overflow: visible; }
 .login-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; width: 100%; }
-.login-tab { width: 100%; padding: 11px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Pretendard', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; text-align: center; box-sizing: border-box; -webkit-appearance: none; display: block; overflow: hidden; }
+.login-tab { width: 100%; padding: 11px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Noto Sans KR', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; text-align: center; box-sizing: border-box; -webkit-appearance: none; display: block; overflow: hidden; }
 .login-tab.active { background: #A78BFA; color: white; border-color: transparent; }
 .input-group { margin-bottom: 14px; }
 .input-group label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
-.input-group input, .input-group select { width: 100%; padding: 12px 16px; background: white; border: 1px solid #FFD6EC; border-radius: 12px; color: #3a2a3a; font-size: 15px; font-family: 'Pretendard', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+.input-group input, .input-group select { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
 .input-group input:focus, .input-group select:focus { border-color: var(--purple); }
 .input-group select option { background: #1a0a2e; }
 .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, #6C35DE, #FF6B9D); border: none; border-radius: 14px; color: white; font-size: 16px; font-family: 'Jua', cursive; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 20px rgba(108,53,222,0.4); letter-spacing: 1px; -webkit-appearance: none; box-sizing: border-box; display: block; overflow: hidden; }
@@ -57,14 +58,14 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 .notice-badge.gold { background: linear-gradient(135deg, #F7B731, #FD9644); }
 .notice-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
 .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-.filter-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid #C8F0E8; background: transparent; color: #A8D8CE; font-family: 'Pretendard', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.filter-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .filter-tab.active { background: linear-gradient(135deg, #6C35DE, #FF6B9D); color: white; border-color: transparent; }
-.section-title { font-family: 'Jua', cursive; font-size: 20px; color: #FFB3D9; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.card { background: white; border: 1px solid #FFD6EC; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(255,179,217,0.2); }
+.section-title { font-family: 'Jua', cursive; font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px); }
 .roulette-wrap { display: flex; flex-direction: column; align-items: center; padding: 16px 0 24px; }
-.stock-badge { background: #FFF9C4; border: 1px solid #FFE57F; border-radius: 20px; padding: 10px 20px; text-align: center; margin-bottom: 20px; width: 100%; max-width: 300px; }
+.stock-badge { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15)); border: 1px solid var(--gold); border-radius: 20px; padding: 10px 20px; text-align: center; margin-bottom: 20px; width: 100%; max-width: 300px; }
 .stock-badge .label { font-size: 11px; color: rgba(255,255,255,0.6); }
-.stock-badge .value { font-family: 'Jua', cursive; font-size: 28px; color: #C8A000; }
+.stock-badge .value { font-family: 'Jua', cursive; font-size: 28px; color: var(--gold); }
 .stock-badge .cost-info { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 .roulette-container { position: relative; width: 300px; height: 300px; margin-bottom: 8px; overflow: visible; }
 .roulette-canvas { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 0 40px rgba(255,215,0,0.35), 0 0 0 6px var(--gold), 0 0 0 10px #8B6914; display: block; }
@@ -106,18 +107,18 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 @keyframes bounceIn { 0%{transform:scale(0) rotate(-20deg)} 70%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0)} }
 .modal-prize { font-family: 'Jua', cursive; font-size: 32px; color: var(--gold); margin-bottom: 8px; }
 .modal-msg { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 24px; }
-.member-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #FFF9C4; border: 1px solid #FFE57F; border-radius: 14px; margin-bottom: 8px; transition: background 0.2s; }
+.member-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; transition: background 0.2s; }
 .member-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--purple), var(--pink)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Jua', cursive; font-size: 16px; flex-shrink: 0; }
 .member-info { flex: 1; min-width: 0; }
 .member-name { font-weight: 700; font-size: 15px; }
 .member-stock { font-size: 12px; color: var(--gold); }
 .member-actions { display: flex; gap: 6px; }
-.btn-sm { padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-family: 'Pretendard', sans-serif; cursor: pointer; transition: all 0.15s; }
+.btn-sm { padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.15s; }
 .btn-sm:active { transform: scale(0.95); }
 .btn-add { background: rgba(0,245,255,0.15); color: var(--cyan); border: 1px solid rgba(0,245,255,0.3); }
 .btn-del { background: rgba(255,80,80,0.15); color: #ff8080; border: 1px solid rgba(255,80,80,0.3); }
 .btn-edit { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
-.prize-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #FFF9C4; border: 1px solid #FFE57F; border-radius: 14px; margin-bottom: 8px; }
+.prize-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
 .prize-emoji { font-size: 32px; }
 .prize-info { flex: 1; }
 .prize-name { font-weight: 700; font-size: 15px; }
@@ -131,7 +132,7 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 .history-prize { font-size: 12px; color: var(--gold); }
 .history-time { font-size: 10px; color: rgba(255,255,255,0.3); }
 .stock-input-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.stock-input-row input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 15px; font-family: 'Pretendard', sans-serif; outline: none; }
+.stock-input-row input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; }
 .stock-input-row input:focus { border-color: var(--purple); }
 .btn-confirm { padding: 10px 16px; background: linear-gradient(135deg, var(--purple), var(--pink)); border: none; border-radius: 10px; color: white; font-family: 'Jua', cursive; font-size: 14px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .btn-confirm:active { transform: scale(0.95); }
@@ -140,7 +141,7 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 .header-prizes-label { font-size: 9px; color: rgba(255,255,255,0.5); display: block; margin-bottom: 1px; }
 .search-select-wrap { position: relative; margin-bottom: 14px; }
 .search-select-wrap label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
-.search-select-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; font-family: 'Pretendard', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.search-select-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
 .search-select-input:focus { border-color: var(--purple); }
 .search-select-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1a0a2e; border: 1px solid var(--purple); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 150; margin-top: 4px; }
 .search-select-dropdown.open { display: block; }
@@ -158,7 +159,7 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 .bulk-member-stock { font-size: 11px; color: var(--gold); }
 .bulk-select-all { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 12px; color: rgba(255,255,255,0.6); cursor: pointer; border-bottom: 1px solid var(--border); }
 .bulk-actions { display: flex; gap: 8px; margin-top: 8px; }
-.bulk-search { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; font-family: 'Pretendard', sans-serif; outline: none; margin-bottom: 8px; }
+.bulk-search { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; outline: none; margin-bottom: 8px; }
 .bulk-search:focus { border-color: var(--purple); }
 .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .setting-row:last-child { border-bottom: none; }
@@ -176,7 +177,7 @@ background-attachment: fixed; color: #3a2a3a; min-height: 100vh; min-height: -we
 .prize-modal-inner { background: linear-gradient(160deg, #2d1b69, #1a0a2e); border: 1px solid var(--border); border-radius: 24px 24px 0 0; padding: 28px 24px 40px; width: 100%; max-width: 480px; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .prize-modal-title { font-family: 'Jua', cursive; font-size: 20px; color: var(--gold); margin-bottom: 20px; }
-.leave-search-bar { width:100%; padding:10px 14px; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:10px; color:white; font-size:14px; font-family:'Pretendard',sans-serif; outline:none; margin-bottom:12px; }
+.leave-search-bar { width:100%; padding:10px 14px; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:10px; color:white; font-size:14px; font-family:'Noto Sans KR',sans-serif; outline:none; margin-bottom:12px; }
 .leave-search-bar:focus { border-color:var(--purple); }
 .leave-item { background:rgba(255,255,255,0.05); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
 .leave-item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
@@ -206,7 +207,7 @@ document.addEventListener('keydown',e=>{
 <body>
 <div class="toast" id="toast"></div>
 
-<div id="loginPage" class="login-wrap" style="position:relative;z-index:1;">
+<div id="loginPage" class="login-wrap" style="background-color:#1a0a2e;position:relative;z-index:1;">
   <div class="login-logo">🎡</div>
   <div class="login-title">(주) 떠리원</div>
   <div class="login-sub">사내 오락실</div>
@@ -331,39 +332,13 @@ document.addEventListener('keydown',e=>{
 </div>
 
 <div class="page" id="pagePrizes">
-  <div class="section-title">🏆 경품 지급 / 차감</div>
-  <div class="card" style="padding:16px">
-    <!-- 멤버 선택 -->
-    <div class="search-select-wrap" style="margin-bottom:12px">
-      <label style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:block">멤버 검색</label>
-      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off"
-        oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')"
-        onfocus="openDropdown('managePrizeDropdown')"
-        onblur="closeDropdownDelay('managePrizeDropdown')">
-      <input type="hidden" id="managePrizeMemberVal">
-      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
-    </div>
-    <!-- 선택한 멤버의 현재 경품 목록 -->
-    <div id="memberPrizeList" style="margin-bottom:10px"></div>
-    <!-- 경품 목록에서 선택해서 지급 -->
-    <div style="border-top:1px solid var(--border);padding-top:12px">
-      <div style="font-size:12px;color:var(--gold);font-family:'Jua',cursive;margin-bottom:8px">📋 경품 선택해서 지급</div>
-      <div id="prizePickList" style="margin-bottom:10px">
-        <div style="font-size:12px;color:rgba(255,255,255,0.3)">경품 탭 로드 후 목록이 표시됩니다</div>
-      </div>
-      <input type="text" id="addPrizeMemo" placeholder="📝 만료기한 (예: 2025-12월) — 미입력 시 무제한"
-        style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Pretendard',sans-serif;outline:none;margin-bottom:8px">
-      <!-- 직접입력 폴백 -->
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:6px">위 목록에 없으면 직접 입력:</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="addPrizeEmoji" placeholder="🎁"
-          style="width:50px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none">
-        <input type="text" id="addPrizeName" placeholder="경품명 직접 입력"
-          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Pretendard',sans-serif;outline:none">
-        <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
-      </div>
-    </div>
+  <div class="section-title">🎁 경품 관리</div>
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
+    <div id="totalProb" style="font-family:'Jua',cursive;font-size:16px;color:var(--gold)">합계: 0%</div>
   </div>
+  <div id="prizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  <button class="btn-primary" onclick="openAddPrize()" style="margin-top:8px">+ 경품 추가</button>
 </div>
 
 <!-- 주식 탭 -->
@@ -372,13 +347,6 @@ document.addEventListener('keydown',e=>{
   <div id="stockAdminView" style="display:none">
     <div class="section-title">💰 주식 지급/차감</div>
     <div class="card">
-      <!-- 그룹 필터 -->
-      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <button onclick="setStockGroup('all')" id="stockGrpAll" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:1">전체</button>
-        <button onclick="setStockGroup('좋아요')" id="stockGrp좋아요" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">좋아요</button>
-        <button onclick="setStockGroup('댓글')" id="stockGrp댓글" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">댓글</button>
-        <button onclick="setStockGroup('시크릿')" id="stockGrp시크릿" class="btn-confirm" style="font-size:11px;padding:5px 12px;opacity:0.4">시크릿</button>
-      </div>
       <input class="bulk-search" id="stockMgmtSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('giveStock');renderBulkList('deductStock')">
       <div style="display:flex;gap:8px;margin-bottom:6px">
         <div style="flex:1">
@@ -416,28 +384,7 @@ document.addEventListener('keydown',e=>{
 
 <!-- 연차 탭 -->
 <div class="page" id="pageLeave">
-  <!-- 관리자 전용: 연차 관리 -->
-  <div id="leaveAdminPanel" style="display:none">
-    <div class="section-title">🏖️ 연차 관리</div>
-    <div class="card">
-      <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
-      <div class="bulk-member-list" id="leaveBulkList"></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
-      <div class="bulk-actions">
-        <input type="number" id="leaveAmount" placeholder="일수 입력" min="1"
-          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Pretendard',sans-serif;outline:none">
-        <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
-        <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)"
-          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Pretendard',sans-serif;outline:none">
-      </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
-    </div>
-    <div class="section-title" style="margin-top:20px">📋 연차 내역 조회</div>
-  </div>
-  <!-- 공통: 조회 -->
+  <div class="section-title">🏖️ 연차 내역 조회</div>
   <input class="leave-search-bar" id="leaveViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterLeaveView()">
   <div id="leaveViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
@@ -458,12 +405,29 @@ document.addEventListener('keydown',e=>{
     </div>
   </div>
 
-  <div class="section-title" style="margin-top:20px">🎁 경품 관리</div>
-  <div class="card" style="padding:14px 16px">
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px">💡 확률 합계는 100%가 되어야 합니다</div>
-    <div id="settingsTotalProb" style="font-family:'Jua',cursive;font-size:15px;color:var(--gold);margin-bottom:12px">합계: 0%</div>
-    <div id="settingsPrizeList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-    <button class="btn-confirm" onclick="openAddPrize()" style="width:100%;margin-top:10px">+ 경품 추가</button>
+  <div class="section-title" style="margin-top:20px">🔧 경품 데이터 복구</div>
+  <div class="card">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">경품 데이터에 중복이 생긴 경우 time 기준으로 중복을 제거합니다.</div>
+    <div id="dedupeStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+    <button class="btn-confirm" onclick="deduplicateMemberPrizes()" style="width:100%;background:linear-gradient(135deg,#FC5C65,#fd9644);margin-bottom:8px">🧹 경품 중복 제거</button>
+    <div id="recoverStatus" style="font-size:12px;color:var(--gold);margin-bottom:10px;min-height:16px;"></div>
+    <button class="btn-confirm" onclick="alert('복구 기능이 비활성화되었습니다')" style="width:100%;opacity:0.4;cursor:not-allowed">📦 전체 경품 데이터 복구 (비활성화됨)</button>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">🏖️ 연차 관리</div>
+  <div class="card">
+    <input class="bulk-search" id="leaveSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderBulkList('leave')">
+    <div class="bulk-member-list" id="leaveBulkList"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
+    <div class="bulk-actions">
+      <input type="number" id="leaveAmount" placeholder="일수 입력" min="1" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
+      <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
   </div>
 
   <div class="section-title" style="margin-top:20px">📢 공지사항 편집</div>
@@ -471,11 +435,29 @@ document.addEventListener('keydown',e=>{
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">항목을 추가·수정·삭제할 수 있어요</div>
     <div id="noticeEditorList"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <input type="text" id="newNoticeBadge" placeholder="+1주"
-        style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive">
-      <input type="text" id="newNoticeText" placeholder="내용 입력"
-        style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Pretendard',sans-serif;outline:none">
+      <input type="text" id="newNoticeBadge" placeholder="+1주" style="width:64px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;text-align:center;outline:none;font-family:'Jua',cursive;">
+      <input type="text" id="newNoticeText" placeholder="내용 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;">
       <button class="btn-confirm" onclick="addNoticeRow()">추가</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">🏆 경품 관리 (지급/차감)</div>
+  <div class="card">
+    <div class="search-select-wrap">
+      <label>멤버 검색</label>
+      <input class="search-select-input" id="managePrizeSearch" placeholder="이름 검색..." autocomplete="off" oninput="filterSearchSelect('managePrizeSearch','managePrizeDropdown')" onfocus="openDropdown('managePrizeDropdown')" onblur="closeDropdownDelay('managePrizeDropdown')">
+      <input type="hidden" id="managePrizeMemberVal">
+      <div class="search-select-dropdown" id="managePrizeDropdown"></div>
+    </div>
+    <div id="memberPrizeList" style="margin-top:8px"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;margin-bottom:8px">경품명으로 직접 지급 (이모지 + 이름 입력)</div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="addPrizeEmoji" placeholder="🎁" style="width:56px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:20px;text-align:center;outline:none;">
+      <input type="text" id="addPrizeName" placeholder="경품명 입력" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button class="btn-confirm" onclick="addMemberPrize()">지급</button>
+    </div>
+    <input type="text" id="addPrizeMemo" placeholder="📝 만료 기한 (예: 2025-12월) — 미입력 시 무제한" style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-top:6px;">
+    <div style="display:none">
     </div>
   </div>
 </div>
@@ -501,7 +483,7 @@ document.addEventListener('keydown',e=>{
     <div class="input-group"><label>확률 (%)</label><input type="number" id="editPrizeProb" placeholder="0~100" min="0" max="100"></div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn-primary" style="flex:1" onclick="savePrize()">저장</button>
-      <button onclick="closePrizeModal()" style="flex:1;padding:14px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:14px;color:white;font-family:'Pretendard',sans-serif;font-size:15px;cursor:pointer;">취소</button>
+      <button onclick="closePrizeModal()" style="flex:1;padding:14px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:14px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;">취소</button>
     </div>
   </div>
 </div>
@@ -532,30 +514,6 @@ let currentUser=null;
 (function restoreLogin(){
   const saved=localStorage.getItem('currentUser');
   if(saved){try{currentUser=JSON.parse(saved);window.addEventListener('DOMContentLoaded',()=>enterApp());}catch(e){localStorage.removeItem('currentUser');}}
-  // 인트라넷에서 자동 로그인
-  const params=new URLSearchParams(window.location.search);
-  const autoLogin=params.get('autoLogin');
-  if(autoLogin){
-    window.addEventListener('DOMContentLoaded',async()=>{
-      const name=decodeURIComponent(autoLogin);
-      // 해당 닉네임으로 자동 로그인
-      const members=await fbGet('members');
-      if(members){
-        const entry=Object.entries(members).find(([k,v])=>v.name===name||(v.name&&v.name.replace(/^\*/,'')===name));
-        if(entry){
-          currentUser={key:entry[0],...entry[1]};
-          localStorage.setItem('currentUser',JSON.stringify(currentUser));
-          enterApp();
-          // URL 파라미터 제거
-          window.history.replaceState({},'',window.location.pathname);
-          return;
-        }
-      }
-      // 못 찾으면 로그인 화면에서 닉네임 자동 입력
-      const inp=document.getElementById('loginInput');
-      if(inp) inp.value=name;
-    });
-  }
 })();
 let loginTab='member',allMembers={},allPrizes={},costPerRoll=10;
 let leaveViewCache=null;
@@ -609,49 +567,6 @@ function enterApp(){
     document.getElementById('headerPrizesWrap').style.display='none';
   }
   loadNotice();showPage('gacha');
-  // 만료일 자동 소멸 체크
-  setTimeout(()=>checkExpiredPrizes(),1500);
-}
-
-// ── 만료일 자동 소멸 ──
-// memo에 날짜(일 단위)가 있고 그 날짜의 다음날 00시 이후면 자동 deducted:true
-// 지원 형식: 26-05-28 / 2026-05-28 / 26.05.28 / 2026.05.28 / 26/05/28
-async function checkExpiredPrizes(){
-  try{
-    const allPrizesData=await fbGet('memberPrizes');
-    if(!allPrizesData)return;
-    // 오늘 00:00:00 기준 타임스탬프
-    const today=new Date();
-    today.setHours(0,0,0,0);
-    const todayTs=today.getTime();
-    let changed=0;
-    for(const [mk,raw] of Object.entries(allPrizesData)){
-      if(!raw)continue;
-      const arr=Array.isArray(raw)?[...raw]:Object.values(raw);
-      let modified=false;
-      arr.forEach((p,i)=>{
-        if(!p||p.deducted)return;
-        const memo=(p.memo||'').trim();
-        if(!memo)return;
-        // 날짜 파싱: YY-MM-DD 또는 YYYY-MM-DD (구분자: - . /)
-        const m=memo.match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
-        if(!m)return;
-        let year=parseInt(m[1]);
-        if(year<100)year+=2000; // 26 → 2026
-        const month=parseInt(m[2])-1; // 0-indexed
-        const day=parseInt(m[3]);
-        // 만료일 다음날 00:00 = 만료일+1일
-        const expDate=new Date(year,month,day+1,0,0,0,0);
-        if(todayTs>=expDate.getTime()){
-          const expStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          arr[i]={...p,deducted:true,deductDate:expStr,deductReason:`만료일(${expStr}) 자동 소멸`};
-          modified=true;changed++;
-        }
-      });
-      if(modified)await fbSet(`memberPrizes/${mk}`,arr);
-    }
-    if(changed>0)showToast(`⏰ 만료된 경품 ${changed}개가 자동 소멸됐습니다`);
-  }catch(e){console.warn('checkExpiredPrizes error',e);}
 }
 
 async function refreshHeaderPrizes(){
@@ -668,7 +583,7 @@ async function refreshHeaderPrizes(){
   (prizes||[]).forEach(p=>{if(p.deducted)return;const key=p.name;if(!counts[key])counts[key]={emoji:p.emoji,name:p.name,count:0};counts[key].count++;});
   if(manualLeave>0){if(counts['연차'])counts['연차'].count+=manualLeave;else counts['연차']={emoji:'🏖️',name:'연차',count:manualLeave};}
   if(Object.keys(counts).length===0)el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
-  else el.innerHTML=Object.values(counts).map(p=>`<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Pretendard',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
+  else el.innerHTML=Object.values(counts).map(p=>`<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
 }
 
 function logout(){
@@ -686,7 +601,7 @@ function showPage(page){
   if(page==='gacha'){refreshGachaPage();loadNotice();}
   if(page==='history')loadHistory();
   if(page==='members')loadMembers();
-  if(page==='prizes'){loadPrizes();if(Object.keys(allPrizes).length>0)renderPrizePicker();}
+  if(page==='prizes')loadPrizes();
   if(page==='stock')loadStockPage();
   if(page==='leave')loadLeaveView();
   if(page==='settings')loadSettings();
@@ -715,7 +630,7 @@ function drawRoulette(){
     ctx.save();ctx.translate(lx,ly);ctx.rotate(midAngle+Math.PI/2);
     ctx.font=sliceAngle>0.4?'22px serif':'14px serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(p.emoji||'🎁',0,sliceAngle>0.5?-12:0);
-    if(sliceAngle>0.35){ctx.font='bold 12px "Pretendard",sans-serif';ctx.fillStyle='#fff';ctx.fillText(p.name||'',0,10);}
+    if(sliceAngle>0.35){ctx.font='bold 12px "Noto Sans KR",sans-serif';ctx.fillStyle='#fff';ctx.fillText(p.name||'',0,10);}
     ctx.restore();startAngle=endAngle;
   });
   ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.strokeStyle='rgba(255,215,0,0.6)';ctx.lineWidth=3;ctx.stroke();
@@ -754,8 +669,7 @@ async function deductStockAndCheck(){
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
     await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
     const today=getKSTDate();
-    await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,time:Date.now(),memo:'경품 뽑기 사용'});
-    showToast(`✅ ${stock}주 → ${stock-costPerRoll}주 차감완료`);
+    await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,memo:'경품 뽑기 사용'});
   }
   return true;
 }
@@ -773,7 +687,7 @@ async function showPrizeModal(prize){
   document.getElementById('resultModal').classList.add('active');
   if(currentUser&&currentUser.role==='member'){
     // fbPush로 개별 저장 - 동시 저장 시 덮어쓰기 방지
-    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now(),deducted:false});
+    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now()});
     refreshHeaderPrizes();
   }
 }
@@ -840,7 +754,7 @@ async function loadHistory(){
     if(leaveLog){
       leaveCard.style.display='';
       const logs=Object.values(leaveLog).sort((a,b)=>{const dd=(b.date||'').localeCompare(a.date||'');return dd!==0?dd:(b.time||0)-(a.time||0);});
-      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''} ${fmtTime(l.time)}</span></div>`).join('')}`;
+      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span></div>`).join('')}`;
     }else leaveCard.style.display='none';
   }
   const list=document.getElementById('historyList');
@@ -1007,7 +921,7 @@ function renderHistoryAccordion(items){
   if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
   const groups={};
   items.forEach(item=>{if(!groups[item.name])groups[item.name]=[];groups[item.name].push(item);});
-  list.innerHTML=`<input id="historySearchInput" placeholder="🔍 이름 검색..." autocomplete="off" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Pretendard',sans-serif;outline:none;margin-bottom:12px;" oninput="filterHistoryAccordion()"><div id="historyAccordionList"></div>`;
+  list.innerHTML=`<input id="historySearchInput" placeholder="🔍 이름 검색..." autocomplete="off" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:12px;" oninput="filterHistoryAccordion()"><div id="historyAccordionList"></div>`;
   renderAccordionItems(groups,'');
 }
 
@@ -1123,43 +1037,9 @@ async function editMemberName(key,currentName){
 async function loadPrizes(){
   const list=document.getElementById('prizeList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const prizes=await fbGet('prizes');allPrizes=prizes||{};updateTotalProb();
-  if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';renderPrizePicker();return;}
-  list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div></div>`).join('');
+  if(!prizes||Object.keys(prizes).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🎁</div>경품이 없습니다</div>';return;}
+  list.innerHTML=Object.entries(prizes).map(([k,p])=>`<div class="prize-item"><div class="prize-emoji">${p.emoji}</div><div class="prize-info"><div class="prize-name">${escHtml(p.name)}</div><div class="prize-prob">${p.prob}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p.prob}%"></div></div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="openEditPrize('${k}')">수정</button><button class="btn-sm btn-del" onclick="deletePrize('${k}')">삭제</button></div></div>`).join('');
   drawRoulette();renderPrizeLegend();
-  renderPrizePicker();
-}
-
-// 경품 목록에서 선택해서 지급하는 UI 렌더링
-function renderPrizePicker(){
-  const el=document.getElementById('prizePickList');if(!el)return;
-  const prizes=Object.values(allPrizes);
-  if(prizes.length===0){el.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.3)">등록된 경품이 없습니다</div>';return;}
-  el.innerHTML=prizes.map((p,i)=>{
-    const key=Object.keys(allPrizes)[i];
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:22px">${p.emoji}</span>
-        <div>
-          <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>
-        </div>
-      </div>
-      <button class="btn-confirm" onclick="givePickedPrize('${escHtml(p.emoji)}','${escHtml(p.name)}')"
-        style="font-size:12px;padding:6px 14px">지급</button>
-    </div>`;
-  }).join('');
-}
-
-// 경품 목록에서 선택해 지급
-async function givePickedPrize(emoji,name){
-  const key=document.getElementById('managePrizeMemberVal').value;
-  if(!key){showToast('먼저 멤버를 선택하세요');return;}
-  const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
-  const current=toArray(await fbGet(`memberPrizes/${key}`));
-  current.push({emoji,name,time:Date.now(),deducted:false,memo});
-  await fbSet(`memberPrizes/${key}`,current);
-  showToast(`✅ ${allMembers[key]?.name||''}에게 ${emoji} ${name} 지급!`);
-  loadMemberPrizes();
 }
 function updateTotalProb(){const total=Object.values(allPrizes).reduce((s,p)=>s+(p.prob||0),0);const el=document.getElementById('totalProb');el.textContent=`합계: ${total}%`;el.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';}
 function openAddPrize(){['editPrizeKey','editPrizeName','editPrizeEmoji','editPrizeProb'].forEach(id=>document.getElementById(id).value='');document.getElementById('prizeModalTitle').textContent='경품 추가';document.getElementById('prizeModal').classList.add('active');}
@@ -1170,25 +1050,12 @@ async function savePrize(){
   const emoji=document.getElementById('editPrizeEmoji').value.trim();const prob=parseFloat(document.getElementById('editPrizeProb').value);
   if(!name||!emoji||isNaN(prob)){showToast('모든 항목을 입력하세요');return;}if(prob<0||prob>100){showToast('확률은 0~100 사이');return;}
   if(key)await fbSet(`prizes/${key}`,{name,emoji,prob});else await fbPush('prizes',{name,emoji,prob});
-  closePrizeModal();showToast('✅ 저장됨');
-  loadPrizes();
-  renderSettingsPrizeList();
+  closePrizeModal();showToast('✅ 저장됨');loadPrizes();
 }
 async function deletePrize(key){if(!confirm('경품을 삭제하시겠습니까?'))return;await fbDelete(`prizes/${key}`);showToast('🗑️ 삭제됨');loadPrizes();}
 
-// ★ 연차 탭
+// ★ 연차 탭 - 지급/차감 내역 모두 표시
 async function loadLeaveView(){
-  const isAdmin=currentUser&&currentUser.role==='admin';
-  // 관리자 패널 표시/숨김
-  const adminPanel=document.getElementById('leaveAdminPanel');
-  if(adminPanel)adminPanel.style.display=isAdmin?'block':'none';
-  // 관리자 연차 bulk list 초기화
-  if(isAdmin){
-    const members=await fbGet('members');allMembers=members||{};
-    await loadLeaveIntoMembers();
-    bulkSelected.leave.clear();
-    renderBulkList('leave');
-  }
   const container=document.getElementById('leaveViewList');if(!container)return;
   container.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   try{
@@ -1203,6 +1070,7 @@ async function loadLeaveView(){
       const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;
       const total=manualLeave+prizeLeave;
       const leaveLogRaw=allLeaveLog&&allLeaveLog[key];
+      // 지급+차감 모두 날짜순 정렬
       const logs=leaveLogRaw
         ? Object.values(leaveLogRaw).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
         : [];
@@ -1227,7 +1095,7 @@ function renderLeaveView(q){
           <span style="color:${isDeduct?'#FC5C65':'#26DE81'}">${isDeduct?'−':'+'}${l.amount}일 ${isDeduct?'차감':'수동지급'}</span>
           ${l.memo?`<span style="color:rgba(255,215,0,0.8);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}
         </div>
-        <span style="color:rgba(255,255,255,0.35);font-size:10px">${(l.date||'')} ${fmtTime(l.time)}</span>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span>
       </div>`;
     });
     if(m.prizeLeave>0){
@@ -1255,127 +1123,13 @@ async function loadSettings(){
   loadNoticeEditor();
   bulkSelected.giveStock.clear();bulkSelected.deductStock.clear();bulkSelected.leave.clear();
   await loadLeaveIntoMembers();
-  renderBulkList('giveStock');renderBulkList('deductStock');
+  renderBulkList('giveStock');renderBulkList('deductStock');renderBulkList('leave');
   const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   document.getElementById('costDisplay').textContent=`${costPerRoll}주`;
   document.getElementById('newCostInput').value=costPerRoll;
-  // 설정 탭 경품 관리 목록 렌더링
-  await renderSettingsPrizeList();
-}
-
-// 설정 탭 경품 관리 목록 (수정/삭제 포함)
-async function renderSettingsPrizeList(){
-  const el=document.getElementById('settingsPrizeList');
-  const totalEl=document.getElementById('settingsTotalProb');
-  if(!el)return;
-  const prizes=await fbGet('prizes');
-  if(!prizes||Object.keys(prizes).length===0){
-    el.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,0.4);padding:8px 0">등록된 경품이 없습니다</div>';
-    if(totalEl)totalEl.textContent='합계: 0%';
-    return;
-  }
-  const total=Object.values(prizes).reduce((s,p)=>s+(p.prob||0),0);
-  if(totalEl){
-    totalEl.textContent=`합계: ${Math.round(total*10)/10}%`;
-    totalEl.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';
-  }
-  el.innerHTML=Object.entries(prizes).map(([k,p])=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:22px;flex-shrink:0">${p.emoji}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4)">${p.prob}%</div>
-        <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:3px">
-          <div style="height:4px;background:var(--gold);border-radius:2px;width:${Math.min(p.prob,100)}%"></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button class="btn-sm btn-edit" onclick="openEditPrize('${k}');_afterSavePrize='settings'">수정</button>
-        <button class="btn-sm btn-del" onclick="deletePrizeFromSettings('${k}')">삭제</button>
-      </div>
-    </div>`).join('');
-}
-
-async function deletePrizeFromSettings(key){
-  if(!confirm('경품을 삭제하시겠습니까?'))return;
-  await fbDelete(`prizes/${key}`);
-  showToast('🗑️ 삭제됨');
-  const prizes=await fbGet('prizes');allPrizes=prizes||{};
-  renderSettingsPrizeList();
-  renderPrizePicker();
-  updateTotalProb();
-}
-
-// 경품 확률 빠른 조정 렌더
-async function renderProbAdjust(){
-  const el=document.getElementById('probAdjustList');
-  const statusEl=document.getElementById('probAdjustStatus');
-  if(!el)return;
-  el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-  const prizes=await fbGet('prizes');
-  if(!prizes||Object.keys(prizes).length===0){
-    el.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.4)">등록된 경품이 없습니다</div>';
-    return;
-  }
-  // 각 경품을 input으로 렌더
-  el.innerHTML=Object.entries(prizes).map(([k,p])=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:20px;flex-shrink:0">${p.emoji}</span>
-      <span style="flex:1;font-size:13px;font-weight:700">${escHtml(p.name)}</span>
-      <div style="display:flex;align-items:center;gap:4px">
-        <input type="number" id="prob_${k}" value="${p.prob}" min="0" max="100" step="1"
-          oninput="updateProbTotal()"
-          style="width:64px;padding:7px 10px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;color:white;font-size:14px;font-family:'Jua',cursive;text-align:center;outline:none">
-        <span style="font-size:13px;color:rgba(255,255,255,0.5)">%</span>
-      </div>
-    </div>`).join('');
-  // 합계 초기 표시
-  updateProbTotal();
-}
-
-function updateProbTotal(){
-  const statusEl=document.getElementById('probAdjustStatus');if(!statusEl)return;
-  // 모든 prob_ input 수집
-  const inputs=document.querySelectorAll('[id^="prob_"]');
-  let total=0;
-  inputs.forEach(inp=>total+=parseFloat(inp.value)||0);
-  total=Math.round(total*10)/10;
-  statusEl.textContent=`합계: ${total}%`;
-  statusEl.style.color=total===100?'#00ff88':total>100?'#ff4444':'var(--gold)';
-}
-
-async function saveProbAll(){
-  const inputs=document.querySelectorAll('[id^="prob_"]');
-  if(inputs.length===0){showToast('경품 목록을 불러오세요');return;}
-  let total=0;
-  const updates={};
-  inputs.forEach(inp=>{
-    const key=inp.id.replace('prob_','');
-    const val=parseFloat(inp.value)||0;
-    total+=val;
-    updates[key]=val;
-  });
-  total=Math.round(total*10)/10;
-  if(total!==100){showToast(`❌ 합계가 ${total}%입니다. 정확히 100%가 되어야 합니다`);return;}
-  // 기존 prizes 읽어서 prob만 업데이트
-  const prizes=await fbGet('prizes');
-  for(const [k,newProb] of Object.entries(updates)){
-    if(prizes[k])await fbSet(`prizes/${k}/prob`,newProb);
-  }
-  allPrizes=await fbGet('prizes')||{};
-  showToast('✅ 확률이 저장됐습니다!');
-  updateProbTotal();
-  // 룰렛에도 반영
-  drawRoulette();renderPrizeLegend();
 }
 
 async function loadMemberPrizes(){
-  // allPrizes 없으면 먼저 로드
-  if(!allPrizes||Object.keys(allPrizes).length===0){
-    const prizes=await fbGet('prizes');
-    allPrizes=prizes||{};
-    renderPrizePicker();
-  }
   const key=document.getElementById('managePrizeMemberVal').value;const container=document.getElementById('memberPrizeList');
   if(!key){container.innerHTML='';return;}
   const prizes=toArray(await fbGet(`memberPrizes/${key}`));
@@ -1404,7 +1158,7 @@ async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
   const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
-  await fbPush(`memberPrizes/${key}`,{emoji,name,time:Date.now(),deducted:false,memo});
+  const current=toArray(await fbGet(`memberPrizes/${key}`));current.push({emoji,name,time:Date.now(),deducted:false,memo});await fbSet(`memberPrizes/${key}`,current);
   document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';if(document.getElementById('addPrizeMemo'))document.getElementById('addPrizeMemo').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
@@ -1551,7 +1305,7 @@ async function loadStockView(){
   const [members, allStockLog]=await Promise.all([fbGet('members'), fbGet('stockLog')]);
   if(!members){container.innerHTML='<div class="empty"><div class="empty-icon">👥</div>멤버 없음</div>';return;}
   stockViewCache=Object.entries(members).map(([key,m])=>{
-    const logs=allStockLog&&allStockLog[key]?Object.values(allStockLog[key]).sort((a,b)=>{ if(a.time&&b.time)return b.time-a.time; return (b.date||'').localeCompare(a.date||''); }):[];
+    const logs=allStockLog&&allStockLog[key]?Object.values(allStockLog[key]).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
     return {key,name:m.name,stock:m.stock||0,logs};
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   renderStockView('');
@@ -1567,7 +1321,7 @@ function renderStockView(q){
     if(m.logs.length>0){
       inner=m.logs.map(l=>`<div class="leave-item-row">
         <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div>
-        <span style="color:rgba(255,255,255,0.35);font-size:10px">${(l.date||'')} ${fmtTime(l.time)}</span>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''}</span>
       </div>`).join('');
     }else{
       inner='<div class="leave-item-empty">내역 없음 (오늘부터 기록됩니다)</div>';
@@ -1593,24 +1347,17 @@ async function loadMemberStockView(){
     fbGet('stockLog/'+currentUser.key)
   ]);
   const stock=(member&&member.stock)||0;
-  const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return a.time-b.time; return (a.date||'').localeCompare(b.date||''); }):[];
+  const logs=stockLog?Object.values(stockLog).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
   let html=`<div style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border:1px solid var(--gold);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px;">
     <div style="font-size:12px;color:rgba(255,255,255,0.6);">현재 보유 주식</div>
     <div style="font-family:'Jua',cursive;font-size:40px;color:var(--gold);">${stock}주</div>
   </div>`;
   if(logs.length>0){
-    // 잔여 계산
-    let running=0;
-    const logsWithBalance=logs.map(l=>{
-      if(l.type==='give') running+=(l.amount||0);
-      else if(l.type==='deduct') running-=(l.amount||0);
-      return {...l, balance:running};
-    });
     html+=`<div style="font-family:'Jua',cursive;font-size:16px;color:var(--gold);margin-bottom:10px;">📋 내역</div>`;
-    html+=logsWithBalance.map(l=>`<div class="leave-item" style="margin-bottom:6px;">
+    html+=logs.map(l=>`<div class="leave-item" style="margin-bottom:6px;">
       <div class="leave-item-row" style="border:none;padding:6px 0;">
-        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'};font-weight:700;">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}<span style="color:rgba(255,255,255,0.5);font-size:11px;margin-left:8px">잔여 ${l.balance}주</span></div>
-        <span style="color:rgba(255,255,255,0.35);font-size:11px;">${(l.date||'')} ${fmtTime(l.time)}</span>
+        <div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'};font-weight:700;">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.type==='deduct'?'차감':'지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div>
+        <span style="color:rgba(255,255,255,0.35);font-size:11px;">${l.date||''}</span>
       </div>
     </div>`).join('');
   }else{
@@ -1628,7 +1375,7 @@ async function giveStock(){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
     const giveMemo=document.getElementById('giveStockMemo')?.value.trim()||'';
-    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo});
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,memo:giveMemo});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
@@ -1649,7 +1396,7 @@ async function deductStock(){
     if(amount>current){skipped++;continue;}
     await fbSet(`members/${key}/stock`, current-amount);
     const deductMemo=document.getElementById('deductStockMemo')?.value.trim()||'';
-    await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today,time:Date.now(),memo:deductMemo});
+    await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today,memo:deductMemo});
   }
   allMembers=(await fbGet('members'))||{};
   const dav=document.getElementById('deductStockAmount');if(dav)dav.value='';
@@ -1660,42 +1407,13 @@ async function deductStock(){
 
 const bulkSelected={giveStock:new Set(),deductStock:new Set(),leave:new Set()};
 
-let _stockGroup = 'all'; // 현재 선택된 그룹 필터
-
-function setStockGroup(group) {
-  _stockGroup = group;
-  // 버튼 스타일 업데이트
-  ['all','좋아요','댓글','시크릿'].forEach(g => {
-    const btn = document.getElementById('stockGrp' + g);
-    if(btn) btn.style.opacity = g === group ? '1' : '0.4';
-  });
-  // 선택 초기화 후 목록 재렌더
-  bulkSelected.giveStock.clear();
-  bulkSelected.deductStock.clear();
-  renderBulkList('giveStock');
-  renderBulkList('deductStock');
-}
-
 function renderBulkList(type){
+  // 주식 탭은 공통 검색창 stockMgmtSearch, 연차는 leaveSearch
   const searchId=type==='leave'?'leaveSearch':'stockMgmtSearch';
   const q=(document.getElementById(searchId)?.value||'').toLowerCase();
   const list=document.getElementById(type+'BulkList');if(!list)return;
-
-  // 그룹 필터 적용 (주식 탭만)
-  const GROUPS=['좋아요','댓글','시크릿'];
-  let sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko'));
-
-  if(type!=='leave' && _stockGroup !== 'all'){
-    sorted = sorted.filter(([k,m]) => {
-      const name = m.name || '';
-      return name.startsWith(_stockGroup) || name.startsWith('*'+_stockGroup);
-    });
-  }
-
-  if(q) sorted = sorted.filter(([k,m]) => (m.name||'').toLowerCase().includes(q));
-
-  const allKeys=sorted.map(([k])=>k);
-  const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
+  const sorted=Object.entries(allMembers).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).filter(([k,m])=>!q||m.name.toLowerCase().includes(q));
+  const allKeys=sorted.map(([k])=>k);const allChecked=allKeys.length>0&&allKeys.every(k=>bulkSelected[type].has(k));
   list.innerHTML=`<div class="bulk-select-all" onclick="toggleBulkAll('${type}',${JSON.stringify(allKeys)})"><div class="bulk-checkbox ${allChecked?'checked':''}">${allChecked?'✓':''}</div><span>전체 선택 (${sorted.length}명)</span></div>${sorted.map(([k,m])=>{const checked=bulkSelected[type].has(k);const subInfo=type==='leave'?`🏖️ ${m.leave||0}일`:`💰 ${m.stock||0}주`;return `<div class="bulk-member-item ${checked?'checked':''}" onclick="toggleBulkMember('${type}','${k}')"><div class="bulk-checkbox ${checked?'checked':''}">${checked?'✓':''}</div><div class="bulk-member-name">${escHtml(m.name)}</div><div class="bulk-member-stock">${subInfo}</div></div>`;}).join('')}`;
   updateBulkCount(type);
 }
@@ -1812,23 +1530,16 @@ async function toggleStockDropdown(){
     ]);
     const stock=(member&&member.stock)||0;
     document.getElementById('headerStockCount').textContent=stock+'주';
-    const logs=stockLog?Object.values(stockLog).sort((a,b)=>{ if(a.time&&b.time)return a.time-b.time; return (a.date||'').localeCompare(b.date||''); }):[];
+    const logs=stockLog?Object.values(stockLog).sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
     const content=document.getElementById('stockDropdownContent');
     let html='<div style="text-align:center;padding:8px 0;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;">';
     html+='<div style="font-family:Jua,cursive;font-size:28px;color:var(--gold);">'+stock+'주</div></div>';
     if(logs.length>0){
-      let running=0;
-      const logsWithBal=logs.map(l=>{
-        if(l.type==='give') running+=(l.amount||0);
-        else if(l.type==='deduct') running-=(l.amount||0);
-        return {...l,balance:running};
-      });
-      html+=logsWithBal.slice(-10).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+      html+=logs.slice(0,10).map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
         <div>
           <span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}주 ${l.memo?'<span style="color:rgba(255,215,0,0.8);font-size:10px;">'+escHtml(l.memo)+'</span>':''}</span>
-          <span style="color:rgba(255,255,255,0.4);font-size:10px;margin-left:6px">잔여 ${l.balance}주</span>
         </div>
-        <span style="color:rgba(255,255,255,0.35);font-size:10px;">${(l.date||'')} ${fmtTime(l.time)}</span>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px;">${l.date||''}</span>
       </div>`).join('');
       if(logs.length>10)html+='<div style="text-align:center;color:rgba(255,255,255,0.3);font-size:10px;padding-top:4px;">최근 10건 표시</div>';
     }else{
@@ -1848,14 +1559,6 @@ document.addEventListener('click',function(e){
 });
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function formatTime(ts){if(!ts)return'';const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
-
-function fmtTime(t){
-  if(!t) return '';
-  const d=new Date(t);
-  const h=String(d.getHours()).padStart(2,'0');
-  const m=String(d.getMinutes()).padStart(2,'0');
-  return h+':'+m;
-}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 init();
