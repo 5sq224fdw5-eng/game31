@@ -240,14 +240,16 @@ document.addEventListener('keydown',e=>{
         <div style="width:60px"></div>
         <div class="header-title">🎡 사내 오락실</div>
         <div style="display:flex;gap:6px;align-items:center">
-          <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="background:rgba(255,127,110,0.15);border:none;color:#FF7F6E;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📋 사무실</a>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="background:rgba(255,127,110,0.15);border:none;color:#FF7F6E;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📋 사무실</a>
+            <button onclick="location.reload()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔄 새로고침</button>
+          </div>
           <button class="btn-logout" onclick="logout()">나가기</button>
         </div>
       </div>
       <div class="header-user">
         <strong id="headerName">-</strong>
         <span id="headerRole" style="font-size:11px;opacity:0.7;margin-left:4px;"></span>
-        <button onclick="location.reload()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px;">🔄 새로고침</button>
       </div>
       <!-- 멤버용 주식 드롭다운 버튼 -->
       <div id="headerStockWrap" style="display:none;width:100%;margin-top:4px;">
