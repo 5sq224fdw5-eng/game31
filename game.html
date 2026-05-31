@@ -499,6 +499,17 @@ function getKSTDate(){const d=new Date();d.setHours(d.getHours()+9);return d.toI
 async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
 async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
 async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
+// 저장 검증+1회 재시도: 실패 시 null 반환 (호출부에서 경고)
+async function fbPushVerified(path,data){
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});
+      if(r.ok){const j=await r.json();if(j&&j.name)return j;}
+    }catch(e){}
+    await new Promise(res=>setTimeout(res,600));
+  }
+  return null;
+}
 async function fbDelete(path){try{await fetch(`${DB_URL}/${path}.json`,{method:'DELETE'});}catch(e){}}
 
 // Firebase 배열이 객체로 반환될 때 배열로 정규화
@@ -604,6 +615,7 @@ function enterApp(){
 // memo에 날짜(일 단위)가 있고 그 날짜의 다음날 00시 이후면 자동 deducted:true
 // 지원 형식: 26-05-28 / 2026-05-28 / 26.05.28 / 2026.05.28 / 26/05/28
 async function checkExpiredPrizes(){
+  if(isSpinning){setTimeout(()=>checkExpiredPrizes(),3000);return;}
   try{
     const allPrizesData=await fbGet('memberPrizes');
     if(!allPrizesData)return;
@@ -615,8 +627,8 @@ async function checkExpiredPrizes(){
     for(const [mk,raw] of Object.entries(allPrizesData)){
       if(!raw)continue;
       const arr=Array.isArray(raw)?[...raw]:Object.values(raw);
-      let modified=false;
-      arr.forEach((p,i)=>{
+      const expiredTimes=[];
+      arr.forEach((p)=>{
         if(!p||p.deducted)return;
         const memo=(p.memo||'').trim();
         if(!memo)return;
@@ -630,12 +642,20 @@ async function checkExpiredPrizes(){
         // 만료일 다음날 00:00 = 만료일+1일
         const expDate=new Date(year,month,day+1,0,0,0,0);
         if(todayTs>=expDate.getTime()){
-          const expStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          arr[i]={...p,deducted:true,deductDate:expStr,deductReason:`만료일(${expStr}) 자동 소멸`};
-          modified=true;changed++;
+          expiredTimes.push({time:p.time,name:p.name,expStr:`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`});
         }
       });
-      if(modified)await fbSet(`memberPrizes/${mk}`,arr);
+      if(expiredTimes.length===0)continue;
+      // ★ 덮어쓰기 직전 최신 배열을 다시 읽어 그 사이 들어온 당첨을 보존
+      if(isSpinning){setTimeout(()=>checkExpiredPrizes(),3000);return;}
+      const freshRaw=await fbGet(`memberPrizes/${mk}`);
+      const fresh=toArray(freshRaw);
+      let modified=false;
+      expiredTimes.forEach(ex=>{
+        const idx=fresh.findIndex(p=>p&&!p.deducted&&p.time===ex.time&&p.name===ex.name);
+        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
+      });
+      if(modified)await fbSet(`memberPrizes/${mk}`,fresh);
     }
     if(changed>0)showToast(`⏰ 만료된 경품 ${changed}개가 자동 소멸됐습니다`);
   }catch(e){console.warn('checkExpiredPrizes error',e);}
@@ -646,7 +666,7 @@ async function refreshHeaderPrizes(){
   const el=document.getElementById('headerPrizes');
   let prizes=await fbGet(`memberPrizes/${currentUser.key}`);
   prizes=toArray(prizes);
-  if(prizes.length===0){
+  if(prizes.length===0&&!isSpinning){
     const history=await fbGet('history');
     if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name).map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
   }
@@ -767,21 +787,35 @@ function refreshStockDisplay(enableBtns){
   }else if(enableBtns){document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;}
 }
 
-async function showPrizeModal(prize){
+function showPrizeModal(prize){
   document.getElementById('modalEmoji').textContent=prize.emoji;
   document.getElementById('modalPrize').textContent=prize.name;
   document.getElementById('modalMsg').textContent=`${currentUser.name}님 축하합니다! 🎉`;
   document.getElementById('resultModal').classList.add('active');
+}
+
+// 당첨 확정 저장: history + (멤버면) memberPrizes 둘 다 검증 저장 후 모달.
+// 저장 실패 시 경고하고 사라지지 않게 함. 저장 끝날 때까지 isSpinning 유지.
+async function finishWin(prize){
+  const t=Date.now();
+  let failed=false;
+  const okH=await fbPushVerified('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:t});
+  if(!okH)failed=true;
   if(currentUser&&currentUser.role==='member'){
-    // fbPush로 개별 저장 - 동시 저장 시 덮어쓰기 방지
-    await fbPush(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:Date.now(),deducted:false});
-    refreshHeaderPrizes();
+    const okP=await fbPushVerified(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:t,deducted:false});
+    if(!okP)failed=true;
   }
+  isSpinning=false;
+  if(failed){
+    showToast('⚠️ 경품 저장 실패! 네트워크 확인 후 🔄 새로고침하세요');
+  }
+  if(currentUser&&currentUser.role==='member')refreshHeaderPrizes();
+  showPrizeModal(prize);
 }
 
 async function doSpin(){
   if(isSpinning)return;
-  const btn=document.getElementById('spinBtn');btn.disabled=true;isSpinning=true;
+  const btn=document.getElementById('spinBtn');btn.disabled=true;document.getElementById('gachaSlotBtn').disabled=true;isSpinning=true;
   const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
   const prize=drawPrize();
   // 룰렛 화면과 동일한 셔플 순서로 각도 계산
@@ -800,21 +834,22 @@ async function doSpin(){
     const elapsed=now-startTime;const progress=Math.min(elapsed/duration,1);
     rouletteAngle=startAngle+(targetAngle-startAngle)*easeOut(progress);drawRoulette();
     if(progress<1)requestAnimationFrame(animate);
-    else{rouletteAngle=targetAngle%360;drawRoulette();isSpinning=false;fbPush('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:Date.now()});setTimeout(()=>showPrizeModal(prize),300);refreshStockDisplay(true);}
+    else{rouletteAngle=targetAngle%360;drawRoulette();setTimeout(()=>{finishWin(prize);refreshStockDisplay(true);},300);}
   }
   requestAnimationFrame(animate);
 }
 
 async function doGachaSlot(){
-  const btn=document.getElementById('gachaSlotBtn');btn.disabled=true;
-  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;return;}
+  if(isSpinning)return;
+  const btn=document.getElementById('gachaSlotBtn');btn.disabled=true;document.getElementById('spinBtn').disabled=true;isSpinning=true;
+  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
   const screen=document.getElementById('screenContent');const machine=document.getElementById('machineBody');
   machine.classList.add('machine-shake');setTimeout(()=>machine.classList.remove('machine-shake'),500);
   screen.className='screen-spinning';
   const emojiList=Object.values(allPrizes).map(p=>p.emoji);let i=0;
   slotSpinInterval=setInterval(()=>{screen.textContent=emojiList[i%emojiList.length];i++;},100);
   const prize=drawPrize();
-  setTimeout(async()=>{clearInterval(slotSpinInterval);screen.className='screen-result';screen.textContent=prize.emoji;await fbPush('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:Date.now()});showPrizeModal(prize);refreshStockDisplay(true);},1800);
+  setTimeout(async()=>{clearInterval(slotSpinInterval);screen.className='screen-result';screen.textContent=prize.emoji;await finishWin(prize);refreshStockDisplay(true);},1800);
 }
 
 function drawPrize(){
@@ -840,8 +875,8 @@ async function loadHistory(){
     const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;const totalLeave=manualLeave+prizeLeave;
     if(leaveLog){
       leaveCard.style.display='';
-      const logs=Object.values(leaveLog).sort((a,b)=>{const dd=(b.date||'').localeCompare(a.date||'');return dd!==0?dd:(b.time||0)-(a.time||0);});
-      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''} ${fmtTime(l.time)}</span></div>`).join('')}`;
+      const logs=Object.values(leaveLog).sort((a,b)=>{const dd=(a.date||'').localeCompare(b.date||'');return dd!==0?dd:(a.time||0)-(b.time||0);});
+      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span> <span style="font-size:11px;color:rgba(255,255,255,0.4)">= 사무실·수동 ${manualLeave}일 + 경품연차 ${prizeLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''} ${fmtTime(l.time)}</span></div>`).join('')}`;
     }else leaveCard.style.display='none';
   }
   const list=document.getElementById('historyList');
@@ -856,7 +891,7 @@ async function loadHistory(){
     // 멤버는 memberPrizes 기준으로 표시 (이름 변경과 무관하게 정확한 데이터)
     const memberPrizes=toArray(await fbGet('memberPrizes/'+currentUser.key));
     const prizeItems=memberPrizes
-      .sort((a,b)=>(b.time||0)-(a.time||0))
+      .sort((a,b)=>(a.time||0)-(b.time||0))
       .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate,memo:p.memo||''}));
     renderMemberPrizeHistory(prizeItems);
   }else{
@@ -868,14 +903,17 @@ async function loadHistory(){
 function renderMemberPrizeHistory(items){
   const list=document.getElementById('historyList');
   if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  const runCount={};
   list.innerHTML=items.map(item=>{
     const isDeducted=!!item.deducted;
+    const prev=runCount[item.prize]||0;const now=prev+1;runCount[item.prize]=now;
     const giveDate=item.time?new Date(item.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/').replace('.',''):'';
     return '<div class="history-item" style="'+(isDeducted?'opacity:0.5;':'')+'">'
       +'<div class="history-emoji">'+item.emoji+'</div>'
       +'<div class="history-info" style="min-width:0;flex:1;">'
       +'<div class="history-prize" style="font-size:14px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
       +(giveDate?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">지급 '+giveDate+' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">만료 기한 '+(item.memo?escHtml(item.memo):'무제한')+'</span></div>':'')
+      +'<div style="font-size:10px;color:rgba(0,245,255,0.7);">직전 '+prev+'개 → +1 → '+now+'개</div>'
       +(isDeducted&&item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
       +'</div>'
       +'</div>';
@@ -911,7 +949,7 @@ async function renderAdminPrizeHistory(){
   if(!members){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>멤버 없음</div>';return;}
   list.innerHTML='<input id="historySearchInput" placeholder="🔍 이름 검색..." autocomplete="off" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;margin-bottom:12px;" oninput="filterAdminPrizeHistory()"><div id="adminPrizeAccordion"></div>';
   window._adminPrizeData=Object.entries(members).map(function([key,m]){
-    const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]).sort(function(a,b){return (b.time||0)-(a.time||0);});
+    const prizes=toArray(allMemberPrizes&&allMemberPrizes[key]).sort(function(a,b){return (a.time||0)-(b.time||0);});
     return {key:key,name:m.name,prizes:prizes};
   }).filter(function(m){return m.prizes.length>0;}).sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
   renderAdminPrizeAccordion('');
@@ -961,14 +999,17 @@ function renderAdminPrizeAccordion(q){
 
         if(isOpen){
           html+='<div style="background:rgba(0,0,0,0.25);">';
+          const runCount={};
           m.prizes.forEach(function(p){
             const isDeducted=!!p.deducted;
+            const prev=runCount[p.name]||0;const now=prev+1;runCount[p.name]=now;
             const giveDate=p.time?new Date(p.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/'):'';
             html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.05);'+(isDeducted?'opacity:0.45;':'')+'">';
             html+='<span style="font-size:18px;">'+p.emoji+'</span>';
             html+='<div style="flex:1;min-width:0;">';
             html+='<div style="font-size:13px;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(p.name)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>';
             html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(giveDate?'지급 '+giveDate:'')+(isDeducted&&p.deductDate?' &nbsp;·&nbsp; <span style="color:#FC5C65;">차감 '+p.deductDate+'</span>':'')+'</div>';
+            html+='<div style="font-size:10px;color:rgba(0,245,255,0.7);">직전 '+prev+'개 → +1 → '+now+'개</div>';
             html+='</div></div>';
           });
           html+='</div>';
@@ -1212,7 +1253,7 @@ async function loadLeaveView(){
       const total=manualLeave+prizeLeave;
       const leaveLogRaw=allLeaveLog&&allLeaveLog[key];
       const logs=leaveLogRaw
-        ? Object.values(leaveLogRaw).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+        ? Object.values(leaveLogRaw).sort((a,b)=>{const dd=(a.date||'').localeCompare(b.date||'');return dd!==0?dd:(a.time||0)-(b.time||0);})
         : [];
       return {key,name:m.name,total,manualLeave,prizeLeave,logs};
     }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -1248,7 +1289,8 @@ function renderLeaveView(q){
       <div class="leave-item-header">
         <span class="leave-item-name">${escHtml(m.name)}</span>
         <span class="leave-item-total">잔여 ${m.total}일</span>
-      </div>${inner}
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);padding:0 0 4px 2px;">= 사무실·수동 ${m.manualLeave}일 + 경품연차 ${m.prizeLeave}일</div>${inner}
     </div>`;
   }).join('');
 }
