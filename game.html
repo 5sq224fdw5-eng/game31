@@ -903,22 +903,39 @@ async function loadHistory(){
 function renderMemberPrizeHistory(items){
   const list=document.getElementById('historyList');
   if(!items||items.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
-  const runCount={};
-  list.innerHTML=items.map(item=>{
-    const isDeducted=!!item.deducted;
-    const prev=runCount[item.prize]||0;const now=prev+1;runCount[item.prize]=now;
-    const giveDate=item.time?new Date(item.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/').replace('.',''):'';
-    return '<div class="history-item" style="'+(isDeducted?'opacity:0.5;':'')+'">'
-      +'<div class="history-emoji">'+item.emoji+'</div>'
+  // 받음(+1)·사용(-1) 이벤트를 한 타임라인으로 만들고 종류별 잔액 누적
+  const events=[];
+  items.forEach(item=>{
+    events.push({kind:'give',prize:item.prize,emoji:item.emoji,t:item.time||0,dateStr:fmtMD(item.time),memo:item.memo});
+    if(item.deducted){
+      const dt=item.deductDate||'';
+      // 차감은 시각이 없어 그 날의 끝으로 정렬(받고 같은날 쓰면 받음이 앞)
+      const dts=parseYMDtoTs(dt);
+      events.push({kind:'use',prize:item.prize,emoji:item.emoji,t:(dts!=null?dts+86399000:(item.time||0)+1),dateStr:dt?fmtYMDtoMD(dt):'',memo:''});
+    }
+  });
+  events.sort((a,b)=>(a.t-b.t));
+  const bal={};
+  list.innerHTML=events.map(ev=>{
+    const prev=bal[ev.prize]||0;
+    const now=ev.kind==='give'?prev+1:Math.max(0,prev-1);
+    bal[ev.prize]=now;
+    const isUse=ev.kind==='use';
+    const flow='직전 '+prev+'개 → '+(isUse?'-1':'+1')+' → '+now+'개';
+    return '<div class="history-item" style="'+(isUse?'opacity:0.55;':'')+'">'
+      +'<div class="history-emoji">'+ev.emoji+'</div>'
       +'<div class="history-info" style="min-width:0;flex:1;">'
-      +'<div class="history-prize" style="font-size:14px;font-weight:700;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(item.prize)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>'
-      +(giveDate?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">지급 '+giveDate+' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">만료 기한 '+(item.memo?escHtml(item.memo):'무제한')+'</span></div>':'')
-      +'<div style="font-size:10px;color:rgba(0,245,255,0.7);">직전 '+prev+'개 → +1 → '+now+'개</div>'
-      +(isDeducted&&item.deductDate?'<div style="font-size:10px;color:#FC5C65;">차감일: '+item.deductDate+'</div>':'')
+      +'<div class="history-prize" style="font-size:14px;font-weight:700;color:'+(isUse?'#FC5C65':'var(--gold)')+';">'+escHtml(ev.prize)+' <span style="font-size:10px;">'+(isUse?'사용':'받음')+'</span></div>'
+      +(ev.dateStr?'<div style="font-size:10px;color:rgba(255,255,255,0.4);">'+(isUse?'사용 ':'지급 ')+ev.dateStr+(!isUse&&ev.memo?' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">만료 기한 '+escHtml(ev.memo)+'</span>':'')+'</div>':'')
+      +'<div style="font-size:10px;color:'+(isUse?'rgba(252,92,101,0.85)':'rgba(0,245,255,0.7)')+';">'+flow+'</div>'
       +'</div>'
       +'</div>';
   }).join('');
 }
+// 날짜 헬퍼
+function fmtMD(ts){if(!ts)return '';return new Date(ts).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/').replace('.','');}
+function parseYMDtoTs(s){if(!s)return null;const m=String(s).match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);if(!m)return null;let y=parseInt(m[1]);if(y<100)y+=2000;return new Date(y,parseInt(m[2])-1,parseInt(m[3])).getTime();}
+function fmtYMDtoMD(s){const ts=parseYMDtoTs(s);return ts!=null?fmtMD(ts):s;}
 
 function renderHistoryList(items){
   const list=document.getElementById('historyList');
@@ -999,17 +1016,26 @@ function renderAdminPrizeAccordion(q){
 
         if(isOpen){
           html+='<div style="background:rgba(0,0,0,0.25);">';
-          const runCount={};
+          const evs=[];
           m.prizes.forEach(function(p){
-            const isDeducted=!!p.deducted;
-            const prev=runCount[p.name]||0;const now=prev+1;runCount[p.name]=now;
-            const giveDate=p.time?new Date(p.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit'}).replace('. ','/'):'';
-            html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.05);'+(isDeducted?'opacity:0.45;':'')+'">';
-            html+='<span style="font-size:18px;">'+p.emoji+'</span>';
+            evs.push({kind:'give',name:p.name,emoji:p.emoji,t:p.time||0,dateStr:fmtMD(p.time),memo:p.memo||''});
+            if(p.deducted){
+              const dt=p.deductDate||p.usedDate||'';
+              const dts=parseYMDtoTs(dt);
+              evs.push({kind:'use',name:p.name,emoji:p.emoji,t:(dts!=null?dts+86399000:(p.time||0)+1),dateStr:dt?fmtYMDtoMD(dt):''});
+            }
+          });
+          evs.sort(function(a,b){return a.t-b.t;});
+          const bal={};
+          evs.forEach(function(ev){
+            const prev=bal[ev.name]||0;const now=ev.kind==='give'?prev+1:Math.max(0,prev-1);bal[ev.name]=now;
+            const isUse=ev.kind==='use';
+            html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.05);'+(isUse?'opacity:0.5;':'')+'">';
+            html+='<span style="font-size:18px;">'+ev.emoji+'</span>';
             html+='<div style="flex:1;min-width:0;">';
-            html+='<div style="font-size:13px;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(p.name)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>';
-            html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(giveDate?'지급 '+giveDate:'')+(isDeducted&&(p.deductDate||p.usedDate)?' &nbsp;·&nbsp; <span style="color:#FC5C65;">차감 '+(p.deductDate||p.usedDate)+'</span>':'')+'</div>';
-            html+='<div style="font-size:10px;color:rgba(0,245,255,0.7);">직전 '+prev+'개 → +1 → '+now+'개</div>';
+            html+='<div style="font-size:13px;color:'+(isUse?'#FC5C65':'var(--gold)')+';">'+escHtml(ev.name)+' <span style="font-size:10px;">'+(isUse?'사용':'받음')+'</span></div>';
+            html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(ev.dateStr?(isUse?'사용 ':'지급 ')+ev.dateStr:'')+(!isUse&&ev.memo?' &nbsp;·&nbsp; <span style="color:rgba(255,215,0,0.7);">만료 '+escHtml(ev.memo)+'</span>':'')+'</div>';
+            html+='<div style="font-size:10px;color:'+(isUse?'rgba(252,92,101,0.85)':'rgba(0,245,255,0.7)')+';">직전 '+prev+'개 → '+(isUse?'-1':'+1')+' → '+now+'개</div>';
             html+='</div></div>';
           });
           html+='</div>';
@@ -1433,7 +1459,7 @@ async function loadMemberPrizes(){
   const fmtDate=ts=>ts?new Date(ts).toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1):'';
   container.innerHTML=prizes.map((p,i)=>{
     const giveDate=fmtDate(p.time);
-    const deductDate=p.deductDate||'';
+    const deductDate=p.deductDate||p.usedDate||'';
     const isDeducted=!!p.deducted;
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${isDeducted?'opacity:0.45':''}">
       <span style="font-size:22px">${p.emoji}</span>
@@ -1460,7 +1486,7 @@ async function addMemberPrize(){
 }
 async function removeMemberPrize(key,index){
   const current=toArray(await fbGet(`memberPrizes/${key}`));
-  // 삭제 대신 차감 표시 + 날짜 기록 (deductDate=오락실 형식, usedDate=인트라넷 호환 형식 둘 다)
+  // 삭제 대신 차감 표시 + 날짜 기록
   const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
   current[index]={...current[index],deducted:true,deductDate:today,usedDate:getKSTDate()};
   await fbSet(`memberPrizes/${key}`,current);
@@ -1800,13 +1826,12 @@ async function adjustLeave(sign){
       // 부족분은 경품 연차에서 차감 (오래된 것부터)
       if(remaining>0){
         const today2=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
-        const todayIso=getKSTDate();
         let cnt=0;
         for(let i=0;i<memberPrizesArr.length;i++){
           if(cnt>=remaining)break;
           const p=memberPrizesArr[i];
           if(p.name==='연차'&&!p.deducted){
-            memberPrizesArr[i]={...p,deducted:true,deductDate:today2,usedDate:todayIso};
+            memberPrizesArr[i]={...p,deducted:true,deductDate:today2,usedDate:getKSTDate()};
             cnt++;
           }
         }
