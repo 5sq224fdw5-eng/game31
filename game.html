@@ -653,7 +653,7 @@ async function checkExpiredPrizes(){
       let modified=false;
       expiredTimes.forEach(ex=>{
         const idx=fresh.findIndex(p=>p&&!p.deducted&&p.time===ex.time&&p.name===ex.name);
-        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
+        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,usedDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
       });
       if(modified)await fbSet(`memberPrizes/${mk}`,fresh);
     }
@@ -892,7 +892,7 @@ async function loadHistory(){
     const memberPrizes=toArray(await fbGet('memberPrizes/'+currentUser.key));
     const prizeItems=memberPrizes
       .sort((a,b)=>(a.time||0)-(b.time||0))
-      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate,memo:p.memo||''}));
+      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate||p.usedDate,memo:p.memo||''}));
     renderMemberPrizeHistory(prizeItems);
   }else{
     // 관리자: memberPrizes 전체 기준으로 표시
@@ -1008,7 +1008,7 @@ function renderAdminPrizeAccordion(q){
             html+='<span style="font-size:18px;">'+p.emoji+'</span>';
             html+='<div style="flex:1;min-width:0;">';
             html+='<div style="font-size:13px;color:'+(isDeducted?'rgba(255,255,255,0.4)':'var(--gold)')+';">'+escHtml(p.name)+(isDeducted?' <span style="font-size:10px;color:#FC5C65;">(차감됨)</span>':'')+'</div>';
-            html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(giveDate?'지급 '+giveDate:'')+(isDeducted&&p.deductDate?' &nbsp;·&nbsp; <span style="color:#FC5C65;">차감 '+p.deductDate+'</span>':'')+'</div>';
+            html+='<div style="font-size:10px;color:rgba(255,255,255,0.35);">'+(giveDate?'지급 '+giveDate:'')+(isDeducted&&(p.deductDate||p.usedDate)?' &nbsp;·&nbsp; <span style="color:#FC5C65;">차감 '+(p.deductDate||p.usedDate)+'</span>':'')+'</div>';
             html+='<div style="font-size:10px;color:rgba(0,245,255,0.7);">직전 '+prev+'개 → +1 → '+now+'개</div>';
             html+='</div></div>';
           });
@@ -1460,9 +1460,9 @@ async function addMemberPrize(){
 }
 async function removeMemberPrize(key,index){
   const current=toArray(await fbGet(`memberPrizes/${key}`));
-  // 삭제 대신 차감 표시 + 날짜 기록
+  // 삭제 대신 차감 표시 + 날짜 기록 (deductDate=오락실 형식, usedDate=인트라넷 호환 형식 둘 다)
   const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
-  current[index]={...current[index],deducted:true,deductDate:today};
+  current[index]={...current[index],deducted:true,deductDate:today,usedDate:getKSTDate()};
   await fbSet(`memberPrizes/${key}`,current);
   showToast('✅ 경품 차감 처리됨');loadMemberPrizes();
 }
@@ -1800,12 +1800,13 @@ async function adjustLeave(sign){
       // 부족분은 경품 연차에서 차감 (오래된 것부터)
       if(remaining>0){
         const today2=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
+        const todayIso=getKSTDate();
         let cnt=0;
         for(let i=0;i<memberPrizesArr.length;i++){
           if(cnt>=remaining)break;
           const p=memberPrizesArr[i];
           if(p.name==='연차'&&!p.deducted){
-            memberPrizesArr[i]={...p,deducted:true,deductDate:today2};
+            memberPrizesArr[i]={...p,deducted:true,deductDate:today2,usedDate:todayIso};
             cnt++;
           }
         }
