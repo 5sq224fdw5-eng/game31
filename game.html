@@ -58,6 +58,8 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 .notice-badge.gold { background: linear-gradient(135deg, #F7B731, #FD9644); }
 .notice-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
 .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.ufilter{font-size:12px;font-weight:700;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);cursor:pointer;}
+.ufilter.on{background:var(--cyan);color:#04243a;border-color:var(--cyan);}
 .filter-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: rgba(255,255,255,0.5); font-family: 'Pretendard', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .filter-tab.active { background: linear-gradient(135deg, #6C35DE, #FF6B9D); color: white; border-color: transparent; }
 .section-title { font-family: 'Jua', cursive; font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -248,9 +250,13 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
           </div>
         </div>
       </div>
-      <div id="headerPrizesWrap" style="display:none;width:100%">
+      <div id="headerPrizesWrap" style="display:none;width:100%;position:relative;">
         <span class="header-prizes-label" style="text-align:center;display:block;">내 당첨</span>
         <div class="header-prizes" id="headerPrizes" style="justify-content:center;max-width:100%;flex-wrap:wrap;">-</div>
+        <div id="prizeDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);width:280px;background:linear-gradient(160deg,#2d1b69,#1a0a2e);border:1px solid var(--border);border-radius:16px;padding:14px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+          <div id="prizeDropdownTitle" style="font-family:'Jua',cursive;font-size:14px;color:var(--gold);text-align:center;margin-bottom:8px;"></div>
+          <div id="prizeDropdownContent" style="font-size:12px;"></div>
+        </div>
       </div>
     </div>
 
@@ -294,15 +300,24 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 </div>
 
 <div class="page" id="pageHistory">
-  <div id="myLeaveCard" style="display:none;margin-bottom:12px;">
-    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;">
-      <div style="font-size:12px;color:var(--gold);margin-bottom:6px;font-family:'Jua',cursive;">🏖️ 내 연차 내역</div>
-      <div id="myLeaveLogList" style="font-size:12px;"></div>
+  <div id="myUnifiedCard" style="display:none;margin-bottom:12px;">
+    <div class="section-title">📜 내 기록</div>
+    <div class="filter-tabs" id="unifiedFilterTabs" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="ufilter on" data-f="all" onclick="setUnifiedFilter('all',this)">전체</button>
+      <button class="ufilter" data-f="주식" onclick="setUnifiedFilter('주식',this)">💰 주식</button>
+      <button class="ufilter" data-f="연차" onclick="setUnifiedFilter('연차',this)">🏖️ 연차</button>
+      <button class="ufilter" data-f="경품" onclick="setUnifiedFilter('경품',this)">🎁 경품</button>
     </div>
+    <div id="myUnifiedList" style="font-size:12px;"></div>
   </div>
-  <div class="section-title">📜 당첨 기록</div>
-  <div class="filter-tabs" id="historyFilterTabs"></div>
-  <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  <div id="myLeaveCard" style="display:none;"></div>
+  <div id="myLeaveLogList" style="display:none;"></div>
+  <div id="myTimelineCard" style="display:none;"><div id="myTimelineList"></div></div>
+  <div id="adminHistoryWrap" style="display:none;">
+    <div class="section-title">📜 당첨 기록</div>
+    <div class="filter-tabs" id="historyFilterTabs"></div>
+    <div id="historyList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  </div>
 </div>
 
 <div class="page" id="pageMembers">
@@ -499,14 +514,19 @@ function getKSTDate(){const d=new Date();d.setHours(d.getHours()+9);return d.toI
 async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
 async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
 async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
-// 저장 검증+1회 재시도: 실패 시 null 반환 (호출부에서 경고)
+// 저장: 응답 ok면 성공으로 간주(본문 파싱 실패해도). 네트워크 예외일 때만 1회 재시도(중복 저장 방지).
 async function fbPushVerified(path,data){
-  for(let attempt=0;attempt<2;attempt++){
+  try{
+    const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});
+    if(r&&r.ok)return {ok:true};            // 저장 성공 (본문 파싱 안 해도 됨)
+    if(r&&!r.ok)return null;                 // 서버가 거부 → 실패 (재시도 안 함)
+  }catch(e){
+    // 네트워크 예외 → 1회만 재시도
     try{
-      const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});
-      if(r.ok){const j=await r.json();if(j&&j.name)return j;}
-    }catch(e){}
-    await new Promise(res=>setTimeout(res,600));
+      await new Promise(res=>setTimeout(res,700));
+      const r2=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});
+      if(r2&&r2.ok)return {ok:true};
+    }catch(e2){}
   }
   return null;
 }
@@ -619,6 +639,7 @@ async function checkExpiredPrizes(){
   try{
     const allPrizesData=await fbGet('memberPrizes');
     if(!allPrizesData)return;
+    const members=(await fbGet('members'))||{};
     // 오늘 00:00:00 기준 타임스탬프
     const today=new Date();
     today.setHours(0,0,0,0);
@@ -651,9 +672,14 @@ async function checkExpiredPrizes(){
       const freshRaw=await fbGet(`memberPrizes/${mk}`);
       const fresh=toArray(freshRaw);
       let modified=false;
+      const memName=(members[mk]&&members[mk].name)||'';
       expiredTimes.forEach(ex=>{
         const idx=fresh.findIndex(p=>p&&!p.deducted&&p.time===ex.time&&p.name===ex.name);
-        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
+        if(idx>=0){
+          fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};
+          modified=true;changed++;
+          fbPush('history',{name:memName,prize:ex.name,emoji:fresh[idx].emoji||'',time:Date.now(),type:'deduct',memo:`만료 자동소멸(${ex.expStr})`});
+        }
       });
       if(modified)await fbSet(`memberPrizes/${mk}`,fresh);
     }
@@ -668,14 +694,14 @@ async function refreshHeaderPrizes(){
   prizes=toArray(prizes);
   if(prizes.length===0&&!isSpinning){
     const history=await fbGet('history');
-    if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name).map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
+    if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name&&h.type!=='deduct'&&h.type!=='manual_give').map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
   }
   const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
   const counts={};
   (prizes||[]).forEach(p=>{if(p.deducted)return;const key=p.name;if(!counts[key])counts[key]={emoji:p.emoji,name:p.name,count:0};counts[key].count++;});
   if(manualLeave>0){if(counts['연차'])counts['연차'].count+=manualLeave;else counts['연차']={emoji:'🏖️',name:'연차',count:manualLeave};}
   if(Object.keys(counts).length===0)el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,0.4)">없음</span>';
-  else el.innerHTML=Object.values(counts).map(p=>`<span style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Pretendard',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
+  else el.innerHTML=Object.values(counts).map(p=>`<span onclick="togglePrizeDropdown('${escHtml(p.name).replace(/'/g,"\\'")}')" style="cursor:pointer;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.1);border-radius:10px;padding:3px 7px;"><span style="font-size:14px">${p.emoji}</span><span style="font-family:'Pretendard',sans-serif;font-size:10px;color:rgba(255,255,255,0.9);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.name)}</span><span style="font-family:'Jua',cursive;color:var(--gold);font-size:11px">×${p.count}</span></span>`).join('');
 }
 
 function logout(){
@@ -895,37 +921,81 @@ let allHistoryItems=[];
 let openHistoryName=null;
 
 async function loadHistory(){
-  if(currentUser&&currentUser.role==='member'){
-    const leaveCard=document.getElementById('myLeaveCard');const leaveLogList=document.getElementById('myLeaveLogList');
-    const leaveLog=await fbGet(`leaveLog/${currentUser.key}`);
-    const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
-    const prizes=toArray(await fbGet(`memberPrizes/${currentUser.key}`));
-    const prizeLeave=prizes.filter(p=>p.name==='연차'&&!p.deducted).length;const totalLeave=manualLeave+prizeLeave;
-    if(leaveLog){
-      leaveCard.style.display='';
-      const logs=Object.values(leaveLog).sort((a,b)=>{const dd=(a.date||'').localeCompare(b.date||'');return dd!==0?dd:(a.time||0)-(b.time||0);});
-      leaveLogList.innerHTML=`<div style="margin-bottom:6px;color:rgba(255,255,255,0.6)">총 잔여: <span style="color:var(--gold);font-family:'Jua',cursive">${totalLeave}일</span> <span style="font-size:11px;color:rgba(255,255,255,0.4)">= 사무실·수동 ${manualLeave}일 + 경품연차 ${prizeLeave}일</span></div>${logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div><span style="color:${l.type==='deduct'?'#FC5C65':'#26DE81'}">${l.type==='deduct'?'-':'+'}${l.amount}일 ${l.type==='deduct'?'차감':'수동지급'}</span>${l.memo?`<span style="color:rgba(255,215,0,0.7);font-size:11px;margin-left:6px">📝 ${escHtml(l.memo)}</span>`:''}</div><span style="color:rgba(255,255,255,0.35);font-size:10px">${l.date||''} ${fmtTime(l.time)}</span></div>`).join('')}`;
-    }else leaveCard.style.display='none';
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  const uniCard=document.getElementById('myUnifiedCard');
+  const adminWrap=document.getElementById('adminHistoryWrap');
+
+  if(!isAdmin && currentUser){
+    // ===== 멤버: 주식+연차+경품 통합 목록 (종류별 잔액 흐름) =====
+    uniCard.style.display='';adminWrap.style.display='none';
+    const listEl=document.getElementById('myUnifiedList');
+    listEl.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+    const [stockLogRaw,leaveLog,prizesRaw]=await Promise.all([
+      fbGet(`stockLog/${currentUser.key}`),
+      fbGet(`leaveLog/${currentUser.key}`),
+      fbGet(`memberPrizes/${currentUser.key}`)
+    ]);
+    const ev=[];
+    if(stockLogRaw)Object.values(stockLogRaw).forEach(s=>{
+      ev.push({t:s.time||0,cat:'주식',key:'주식',give:s.type!=='deduct',amt:s.amount||0,unit:'주',label:'💰 주식',memo:s.memo||'',date:s.date||''});
+    });
+    if(leaveLog)Object.values(leaveLog).forEach(l=>{
+      const dts=parseYMDtoTs(l.date||'');
+      ev.push({t:l.time||(dts||0),cat:'연차',key:'연차',give:l.type!=='deduct',amt:Math.abs(l.amount||1),unit:'일',label:'🏖️ 연차',memo:l.memo||'',date:l.date||''});
+    });
+    toArray(prizesRaw).forEach(p=>{
+      const ky='경품:'+p.name;
+      ev.push({t:p.time||0,cat:'경품',key:ky,give:true,amt:1,unit:'개',label:`${p.emoji||'🎁'} ${p.name}`,memo:p.memo||'',date:fmtMD(p.time)});
+      if(p.deducted){
+        const dts=parseYMDtoTs(p.deductDate||p.usedDate||'');
+        ev.push({t:(dts!=null?dts+86399000:(p.time||0)+1),cat:'경품',key:ky,give:false,amt:1,unit:'개',label:`${p.emoji||'🎁'} ${p.name}`,memo:p.deductReason||'사용',date:fmtYMDtoMD(p.deductDate||p.usedDate||'')});
+      }
+    });
+    // 오래된→최신 순으로 잔액 누적
+    ev.sort((a,b)=>(a.t||0)-(b.t||0));
+    const bal={};
+    ev.forEach(e=>{const prev=bal[e.key]||0;const now=e.give?prev+e.amt:Math.max(0,prev-e.amt);e.prev=prev;e.now=now;bal[e.key]=now;});
+    ev.reverse(); // 최신 위
+    window._unifiedEvents=ev;
+    renderUnified('all');
+    return;
   }
+  // ===== 관리자: 기존 당첨기록 뷰 =====
+  uniCard.style.display='none';adminWrap.style.display='';
   const list=document.getElementById('historyList');
   list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const history=await fbGet('history');
-  const isAdmin=currentUser&&currentUser.role==='admin';
   if(!history){document.getElementById('historyFilterTabs').innerHTML='';list.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
   let items=Object.entries(history).map(([k,v])=>v).sort((a,b)=>(b.time||0)-(a.time||0));
   document.getElementById('historyFilterTabs').innerHTML='';
   allHistoryItems=items;
-  if(!isAdmin){
-    // 멤버는 memberPrizes 기준으로 표시 (이름 변경과 무관하게 정확한 데이터)
-    const memberPrizes=toArray(await fbGet('memberPrizes/'+currentUser.key));
-    const prizeItems=memberPrizes
-      .sort((a,b)=>(a.time||0)-(b.time||0))
-      .map(p=>({emoji:p.emoji,prize:p.name,time:p.time,deducted:p.deducted,deductDate:p.deductDate||p.usedDate,memo:p.memo||''}));
-    renderMemberPrizeHistory(prizeItems);
-  }else{
-    // 관리자: memberPrizes 전체 기준으로 표시
-    renderAdminPrizeHistory();
-  }
+  renderAdminPrizeHistory();
+}
+
+let _unifiedFilter='all';
+function setUnifiedFilter(f,el){
+  _unifiedFilter=f;
+  document.querySelectorAll('.ufilter').forEach(x=>x.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderUnified(f);
+}
+function renderUnified(f){
+  const listEl=document.getElementById('myUnifiedList');
+  const ev=(window._unifiedEvents||[]).filter(e=>f==='all'||e.cat===f);
+  if(!ev.length){listEl.innerHTML='<div class="empty"><div class="empty-icon">📭</div>기록이 없습니다</div>';return;}
+  const catColor={'주식':'#FFD700','연차':'#26DE81','경품':'#00F5FF'};
+  listEl.innerHTML=ev.map(e=>{
+    const sign=e.give?'+':'-';const col=e.give?'#26DE81':'#FC5C65';
+    const when=e.t?new Date(e.t).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):(e.date||'');
+    return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="min-width:0;flex:1;">
+        <div><span style="font-size:10px;padding:1px 7px;border-radius:6px;background:rgba(255,255,255,0.1);color:${catColor[e.cat]};margin-right:6px;font-weight:700;">${e.cat}</span><span style="font-size:13px;font-weight:700;">${escHtml(e.label)}</span><span style="color:${col};font-weight:800;font-size:13px;margin-left:6px;">${sign}${e.amt}${e.unit}</span></div>
+        <div style="font-size:11px;color:${col};margin-top:3px;">직전 ${e.prev}${e.unit} → ${sign}${e.amt} → 잔여 ${e.now}${e.unit}</div>
+        ${e.memo?`<div style="font-size:10px;color:rgba(255,215,0,0.75);margin-top:2px;">📝 ${escHtml(e.memo)}</div>`:''}
+      </div>
+      <span style="color:rgba(255,255,255,0.35);font-size:10px;white-space:nowrap;margin-left:8px;">${when}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderMemberPrizeHistory(items){
@@ -1269,8 +1339,10 @@ async function givePickedPrize(emoji,name){
   if(!key){showToast('먼저 멤버를 선택하세요');return;}
   const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
   const current=toArray(await fbGet(`memberPrizes/${key}`));
-  current.push({emoji,name,time:Date.now(),deducted:false,memo});
+  const t=Date.now();
+  current.push({emoji,name,time:t,deducted:false,memo});
   await fbSet(`memberPrizes/${key}`,current);
+  await fbPush('history',{name:allMembers[key]?.name||'',prize:name,emoji,time:t,type:'manual_give',memo});
   showToast(`✅ ${allMembers[key]?.name||''}에게 ${emoji} ${name} 지급!`);
   loadMemberPrizes();
 }
@@ -1518,7 +1590,9 @@ async function addMemberPrize(){
   const key=document.getElementById('managePrizeMemberVal').value;const emoji=document.getElementById('addPrizeEmoji').value.trim();const name=document.getElementById('addPrizeName').value.trim();
   if(!key){showToast('멤버를 선택하세요');return;}if(!emoji||!name){showToast('이모지와 경품명을 입력하세요');return;}
   const memo=document.getElementById('addPrizeMemo')?.value.trim()||'';
-  await fbPush(`memberPrizes/${key}`,{emoji,name,time:Date.now(),deducted:false,memo});
+  const t=Date.now();
+  await fbPush(`memberPrizes/${key}`,{emoji,name,time:t,deducted:false,memo});
+  await fbPush('history',{name:allMembers[key].name,prize:name,emoji,time:t,type:'manual_give',memo});
   document.getElementById('addPrizeEmoji').value='';document.getElementById('addPrizeName').value='';if(document.getElementById('addPrizeMemo'))document.getElementById('addPrizeMemo').value='';
   showToast(`✅ ${allMembers[key].name}에게 ${emoji} ${name} 지급!`);loadMemberPrizes();
 }
@@ -1526,8 +1600,10 @@ async function removeMemberPrize(key,index){
   const current=toArray(await fbGet(`memberPrizes/${key}`));
   // 삭제 대신 차감 표시 + 날짜 기록
   const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
-  current[index]={...current[index],deducted:true,deductDate:today};
+  const item=current[index]||{};
+  current[index]={...item,deducted:true,deductDate:today};
   await fbSet(`memberPrizes/${key}`,current);
+  await fbPush('history',{name:allMembers[key]?.name||'',prize:item.name||'',emoji:item.emoji||'',time:Date.now(),type:'deduct',memo:'경품 차감'});
   showToast('✅ 경품 차감 처리됨');loadMemberPrizes();
 }
 
@@ -1555,6 +1631,7 @@ async function deduplicateMemberPrizes(){
   if(history){
     Object.values(history).forEach(h=>{
       if(!h.name||!h.time)return;
+      if(h.type==='deduct'||h.type==='manual_give')return;
       if(!validTimesByName[h.name])validTimesByName[h.name]=new Set();
       validTimesByName[h.name].add(h.time);
     });
@@ -1604,6 +1681,7 @@ async function recoverMemberPrizes(){
   const byName={};
   Object.values(history).forEach(h=>{
     if(!h.name||!h.prize)return;
+    if(h.type==='deduct'||h.type==='manual_give')return;
     if(!byName[h.name])byName[h.name]=[];
     byName[h.name].push({emoji:h.emoji||'🎁',name:h.prize,time:h.time||0});
   });
@@ -1871,6 +1949,7 @@ async function adjustLeave(sign){
           if(p.name==='연차'&&!p.deducted){
             memberPrizesArr[i]={...p,deducted:true,deductDate:today2};
             cnt++;
+            fbPush('history',{name:allMembers[key]?.name||'',prize:'연차',emoji:p.emoji||'🏖️',time:Date.now(),type:'deduct',memo:'연차 차감(경품연차 소진)'});
           }
         }
         await fbSet(`memberPrizes/${key}`,memberPrizesArr);
@@ -1959,7 +2038,64 @@ document.addEventListener('click',function(e){
     const dd=document.getElementById('stockDropdown');
     if(dd)dd.style.display='none';
   }
+  if(_prizeDropdownOpen&&!e.target.closest('#headerPrizesWrap')){
+    _prizeDropdownOpen=false;
+    const dd=document.getElementById('prizeDropdown');
+    if(dd)dd.style.display='none';
+  }
 });
+
+let _prizeDropdownOpen=false,_prizeDropdownName=null;
+async function togglePrizeDropdown(name){
+  const dd=document.getElementById('prizeDropdown');
+  // 같은 배지 다시 누르면 닫기
+  if(_prizeDropdownOpen&&_prizeDropdownName===name){_prizeDropdownOpen=false;dd.style.display='none';return;}
+  _prizeDropdownOpen=true;_prizeDropdownName=name;
+  event&&event.stopPropagation&&event.stopPropagation();
+  document.getElementById('prizeDropdownTitle').textContent=name+' 내역';
+  const content=document.getElementById('prizeDropdownContent');
+  content.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.4);padding:8px;">불러오는 중...</div>';
+  dd.style.display='block';
+
+  const prizes=toArray(await fbGet(`memberPrizes/${currentUser.key}`)).filter(p=>p&&p.name===name);
+  // 받음(+)/사용(-) 이벤트로 분해 후 시간순
+  const ev=[];
+  prizes.forEach(p=>{
+    ev.push({give:true,t:p.time||0,date:fmtMD(p.time),memo:p.memo||''});
+    if(p.deducted){
+      const dts=parseYMDtoTs(p.deductDate||p.usedDate||'');
+      ev.push({give:false,t:(dts!=null?dts+86399000:(p.time||0)+1),date:(p.deductDate||p.usedDate||''),memo:p.deductReason||'사용'});
+    }
+  });
+  // 연차 배지엔 수동연차(leaveLog)도 합산되므로 드롭다운에도 포함
+  let manualLeaveDays=0;
+  if(name==='연차'){
+    const lg=await fbGet(`leaveLog/${currentUser.key}`);
+    if(lg)Object.values(lg).forEach(l=>{
+      const give=l.type!=='deduct';const amt=Math.abs(l.amount||1);
+      const dts=parseYMDtoTs(l.date||'');
+      ev.push({give,t:l.time||(dts||0),date:l.date?fmtYMDtoMD(l.date):'',memo:(l.memo||'')+(give?' (수동지급)':' (수동차감)')});
+    });
+    manualLeaveDays=await fbGet(`memberLeave/${currentUser.key}`)||0;
+  }
+  ev.sort((a,b)=>(a.t||0)-(b.t||0));
+  let bal=0;
+  const heldPrize=prizes.filter(p=>!p.deducted).length;
+  const held=name==='연차'?(heldPrize+manualLeaveDays):heldPrize;
+  let html=`<div style="text-align:center;padding:6px 0;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;"><span style="font-family:Jua,cursive;font-size:20px;color:var(--gold);">보유 ${held}개</span></div>`;
+  if(ev.length){
+    html+=ev.map(e=>{
+      bal+=e.give?1:-1;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div><span style="color:${e.give?'#26DE81':'#FC5C65'}">${e.give?'+1 받음':'-1 사용'}</span>${e.memo?`<span style="color:rgba(255,215,0,0.8);font-size:10px;margin-left:6px;">📝${escHtml(e.memo)}</span>`:''}<span style="color:rgba(255,255,255,0.4);font-size:10px;margin-left:6px;">잔여 ${bal}개</span></div>
+        <span style="color:rgba(255,255,255,0.35);font-size:10px;">${e.give?'지급 ':'사용 '}${escHtml(e.date||'')}</span>
+      </div>`;
+    }).join('');
+  }else{
+    html+='<div style="text-align:center;color:rgba(255,255,255,0.3);padding:12px 0;">내역 없음</div>';
+  }
+  content.innerHTML=html;
+}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function formatTime(ts){if(!ts)return'';const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
 
