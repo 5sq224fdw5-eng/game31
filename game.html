@@ -771,11 +771,19 @@ async function refreshGachaPage(){
 
 async function deductStockAndCheck(){
   if(currentUser.role==='member'){
-    const member=await fbGet(`members/${currentUser.key}`);const stock=member?(member.stock||0):0;
+    // key 보정 (없거나 members에 없으면 이름으로 다시 찾기)
+    let key=currentUser.key;
+    const all=(await fbGet('members'))||{};
+    if(!key||!all[key]){
+      const hit=Object.entries(all).find(([k,m])=>m&&m.name===currentUser.name);
+      if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+    }
+    if(!key||!all[key]){showToast('로그인 정보 오류 — 🔄 새로고침 후 다시 로그인해 주세요');return false;}
+    const member=all[key];const stock=member?(member.stock||0):0;
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
-    await fbSet(`members/${currentUser.key}/stock`,stock-costPerRoll);
+    await fbSet(`members/${key}/stock`,stock-costPerRoll);
     const today=getKSTDate();
-    await fbPush(`stockLog/${currentUser.key}`,{type:'deduct',amount:costPerRoll,date:today,time:Date.now(),memo:'경품 뽑기 사용'});
+    await fbPush(`stockLog/${key}`,{type:'deduct',amount:costPerRoll,date:today,time:Date.now(),memo:'경품 뽑기 사용'});
     showToast(`✅ ${stock}주 → ${stock-costPerRoll}주 차감완료`);
   }
   return true;
@@ -797,18 +805,31 @@ function showPrizeModal(prize){
 // 당첨 확정 저장: history + (멤버면) memberPrizes 둘 다 검증 저장 후 모달.
 // 저장 실패 시 경고하고 사라지지 않게 함. 저장 끝날 때까지 isSpinning 유지.
 async function finishWin(prize){
+  if(window._finishing)return;window._finishing=true;
   const t=Date.now();
   let failed=false;
-  const okH=await fbPushVerified('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:t});
-  if(!okH)failed=true;
-  if(currentUser&&currentUser.role==='member'){
-    const okP=await fbPushVerified(`memberPrizes/${currentUser.key}`,{emoji:prize.emoji,name:prize.name,time:t,deducted:false});
-    if(!okP)failed=true;
-  }
-  isSpinning=false;
-  if(failed){
-    showToast('⚠️ 경품 저장 실패! 네트워크 확인 후 🔄 새로고침하세요');
-  }
+  try{
+    const okH=await fbPushVerified('history',{name:currentUser.name,prize:prize.name,emoji:prize.emoji,time:t});
+    if(!okH)failed=true;
+    if(currentUser&&currentUser.role==='member'){
+      // ★ key가 없거나 members에 없으면 이름으로 다시 찾아 보정 (경품이 undefined 키로 증발하는 것 방지)
+      let key=currentUser.key;
+      const latest=(await fbGet('members'))||{};
+      if(!key||!latest[key]){
+        const hit=Object.entries(latest).find(([k,m])=>m&&m.name===currentUser.name);
+        if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+      }
+      if(key&&latest[key]){
+        const okP=await fbPushVerified(`memberPrizes/${key}`,{emoji:prize.emoji,name:prize.name,time:t,deducted:false});
+        if(!okP)failed=true;
+      }else{
+        failed=true; // 키를 끝내 못 찾음
+      }
+    }
+  }catch(e){failed=true;}
+  isSpinning=false;window._finishing=false;
+  document.getElementById('spinBtn').disabled=false;document.getElementById('gachaSlotBtn').disabled=false;
+  if(failed){showToast('⚠️ 경품 저장 실패! 🔄 새로고침 후 다시 로그인해 주세요');}
   if(currentUser&&currentUser.role==='member')refreshHeaderPrizes();
   showPrizeModal(prize);
 }
@@ -816,8 +837,12 @@ async function finishWin(prize){
 async function doSpin(){
   if(isSpinning)return;
   const btn=document.getElementById('spinBtn');btn.disabled=true;document.getElementById('gachaSlotBtn').disabled=true;isSpinning=true;
-  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
+  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;refreshStockDisplay(true);return;}
   const prize=drawPrize();
+  // 안전장치: 애니메이션이 멈춰도(백그라운드 전환 등) 잠금이 영구히 갇히지 않도록
+  let settled=false;
+  const settle=()=>{if(settled)return;settled=true;finishWin(prize);refreshStockDisplay(true);};
+  const watchdog=setTimeout(settle,9000);
   // 룰렛 화면과 동일한 셔플 순서로 각도 계산
   const rawPrizesForSpin=Object.values(allPrizes);
   const prizes=window._shuffledPrizeKeys?window._shuffledPrizeKeys.map(i=>rawPrizesForSpin[i]):rawPrizesForSpin;
@@ -834,7 +859,7 @@ async function doSpin(){
     const elapsed=now-startTime;const progress=Math.min(elapsed/duration,1);
     rouletteAngle=startAngle+(targetAngle-startAngle)*easeOut(progress);drawRoulette();
     if(progress<1)requestAnimationFrame(animate);
-    else{rouletteAngle=targetAngle%360;drawRoulette();setTimeout(()=>{finishWin(prize);refreshStockDisplay(true);},300);}
+    else{rouletteAngle=targetAngle%360;drawRoulette();clearTimeout(watchdog);setTimeout(settle,300);}
   }
   requestAnimationFrame(animate);
 }
@@ -842,14 +867,17 @@ async function doSpin(){
 async function doGachaSlot(){
   if(isSpinning)return;
   const btn=document.getElementById('gachaSlotBtn');btn.disabled=true;document.getElementById('spinBtn').disabled=true;isSpinning=true;
-  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;return;}
+  const ok=await deductStockAndCheck();if(!ok){btn.disabled=false;isSpinning=false;refreshStockDisplay(true);return;}
   const screen=document.getElementById('screenContent');const machine=document.getElementById('machineBody');
   machine.classList.add('machine-shake');setTimeout(()=>machine.classList.remove('machine-shake'),500);
   screen.className='screen-spinning';
   const emojiList=Object.values(allPrizes).map(p=>p.emoji);let i=0;
   slotSpinInterval=setInterval(()=>{screen.textContent=emojiList[i%emojiList.length];i++;},100);
   const prize=drawPrize();
-  setTimeout(async()=>{clearInterval(slotSpinInterval);screen.className='screen-result';screen.textContent=prize.emoji;await finishWin(prize);refreshStockDisplay(true);},1800);
+  let settled=false;
+  const settle=()=>{if(settled)return;settled=true;clearInterval(slotSpinInterval);screen.className='screen-result';screen.textContent=prize.emoji;finishWin(prize);refreshStockDisplay(true);};
+  const watchdog=setTimeout(settle,9000);
+  setTimeout(()=>{clearTimeout(watchdog);settle();},1800);
 }
 
 function drawPrize(){
