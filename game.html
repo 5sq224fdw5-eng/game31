@@ -226,7 +226,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <div style="width:60px"></div>
         <div class="header-title">🎡 사내 오락실</div>
         <div style="display:flex;gap:6px;align-items:center">
-          <button id="gameReloadBtn" class="btn-logout" onclick="forceReload()" ondblclick="hardUpdate()" title="탭: 새로고침 · 길게/더블탭: 강제 업데이트" style="padding:5px 9px">🔄</button>
+          <button class="btn-logout" onclick="forceReload()" title="새로고침" style="padding:5px 9px">🔄</button>
           <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="background:rgba(255,127,110,0.15);border:none;color:#FF7F6E;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📋 인트라넷</a>
           <button class="btn-logout" onclick="logout()">나가기</button>
         </div>
@@ -653,7 +653,7 @@ async function checkExpiredPrizes(){
       let modified=false;
       expiredTimes.forEach(ex=>{
         const idx=fresh.findIndex(p=>p&&!p.deducted&&p.time===ex.time&&p.name===ex.name);
-        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,usedDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
+        if(idx>=0){fresh[idx]={...fresh[idx],deducted:true,deductDate:ex.expStr,deductReason:`만료일(${ex.expStr}) 자동 소멸`};modified=true;changed++;}
       });
       if(modified)await fbSet(`memberPrizes/${mk}`,fresh);
     }
@@ -712,34 +712,6 @@ function forceReload(){
   const page=activeBtn?activeBtn.getAttribute('data-page'):'gacha';
   showPage(page);
 }
-
-// 홈 추가 앱이 구버전을 캐시할 때: 캐시 전부 비우고 최신으로 다시 로드
-async function hardUpdate(){
-  showToast('🔄 최신 버전 받는 중...');
-  try{ if('caches' in window){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); } }catch(e){}
-  try{ const reg=await navigator.serviceWorker?.getRegistration(); if(reg){ await reg.update().catch(()=>{}); } }catch(e){}
-  setTimeout(()=>{ try{ location.reload(); }catch(e){ location.href=location.href; } }, 600);
-}
-// 헤더 새로고침 버튼 길게 누르면(0.6초) 강제 업데이트
-(function(){
-  function bindLongPress(){
-    const btn=document.getElementById('gameReloadBtn');
-    if(!btn||btn._lpBound)return;
-    btn._lpBound=true;
-    let timer=null,fired=false;
-    const start=()=>{fired=false;timer=setTimeout(()=>{fired=true;hardUpdate();},600);};
-    const cancel=()=>{ if(timer){clearTimeout(timer);timer=null;} };
-    btn.addEventListener('touchstart',start,{passive:true});
-    btn.addEventListener('touchend',cancel);
-    btn.addEventListener('touchmove',cancel,{passive:true});
-    btn.addEventListener('mousedown',start);
-    btn.addEventListener('mouseup',cancel);
-    btn.addEventListener('mouseleave',cancel);
-    btn.addEventListener('click',(e)=>{ if(fired){e.stopImmediatePropagation();e.preventDefault();fired=false;} },true);
-  }
-  if(document.readyState!=='loading')bindLongPress();
-  else document.addEventListener('DOMContentLoaded',bindLongPress);
-})();
 
 const SLICE_COLORS=['#6C35DE','#FF6B9D','#00C9A7','#F7B731','#FC5C65','#45AAF2','#A55EEA','#26DE81','#FD9644','#2BCBBA'];
 let rouletteAngle=0,isSpinning=false,currentMode='roulette',slotSpinInterval=null;
@@ -1201,51 +1173,28 @@ async function loadMembers(){
   const list=document.getElementById('memberList');list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   const members=await fbGet('members');allMembers=members||{};populateMemberSelect();populateGiveStockSelect();
   if(!members||Object.keys(members).length===0){list.innerHTML='<div class="empty"><div class="empty-icon">👥</div>멤버가 없습니다</div>';return;}
-
-  // 그룹별로 묶기
-  const byGroup={};
-  GROUP_ORDER.forEach(g=>byGroup[g]=[]);
-  Object.entries(members).forEach(([k,m])=>{
-    const g=getNameGroup(m.name||'');
-    (byGroup[g]=byGroup[g]||[]).push([k,m]);
-  });
-
-  function memberRow(k,m){
-    return `<div class="member-item"><div class="member-avatar">${(m.name||'?').charAt(0)}</div><div class="member-info"><div class="member-name">${escHtml(pureName(m.name))}</div><div class="member-stock">💰 ${m.stock||0}주</div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="editMemberName('${k}','${escHtml(m.name)}')">수정</button><button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button></div></div>`;
-  }
-
-  let html='';
-  GROUP_ORDER.forEach(g=>{
-    const arr=(byGroup[g]||[]).sort(([,a],[,b])=>(a.name||'').localeCompare(b.name||'','ko'));
-    if(arr.length===0)return;
-    const gid='mg_'+g;
-    html+=`<div onclick="toggleMemberGroup('${gid}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-top:8px;background:rgba(255,255,255,0.05);border-radius:10px;cursor:pointer">
-      <span>${GROUP_EMOJI[g]||'👤'}</span>
-      <span style="font-weight:700;color:${GROUP_COLOR[g]||'#fff'};font-family:'Jua',cursive">${g} (${arr.length})</span>
-      <span id="${gid}_arrow" style="margin-left:auto;color:rgba(255,255,255,0.5)">▸</span>
-    </div>`;
-    html+=`<div id="${gid}" style="display:none;margin-top:4px">${arr.map(([k,m])=>memberRow(k,m)).join('')}</div>`;
-  });
-  list.innerHTML=html;
-}
-
-function toggleMemberGroup(gid){
-  const el=document.getElementById(gid);const arrow=document.getElementById(gid+'_arrow');
-  if(!el)return;
-  const open=el.style.display==='none'||el.style.display==='';
-  el.style.display=open?'block':'none';
-  if(arrow)arrow.textContent=open?'▾':'▸';
+  list.innerHTML=Object.entries(members).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko')).map(([k,m])=>`<div class="member-item"><div class="member-avatar">${m.name.charAt(0)}</div><div class="member-info"><div class="member-name">${escHtml(m.name)}</div><div class="member-stock">💰 ${m.stock||0}주</div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="editMemberName('${k}','${m.name}')">수정</button><button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button></div></div>`).join('');
 }
 
 async function addMember(){
-  const name=document.getElementById('newMemberName').value.trim();if(!name){showToast('이름을 입력하세요');return;}
-  if(Object.values(allMembers).some(m=>m.name===name)){showToast('이미 존재하는 이름입니다');return;}
+  const raw=document.getElementById('newMemberName').value;
+  const name=(raw||'').trim();if(!name){showToast('이름을 입력하세요');return;}
+  // 공백·전각공백 정규화 후 비교 (보이지 않는 차이로 중복 등록되는 것 방지)
+  const norm=s=>(s||'').replace(/\s+/g,'').normalize('NFC');
+  const target=norm(name);
+  // ★ 추가 직전 DB에서 최신 목록을 다시 읽어 검사 (오래된 스냅샷/다른 기기 대비)
+  const latest=(await fbGet('members'))||{};
+  allMembers=latest;
+  if(Object.values(latest).some(m=>norm(m.name)===target)){showToast('이미 존재하는 이름입니다');return;}
   await fbPush('members',{name,stock:0});document.getElementById('newMemberName').value='';showToast(`✅ ${name} 추가됨`);loadMembers();
 }
 async function deleteMember(key){const m=allMembers[key];if(!m)return;if(!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`))return;await fbDelete(`members/${key}`);showToast('🗑️ 삭제됨');loadMembers();}
 async function editMemberName(key,currentName){
   const newName=prompt('새 이름을 입력하세요',currentName);if(!newName||newName.trim()==='')return;if(newName.trim()===currentName)return;
-  if(Object.entries(allMembers).some(([k,m])=>m.name===newName.trim()&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
+  const norm=s=>(s||'').replace(/\s+/g,'').normalize('NFC');
+  const target=norm(newName.trim());
+  const latest=(await fbGet('members'))||{};allMembers=latest;
+  if(Object.entries(latest).some(([k,m])=>norm(m.name)===target&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
   await fbSet(`members/${key}/name`,newName.trim());showToast(`✅ ${currentName} → ${newName.trim()} 변경됨`);loadMembers();
 }
 
@@ -1354,8 +1303,7 @@ function renderLeaveView(q){
   const filtered=q?leaveViewCache.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())):leaveViewCache;
   if(filtered.length===0){container.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과 없음</div>';return;}
 
-  // 한 멤버 카드 HTML
-  function personCard(m){
+  container.innerHTML=filtered.map(m=>{
     let inner='';
     m.logs.forEach(l=>{
       const isDeduct=l.type==='deduct';
@@ -1375,40 +1323,12 @@ function renderLeaveView(q){
     }
     return `<div class="leave-item">
       <div class="leave-item-header">
-        <span class="leave-item-name">${escHtml(pureName(m.name))}</span>
+        <span class="leave-item-name">${escHtml(m.name)}</span>
         <span class="leave-item-total">잔여 ${m.total}일</span>
       </div>
       <div style="font-size:11px;color:rgba(255,255,255,0.4);padding:0 0 4px 2px;">= 사무실·수동 ${m.manualLeave}일 + 경품연차 ${m.prizeLeave}일</div>${inner}
     </div>`;
-  }
-
-  // 그룹별로 묶기
-  const byGroup={};
-  GROUP_ORDER.forEach(g=>byGroup[g]=[]);
-  filtered.forEach(m=>{ const g=getNameGroup(m.name); (byGroup[g]=byGroup[g]||[]).push(m); });
-
-  // 검색 중이면 그룹 자동 펼침
-  const expand=!!q;
-  let html='';
-  GROUP_ORDER.forEach(g=>{
-    const list=byGroup[g]; if(!list||list.length===0)return;
-    const gid='lv_'+g;
-    html+=`<div onclick="toggleLeaveViewGroup('${gid}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-top:8px;background:rgba(255,255,255,0.05);border-radius:10px;cursor:pointer">
-      <span>${GROUP_EMOJI[g]||'👤'}</span>
-      <span style="font-weight:700;color:${GROUP_COLOR[g]||'#fff'};font-family:'Jua',cursive">${g} (${list.length})</span>
-      <span id="${gid}_arrow" style="margin-left:auto;color:rgba(255,255,255,0.5)">${expand?'▾':'▸'}</span>
-    </div>`;
-    html+=`<div id="${gid}" style="display:${expand?'block':'none'};margin-top:4px">${list.map(personCard).join('')}</div>`;
-  });
-  container.innerHTML=html;
-}
-
-function toggleLeaveViewGroup(gid){
-  const el=document.getElementById(gid);const arrow=document.getElementById(gid+'_arrow');
-  if(!el)return;
-  const open=el.style.display==='none'||el.style.display==='';
-  el.style.display=open?'block':'none';
-  if(arrow)arrow.textContent=open?'▾':'▸';
+  }).join('');
 }
 
 function filterLeaveView(){
@@ -1578,7 +1498,7 @@ async function removeMemberPrize(key,index){
   const current=toArray(await fbGet(`memberPrizes/${key}`));
   // 삭제 대신 차감 표시 + 날짜 기록
   const today=new Date().toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'.').slice(0,-1);
-  current[index]={...current[index],deducted:true,deductDate:today,usedDate:getKSTDate()};
+  current[index]={...current[index],deducted:true,deductDate:today};
   await fbSet(`memberPrizes/${key}`,current);
   showToast('✅ 경품 차감 처리됨');loadMemberPrizes();
 }
@@ -1921,7 +1841,7 @@ async function adjustLeave(sign){
           if(cnt>=remaining)break;
           const p=memberPrizesArr[i];
           if(p.name==='연차'&&!p.deducted){
-            memberPrizesArr[i]={...p,deducted:true,deductDate:today2,usedDate:getKSTDate()};
+            memberPrizesArr[i]={...p,deducted:true,deductDate:today2};
             cnt++;
           }
         }
