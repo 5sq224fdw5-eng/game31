@@ -555,24 +555,45 @@ let currentUser=null;
   const autoLogin=params.get('autoLogin');
   if(autoLogin){
     const _doAutoLogin=async()=>{
-      const name=decodeURIComponent(autoLogin);
+      let name='';
+      try{ name=decodeURIComponent(autoLogin); }catch(e){ name=autoLogin; }
+      // URL 파라미터 먼저 제거 (실패해도 다음 새로고침 때 깨끗하게)
+      try{ window.history.replaceState({},'',window.location.pathname); }catch(e){}
       try{
         const members=await fbGet('members');
         if(members){
-          const entry=Object.entries(members).find(([k,v])=>v.name===name||(v.name&&v.name.replace(/^\*/,'')===name));
+          const norm=s=>(s||'').replace(/^\*/,'').trim();
+          let entry=Object.entries(members).find(([k,v])=>norm(v.name)===norm(name));
+          // 정확매칭 실패 시: 끝부분(닉네임) 일치로 보조 매칭
+          if(!entry){
+            entry=Object.entries(members).find(([k,v])=>{ const n=norm(v.name); return n && (n.endsWith(norm(name))||norm(name).endsWith(n)); });
+          }
           if(entry){
             currentUser={key:entry[0],...entry[1]};
             localStorage.setItem('currentUser',JSON.stringify(currentUser));
-            enterApp();
-            window.history.replaceState({},'',window.location.pathname);
+            // DOM 요소가 준비될 때까지 기다렸다가 enterApp (없으면 무한로딩됨)
+            const _tryEnter=(tries)=>{
+              if(document.getElementById('loginPage') && document.getElementById('mainApp')){
+                try{ enterApp(); }catch(e){ console.error('enterApp',e); }
+              } else if(tries>0){
+                setTimeout(()=>_tryEnter(tries-1), 100);
+              }
+            };
+            _tryEnter(30); // 최대 3초 대기
             return;
           }
         }
       }catch(e){}
-      const inp=document.getElementById('loginInput');
-      if(inp) inp.value=name;
+      // 매칭 실패 → 무한로딩처럼 멈추지 말고 로그인 화면 보여주고 닉네임 채움
+      try{
+        const lp=document.getElementById('loginPage');
+        const ap=document.getElementById('app');
+        if(lp) lp.style.display='';
+        if(ap) ap.style.display='none';
+        const inp=document.getElementById('loginInput');
+        if(inp) inp.value=name;
+      }catch(e){}
     };
-    // DOM이 이미 준비됐으면 바로, 아니면 이벤트 대기 (놓침 방지)
     if(document.readyState==='loading'){
       window.addEventListener('DOMContentLoaded', _doAutoLogin);
     } else {
