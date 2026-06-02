@@ -570,7 +570,8 @@ let currentUser=null;
             entry=Object.entries(members).find(([k,v])=>{ const n=norm(v.name); return n && (n.endsWith(norm(name))||norm(name).endsWith(n)); });
           }
           if(entry){
-            currentUser={key:entry[0],...entry[1]};
+            const md=entry[1]||{};
+            currentUser={ name:md.name, role:(md.role||'member'), key:entry[0] };
             localStorage.setItem('currentUser',JSON.stringify(currentUser));
             // DOM 요소가 준비될 때까지 기다렸다가 enterApp (없으면 무한로딩됨)
             const _tryEnter=(tries)=>{
