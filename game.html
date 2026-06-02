@@ -554,25 +554,30 @@ let currentUser=null;
   const params=new URLSearchParams(window.location.search);
   const autoLogin=params.get('autoLogin');
   if(autoLogin){
-    window.addEventListener('DOMContentLoaded',async()=>{
+    const _doAutoLogin=async()=>{
       const name=decodeURIComponent(autoLogin);
-      // 해당 닉네임으로 자동 로그인
-      const members=await fbGet('members');
-      if(members){
-        const entry=Object.entries(members).find(([k,v])=>v.name===name||(v.name&&v.name.replace(/^\*/,'')===name));
-        if(entry){
-          currentUser={key:entry[0],...entry[1]};
-          localStorage.setItem('currentUser',JSON.stringify(currentUser));
-          enterApp();
-          // URL 파라미터 제거
-          window.history.replaceState({},'',window.location.pathname);
-          return;
+      try{
+        const members=await fbGet('members');
+        if(members){
+          const entry=Object.entries(members).find(([k,v])=>v.name===name||(v.name&&v.name.replace(/^\*/,'')===name));
+          if(entry){
+            currentUser={key:entry[0],...entry[1]};
+            localStorage.setItem('currentUser',JSON.stringify(currentUser));
+            enterApp();
+            window.history.replaceState({},'',window.location.pathname);
+            return;
+          }
         }
-      }
-      // 못 찾으면 로그인 화면에서 닉네임 자동 입력
+      }catch(e){}
       const inp=document.getElementById('loginInput');
       if(inp) inp.value=name;
-    });
+    };
+    // DOM이 이미 준비됐으면 바로, 아니면 이벤트 대기 (놓침 방지)
+    if(document.readyState==='loading'){
+      window.addEventListener('DOMContentLoaded', _doAutoLogin);
+    } else {
+      _doAutoLogin();
+    }
   }
 })();
 let loginTab='member',allMembers={},allPrizes={},costPerRoll=10;
