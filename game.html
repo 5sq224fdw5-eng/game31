@@ -548,11 +548,12 @@ function pureName(name){
 
 let currentUser=null;
 (function restoreLogin(){
-  const saved=localStorage.getItem('currentUser');
-  if(saved){try{currentUser=JSON.parse(saved);window.addEventListener('DOMContentLoaded',()=>enterApp());}catch(e){localStorage.removeItem('currentUser');}}
-  // 인트라넷에서 자동 로그인
   const params=new URLSearchParams(window.location.search);
   const autoLogin=params.get('autoLogin');
+  // autoLogin(인트라넷 경유)이 있으면 저장된 세션 복원은 건너뜀 — 아래 autoLogin 처리가 단독으로 담당 (이중 enterApp 충돌 방지)
+  const saved=localStorage.getItem('currentUser');
+  if(saved && !autoLogin){try{currentUser=JSON.parse(saved);window.addEventListener('DOMContentLoaded',()=>enterApp());}catch(e){localStorage.removeItem('currentUser');}}
+  // 인트라넷에서 자동 로그인
   if(autoLogin){
     const _doAutoLogin=async()=>{
       let name='';
