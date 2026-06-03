@@ -608,8 +608,24 @@ let leaveViewCache=null;
 
 async function init(){
   const members=await fbGet('members');allMembers=members||{};
-  const prizes=await fbGet('prizes');allPrizes=prizes;
-  if(!prizes){allPrizes={p1:{name:'연차',emoji:'🏖️',prob:10},p2:{name:'투피드',emoji:'🍔',prob:40},p3:{name:'출근확인증',emoji:'📋',prob:50}};await fbSet('prizes',allPrizes);}
+  // prizes를 안전하게 읽기: 읽기 실패(네트워크 등)와 '진짜 없음'을 구분해야 설정이 안 날아감
+  let prizes=null, prizeReadOk=false;
+  try{
+    const r=await fetch(`${DB_URL}/prizes.json`);
+    if(r.ok){ prizes=await r.json(); prizeReadOk=true; }
+  }catch(e){ prizeReadOk=false; }
+  if(prizeReadOk){
+    allPrizes = prizes || {};
+    // 읽기 성공 + 진짜로 비어있을 때만(최초 세팅) 기본값 생성
+    if(!prizes || Object.keys(prizes).length===0){
+      allPrizes={p1:{name:'연차',emoji:'🏖️',prob:10},p2:{name:'투피드',emoji:'🍔',prob:40},p3:{name:'출근확인증',emoji:'📋',prob:50}};
+      await fbSet('prizes',allPrizes);
+    }
+  } else {
+    // 읽기 실패 → 절대 덮어쓰지 않음. 한 번 더 시도해서 받아오기만 함
+    const retry=await fbGet('prizes');
+    allPrizes = retry || {};
+  }
   const cost=await fbGet('costPerRoll');costPerRoll=(cost!==null&&cost!==undefined)?cost:10;
   populateMemberSelect();
 }
