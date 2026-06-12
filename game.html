@@ -194,6 +194,10 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<div id="updateBanner" style="display:none;position:sticky;top:0;left:0;right:0;z-index:9999;background:#FF85C1;color:white;padding:10px 14px;align-items:center;justify-content:space-between;font-size:13px;font-weight:700">
+  <span>🔔 새 버전이 있어요</span>
+  <button onclick="hardUpdate()" style="background:white;color:#FF5C9D;border:none;border-radius:14px;padding:6px 16px;font-size:12px;font-weight:800;cursor:pointer">업데이트</button>
+</div>
 
 <div id="loginPage" class="login-wrap" style="background-color:#1a0a2e;position:relative;z-index:1;">
   <div class="login-logo">🎡</div>
@@ -447,6 +451,10 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 
 <div class="page" id="pageSettings">
   <div class="section-title">⚙️ 설정</div>
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">📢 새 파일을 GitHub에 올린 뒤 누르면, 앱을 연 사람들에게 업데이트 배너가 떠요</div>
+    <button onclick="announceNewVersion()" style="width:100%;padding:11px;background:#5DB88A;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">📢 새 버전 알리기</button>
+  </div>
   <div class="card">
     <div class="setting-row">
       <div>
@@ -514,6 +522,43 @@ const DB_URL='https://gacha-31-default-rtdb.firebaseio.com';
 function getKSTDate(){const d=new Date();d.setHours(d.getHours()+9);return d.toISOString().slice(0,10);}
 async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
 async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
+
+// ── 앱 버전 업데이트 배너 (홈화면 앱 캐시 문제 해결용) ──
+async function checkUpdateBanner(){
+  try{
+    const srv = await fbGet('appReleaseAt');
+    if(!srv) return;
+    const seen = Number(localStorage.getItem('seenReleaseAt')||'0');
+    const banner = document.getElementById('updateBanner');
+    if(!banner) return;
+    banner.style.display = (Number(srv) > seen) ? 'flex' : 'none';
+  }catch(e){}
+}
+async function hardUpdate(){
+  showToast('🔄 최신 버전 받는 중...');
+  try{ const srv = await fbGet('appReleaseAt'); if(srv) localStorage.setItem('seenReleaseAt', String(srv)); }catch(e){}
+  try{ if('caches' in window){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); } }catch(e){}
+  try{
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister().catch(()=>{})));
+    }
+  }catch(e){}
+  setTimeout(()=>{
+    const base = location.href.split('?')[0].split('#')[0];
+    location.replace(base + '?v=' + Date.now());
+  }, 600);
+}
+// (관리자) 새 버전 알리기
+async function announceNewVersion(){
+  if(!confirm('지금 버전을 "새 버전"으로 알릴까요?\n앱을 연 사람들에게 업데이트 배너가 표시됩니다.\n(GitHub에 새 파일을 먼저 올렸는지 확인하세요)')) return;
+  try{
+    await fbSet('appReleaseAt', Date.now());
+    localStorage.setItem('seenReleaseAt', String(Date.now()));
+    const banner=document.getElementById('updateBanner'); if(banner) banner.style.display='none';
+    showToast('📢 새 버전 알림 전송됨!');
+  }catch(e){ showToast('전송 실패'); }
+}
 async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
 // 저장: 응답 ok면 성공으로 간주(본문 파싱 실패해도). 네트워크 예외일 때만 1회 재시도(중복 저장 방지).
 async function fbPushVerified(path,data){
@@ -672,6 +717,7 @@ function enterApp(){
     document.getElementById('headerPrizesWrap').style.display='none';
   }
   loadNotice();showPage('gacha');
+  checkUpdateBanner();
   // 만료일 자동 소멸 체크
   setTimeout(()=>checkExpiredPrizes(),1500);
 }
