@@ -1406,7 +1406,13 @@ async function editMemberName(key,currentName){
 
   const star=hadStar?'*':'';
   const newFull=`${star}${prefix}${nn}`;
-  const oldFull=(oldNick&&oldNick.trim())?`${star}${prefix}${oldNick.trim()}`:currentName;
+  // 예전 이름: 과거엔 인사팀(별표)이 아니었을 수 있으므로 별표 없이 매칭
+  let oldFull;
+  if(oldNick&&oldNick.trim()){
+    oldFull=`${prefix}${oldNick.trim()}`;
+  } else {
+    oldFull=currentName;
+  }
 
   if(newFull===oldFull){showToast('변경 사항 없음');return;}
   // 중복 이름 체크
