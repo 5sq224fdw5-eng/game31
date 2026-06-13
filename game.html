@@ -1406,31 +1406,35 @@ async function editMemberName(key,currentName){
 
   const star=hadStar?'*':'';
   const newFull=`${star}${prefix}${nn}`;
-  // 예전 이름: 과거엔 인사팀(별표)이 아니었을 수 있으므로 별표 없이 매칭
-  let oldFull;
+  // 예전 이름 후보들: 별표 유무 + 접두사 유무 모두 시도
+  let oldCandidates;
   if(oldNick&&oldNick.trim()){
-    oldFull=`${prefix}${oldNick.trim()}`;
+    const on=oldNick.trim();
+    oldCandidates=[`${prefix}${on}`,`*${prefix}${on}`,on,`*${on}`];
   } else {
-    oldFull=currentName;
+    oldCandidates=[currentName];
   }
+  oldCandidates=[...new Set(oldCandidates)].filter(c=>c&&c!==newFull);
 
-  if(newFull===oldFull){showToast('변경 사항 없음');return;}
+  if(oldCandidates.length===0){showToast('변경 사항 없음');return;}
   // 중복 이름 체크
   const norm=s=>(s||'').replace(/\s+/g,'').normalize('NFC');
   const latest=(await fbGet('members'))||{};allMembers=latest;
   if(Object.entries(latest).some(([k,m])=>norm(m.name)===norm(newFull)&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
 
-  if(!confirm(`"${oldFull}" → "${newFull}"\n\n과거 기록(투표·출석·링크)도 새 이름으로 옮길까요?\n연차·투피드 보유는 그대로 유지됩니다.`))return;
+  if(!confirm(`예전 이름(${oldCandidates.join(' / ')}) → "${newFull}"\n\n과거 기록(투표·출석·링크)도 새 이름으로 옮길까요?\n연차·투피드 보유는 그대로 유지됩니다.`))return;
   showToast('🔄 데이터 이동 중... 잠시만요');
   try{
-    await migrateMemberName(key, oldFull, newFull);
+    await migrateMemberName(key, oldCandidates, newFull);
     showToast('✅ 닉네임 변경 + 데이터 이동 완료!');
     loadMembers();
   }catch(e){ showToast('변경 실패: '+(e.message||'')); }
 }
 
-// 이름으로 저장된 모든 데이터를 옛이름→새이름으로 이동 (키 기반 연차/투피드는 자동 유지)
-async function migrateMemberName(key, oldName, newName){
+// 이름으로 저장된 모든 데이터를 옛이름(후보들)→새이름으로 이동 (키 기반 연차/투피드 자동 유지)
+async function migrateMemberName(key, oldNames, newName){
+  const olds=Array.isArray(oldNames)?oldNames:[oldNames];
+  const isOld=(nm)=>olds.includes(nm);
   const _del=async(p)=>{try{await fetch(`${DB_URL}/${p}.json`,{method:'DELETE'});}catch(e){}};
   // 1) members 이름
   await fbSet(`members/${key}/name`, newName);
@@ -1438,14 +1442,16 @@ async function migrateMemberName(key, oldName, newName){
   const votes=await fbGet('votes')||{};
   for(const vid in votes){
     const v=votes[vid]; if(!v)continue;
-    if(v.responses&&v.responses[oldName]!==undefined){ await fbSet(`votes/${vid}/responses/${newName}`,v.responses[oldName]); await _del(`votes/${vid}/responses/${oldName}`); }
-    if(v.responseTimes&&v.responseTimes[oldName]!==undefined){ await fbSet(`votes/${vid}/responseTimes/${newName}`,v.responseTimes[oldName]); await _del(`votes/${vid}/responseTimes/${oldName}`); }
-    if(v.images&&v.images[oldName]!==undefined){ await fbSet(`votes/${vid}/images/${newName}`,v.images[oldName]); await _del(`votes/${vid}/images/${oldName}`); }
+    for(const oldName of olds){
+      if(v.responses&&v.responses[oldName]!==undefined){ await fbSet(`votes/${vid}/responses/${newName}`,v.responses[oldName]); await _del(`votes/${vid}/responses/${oldName}`); }
+      if(v.responseTimes&&v.responseTimes[oldName]!==undefined){ await fbSet(`votes/${vid}/responseTimes/${newName}`,v.responseTimes[oldName]); await _del(`votes/${vid}/responseTimes/${oldName}`); }
+      if(v.images&&v.images[oldName]!==undefined){ await fbSet(`votes/${vid}/images/${newName}`,v.images[oldName]); await _del(`votes/${vid}/images/${oldName}`); }
+    }
     if(v.links){
       for(const lk in v.links){
         const lkBase=lk.replace(/_[12]$/,''); const suffix=(lk.match(/_[12]$/)||[''])[0]; const link=v.links[lk]; let changed=false;
-        if(link&&link.nick===oldName){ link.nick=newName; changed=true; }
-        if(lkBase===oldName){ await fbSet(`votes/${vid}/links/${newName}${suffix}`,link); await _del(`votes/${vid}/links/${lk}`); }
+        if(link&&isOld(link.nick)){ link.nick=newName; changed=true; }
+        if(isOld(lkBase)){ await fbSet(`votes/${vid}/links/${newName}${suffix}`,link); await _del(`votes/${vid}/links/${lk}`); }
         else if(changed){ await fbSet(`votes/${vid}/links/${lk}`,link); }
       }
     }
@@ -1455,7 +1461,9 @@ async function migrateMemberName(key, oldName, newName){
     const root=await fbGet(path)||{};
     for(const gid in root){ const weeks=root[gid]||{};
       for(const wk in weeks){ const names=weeks[wk]||{};
-        if(names[oldName]!==undefined){ await fbSet(`${path}/${gid}/${wk}/${newName}`,names[oldName]); await _del(`${path}/${gid}/${wk}/${oldName}`); }
+        for(const oldName of olds){
+          if(names[oldName]!==undefined){ await fbSet(`${path}/${gid}/${wk}/${newName}`,names[oldName]); await _del(`${path}/${gid}/${wk}/${oldName}`); }
+        }
       }
     }
   }
