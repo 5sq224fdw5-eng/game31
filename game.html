@@ -1388,12 +1388,71 @@ async function addMember(){
 }
 async function deleteMember(key){const m=allMembers[key];if(!m)return;if(!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`))return;await fbDelete(`members/${key}`);showToast('🗑️ 삭제됨');loadMembers();}
 async function editMemberName(key,currentName){
-  const newName=prompt('새 이름을 입력하세요',currentName);if(!newName||newName.trim()==='')return;if(newName.trim()===currentName)return;
+  // currentName 예: "*좋아요알잘딱". 그룹 접두사 분리.
+  const cleanCur=(currentName||'').replace(/^\*/,'');
+  const hadStar=(currentName||'').startsWith('*');
+  let prefix='', nickOnly=cleanCur;
+  try{
+    const groups=await fbGet('groups')||{};
+    const gnames=Object.values(groups).map(g=>g.name).filter(Boolean).sort((a,b)=>b.length-a.length);
+    for(const gn of gnames){ if(cleanCur.startsWith(gn)){ prefix=gn; nickOnly=cleanCur.slice(gn.length); break; } }
+  }catch(e){}
+
+  const newNick=prompt(`새 닉네임 입력:\n(현재: ${nickOnly}${prefix?` / 그룹: ${prefix}`:''})`, nickOnly);
+  if(!newNick||!newNick.trim())return;
+  const nn=newNick.trim();
+
+  const oldNick=prompt(`과거 기록에 쓰던 "예전 닉네임"이 있으면 입력하세요.\n(없으면 비우고 확인 — 현재 닉네임 기준 변경)\n\n예: 닉네임을 먼저 바꿔서 과거 투표·출석이 옛 닉네임으로 남은 경우 그 옛 닉네임 입력.`, '');
+
+  const star=hadStar?'*':'';
+  const newFull=`${star}${prefix}${nn}`;
+  const oldFull=(oldNick&&oldNick.trim())?`${star}${prefix}${oldNick.trim()}`:currentName;
+
+  if(newFull===oldFull){showToast('변경 사항 없음');return;}
+  // 중복 이름 체크
   const norm=s=>(s||'').replace(/\s+/g,'').normalize('NFC');
-  const target=norm(newName.trim());
   const latest=(await fbGet('members'))||{};allMembers=latest;
-  if(Object.entries(latest).some(([k,m])=>norm(m.name)===target&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
-  await fbSet(`members/${key}/name`,newName.trim());showToast(`✅ ${currentName} → ${newName.trim()} 변경됨`);loadMembers();
+  if(Object.entries(latest).some(([k,m])=>norm(m.name)===norm(newFull)&&k!==key)){showToast('이미 존재하는 이름입니다');return;}
+
+  if(!confirm(`"${oldFull}" → "${newFull}"\n\n과거 기록(투표·출석·링크)도 새 이름으로 옮길까요?\n연차·투피드 보유는 그대로 유지됩니다.`))return;
+  showToast('🔄 데이터 이동 중... 잠시만요');
+  try{
+    await migrateMemberName(key, oldFull, newFull);
+    showToast('✅ 닉네임 변경 + 데이터 이동 완료!');
+    loadMembers();
+  }catch(e){ showToast('변경 실패: '+(e.message||'')); }
+}
+
+// 이름으로 저장된 모든 데이터를 옛이름→새이름으로 이동 (키 기반 연차/투피드는 자동 유지)
+async function migrateMemberName(key, oldName, newName){
+  const _del=async(p)=>{try{await fetch(`${DB_URL}/${p}.json`,{method:'DELETE'});}catch(e){}};
+  // 1) members 이름
+  await fbSet(`members/${key}/name`, newName);
+  // 2) votes의 responses/responseTimes/images/links
+  const votes=await fbGet('votes')||{};
+  for(const vid in votes){
+    const v=votes[vid]; if(!v)continue;
+    if(v.responses&&v.responses[oldName]!==undefined){ await fbSet(`votes/${vid}/responses/${newName}`,v.responses[oldName]); await _del(`votes/${vid}/responses/${oldName}`); }
+    if(v.responseTimes&&v.responseTimes[oldName]!==undefined){ await fbSet(`votes/${vid}/responseTimes/${newName}`,v.responseTimes[oldName]); await _del(`votes/${vid}/responseTimes/${oldName}`); }
+    if(v.images&&v.images[oldName]!==undefined){ await fbSet(`votes/${vid}/images/${newName}`,v.images[oldName]); await _del(`votes/${vid}/images/${oldName}`); }
+    if(v.links){
+      for(const lk in v.links){
+        const lkBase=lk.replace(/_[12]$/,''); const suffix=(lk.match(/_[12]$/)||[''])[0]; const link=v.links[lk]; let changed=false;
+        if(link&&link.nick===oldName){ link.nick=newName; changed=true; }
+        if(lkBase===oldName){ await fbSet(`votes/${vid}/links/${newName}${suffix}`,link); await _del(`votes/${vid}/links/${lk}`); }
+        else if(changed){ await fbSet(`votes/${vid}/links/${lk}`,link); }
+      }
+    }
+  }
+  // 3) attendance, attendanceManual: gid/monday/이름
+  for(const path of ['attendance','attendanceManual']){
+    const root=await fbGet(path)||{};
+    for(const gid in root){ const weeks=root[gid]||{};
+      for(const wk in weeks){ const names=weeks[wk]||{};
+        if(names[oldName]!==undefined){ await fbSet(`${path}/${gid}/${wk}/${newName}`,names[oldName]); await _del(`${path}/${gid}/${wk}/${oldName}`); }
+      }
+    }
+  }
 }
 
 async function loadPrizes(){
