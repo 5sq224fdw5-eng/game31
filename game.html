@@ -888,15 +888,20 @@ async function refreshGachaPage(){
 
 async function deductStockAndCheck(){
   if(currentUser.role==='member'){
-    // key 보정 (없거나 members에 없으면 이름으로 다시 찾기)
     let key=currentUser.key;
-    const all=(await fbGet('members'))||{};
-    if(!key||!all[key]){
-      const hit=Object.entries(all).find(([k,m])=>m&&m.name===currentUser.name);
-      if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+    // ★ 비용절감: 우선 본인 한 명만 읽음 (members 전체 X). 전체는 key가 깨졌을 때만 폴백.
+    let member = key ? await fbGet(`members/${key}`) : null;
+    if(!member){
+      // key 보정 (없거나 members에 없으면 이름으로 다시 찾기) — 이때만 전체 읽음
+      const all=(await fbGet('members'))||{};
+      if(!key||!all[key]){
+        const hit=Object.entries(all).find(([k,m])=>m&&m.name===currentUser.name);
+        if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+      }
+      member = (key && all[key]) ? all[key] : null;
     }
-    if(!key||!all[key]){showToast('로그인 정보 오류 — 🔄 새로고침 후 다시 로그인해 주세요');return false;}
-    const member=all[key];const stock=member?(member.stock||0):0;
+    if(!key||!member){showToast('로그인 정보 오류 — 🔄 새로고침 후 다시 로그인해 주세요');return false;}
+    const stock=member?(member.stock||0):0;
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
     await fbSet(`members/${key}/stock`,stock-costPerRoll);
     const today=getKSTDate();
@@ -931,12 +936,17 @@ async function finishWin(prize){
     if(currentUser&&currentUser.role==='member'){
       // ★ key가 없거나 members에 없으면 이름으로 다시 찾아 보정 (경품이 undefined 키로 증발하는 것 방지)
       let key=currentUser.key;
-      const latest=(await fbGet('members'))||{};
-      if(!key||!latest[key]){
-        const hit=Object.entries(latest).find(([k,m])=>m&&m.name===currentUser.name);
-        if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+      // ★ 비용절감: 우선 본인 한 명만 확인 (members 전체 X). 전체는 key가 깨졌을 때만 폴백.
+      let exists = key ? await fbGet(`members/${key}`) : null;
+      if(!exists){
+        const latest=(await fbGet('members'))||{};
+        if(!key||!latest[key]){
+          const hit=Object.entries(latest).find(([k,m])=>m&&m.name===currentUser.name);
+          if(hit){key=hit[0];currentUser.key=key;localStorage.setItem('currentUser',JSON.stringify(currentUser));}
+        }
+        exists = (key && latest[key]) ? latest[key] : null;
       }
-      if(key&&latest[key]){
+      if(key&&exists){
         const okP=await fbPushVerified(`memberPrizes/${key}`,{emoji:prize.emoji,name:prize.name,time:t,deducted:false});
         if(!okP)failed=true;
       }else{
