@@ -455,6 +455,15 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">📢 새 파일을 GitHub에 올린 뒤 누르면, 앱을 연 사람들에게 업데이트 배너가 떠요</div>
     <button onclick="announceNewVersion()" style="width:100%;padding:11px;background:#5DB88A;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">📢 새 버전 알리기</button>
   </div>
+
+  <div class="section-title" style="margin-top:20px">🗑️ 지급내역 삭제 (오지급 정리)</div>
+  <div class="card" style="padding:14px 16px">
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">멤버를 고른 뒤, 잘못 들어간 주식·연차·경품 내역을 삭제해요.<br><span style="color:#FC5C65">※ 잔액(주식 수 등)은 안 바뀌어요 — 잔액은 따로 맞춰주세요.</span></div>
+    <input class="leave-search-bar" id="logDelSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderLogDelMembers()">
+    <div id="logDelMembers" style="max-height:170px;overflow-y:auto;margin:8px 0"></div>
+    <div id="logDelList"></div>
+  </div>
+
   <div class="card">
     <div class="setting-row">
       <div>
@@ -813,7 +822,7 @@ function showPage(page){
   if(page==='prizes'){loadPrizes();if(Object.keys(allPrizes).length>0)renderPrizePicker();}
   if(page==='stock')loadStockPage();
   if(page==='leave')loadLeaveView();
-  if(page==='settings')loadSettings();
+  if(page==='settings'){loadSettings();renderLogDelMembers();}
 }
 
 // 헤더 새로고침 버튼: 현재 탭 데이터 + 헤더 정보 다시 불러오기 (페이지 리로드 없이)
@@ -2289,6 +2298,55 @@ function fmtTime(t){
   return h+':'+m;
 }
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── 관리자: 지급내역(주식·연차·경품) 삭제 ──
+function renderLogDelMembers(){
+  const box=document.getElementById('logDelMembers'); if(!box) return;
+  const q=(document.getElementById('logDelSearch')?.value||'').trim().toLowerCase();
+  const ents=Object.entries(allMembers||{}).filter(([k,m])=>m&&m.name&&(!q||m.name.toLowerCase().includes(q)));
+  ents.sort((a,b)=>String(a[1].name).localeCompare(String(b[1].name),'ko'));
+  if(ents.length===0){ box.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.4);padding:6px">멤버 없음</div>'; return; }
+  box.innerHTML=ents.map(([k,m])=>`<button onclick="loadLogDel('${k}','${escHtml(m.name).replace(/'/g,"\\'")}')" style="display:inline-block;margin:3px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:18px;color:white;font-size:12px;font-weight:700;cursor:pointer">${escHtml(m.name)}</button>`).join('');
+}
+async function loadLogDel(key, name){
+  const list=document.getElementById('logDelList'); if(!list) return;
+  list.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const [stockLog,leaveLog,prizesRaw]=await Promise.all([
+    fbGet(`stockLog/${key}`), fbGet(`leaveLog/${key}`), fbGet(`memberPrizes/${key}`)
+  ]);
+  const rows=[];
+  if(stockLog) Object.entries(stockLog).forEach(([id,s])=>rows.push({t:s.time||0,cat:'주식',emoji:'💰',give:s.type!=='deduct',amt:s.amount||0,unit:'주',memo:s.memo||'',date:s.date||'',del:`deleteLogEntry('stock','${key}','${id}','${escHtml(name).replace(/'/g,"\\'")}')`}));
+  if(leaveLog) Object.entries(leaveLog).forEach(([id,l])=>rows.push({t:l.time||0,cat:'연차',emoji:'🏖️',give:l.type!=='deduct',amt:Math.abs(l.amount||1),unit:'일',memo:l.memo||'',date:l.date||'',del:`deleteLogEntry('leave','${key}','${id}','${escHtml(name).replace(/'/g,"\\'")}')`}));
+  toArray(prizesRaw).forEach((p,idx)=>rows.push({t:p.time||0,cat:'경품',emoji:p.emoji||'🎁',give:true,amt:1,unit:'개',memo:p.name||'',date:'',del:`deleteLogEntry('prize','${key}','${idx}','${escHtml(name).replace(/'/g,"\\'")}')`}));
+  rows.sort((a,b)=>(b.t||0)-(a.t||0));
+  if(rows.length===0){ list.innerHTML=`<div style="font-size:13px;color:rgba(255,255,255,0.5);padding:10px;text-align:center">${escHtml(name)} 님의 내역이 없어요</div>`; return; }
+  let h=`<div style="font-size:13px;font-weight:700;color:var(--gold);margin:6px 0 8px">${escHtml(name)} 님 내역 (${rows.length}건)</div>`;
+  rows.forEach(r=>{
+    const sign=r.give?`<span style="color:#4ECDC4">+${r.amt}${r.unit}</span>`:`<span style="color:#FC5C65">-${r.amt}${r.unit}</span>`;
+    const dt=r.date?escHtml(r.date):(r.t?new Date(r.t).toLocaleDateString('ko-KR'):'');
+    h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:20px">${r.emoji}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${r.cat} ${sign}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45)">${escHtml(r.memo)}${dt?' · '+dt:''}</div>
+      </div>
+      <button onclick="${r.del}" style="flex-shrink:0;background:rgba(252,92,101,0.15);color:#FC5C65;border:1px solid rgba(252,92,101,0.4);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer">🗑️ 삭제</button>
+    </div>`;
+  });
+  list.innerHTML=h;
+}
+async function deleteLogEntry(cat, key, idOrIdx, name){
+  if(!confirm('이 내역을 삭제할까요? (잔액은 안 바뀝니다)')) return;
+  if(cat==='stock') await fbDelete(`stockLog/${key}/${idOrIdx}`);
+  else if(cat==='leave') await fbDelete(`leaveLog/${key}/${idOrIdx}`);
+  else if(cat==='prize'){
+    const arr=toArray(await fbGet(`memberPrizes/${key}`));
+    const i=parseInt(idOrIdx,10);
+    if(i>=0&&i<arr.length){ arr.splice(i,1); await fbSet(`memberPrizes/${key}`, arr); }
+  }
+  showToast('🗑️ 내역 삭제됨');
+  loadLogDel(key, name);
+}
 
 init();
 </script>
