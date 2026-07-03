@@ -870,7 +870,9 @@ function drawRoulette(){
 
 function renderPrizeLegend(){
   const legend=document.getElementById('prizeLegend');if(!legend)return;
-  legend.innerHTML=Object.values(allPrizes).map((p,i)=>`<div class="legend-item"><div class="legend-color" style="background:${SLICE_COLORS[i%SLICE_COLORS.length]}"></div><span style="font-size:18px">${p.emoji}</span><span class="legend-name">${escHtml(p.name)}</span><span class="legend-prob">${p.prob}%</span></div>`).join('');
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  legend.innerHTML=Object.values(allPrizes).map((p,i)=>`<div class="legend-item"><div class="legend-color" style="background:${SLICE_COLORS[i%SLICE_COLORS.length]}"></div><span style="font-size:18px">${p.emoji}</span><span class="legend-name">${escHtml(p.name)}</span>${isAdmin?`<span class="legend-prob">${p.prob}%</span>`:''}</div>`).join('');
+
 }
 
 function switchMode(mode){
