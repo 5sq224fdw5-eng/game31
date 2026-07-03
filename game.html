@@ -399,6 +399,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
       </div>
       <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+      <input type="text" id="giveStockExpiry" placeholder="📅 만료일 (예: 2026-07-31) — 미입력 시 무제한" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
         <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
@@ -2012,7 +2013,8 @@ async function giveStock(){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
     const giveMemo=document.getElementById('giveStockMemo')?.value.trim()||'';
-    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo});
+const giveExpiry=document.getElementById('giveStockExpiry')?.value.trim()||'';
+await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
