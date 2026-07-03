@@ -358,8 +358,12 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <div id="prizePickList" style="margin-bottom:10px">
         <div style="font-size:12px;color:rgba(255,255,255,0.3)">경품 탭 로드 후 목록이 표시됩니다</div>
       </div>
-      <input type="text" id="addPrizeMemo" placeholder="📝 만료기한 (예: 2025-12월) — 미입력 시 무제한"
-        style="width:100%;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Pretendard',sans-serif;outline:none;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <label style="font-size:12px;color:rgba(255,255,255,0.5);white-space:nowrap">📅 만료일</label>
+        <input type="date" id="addPrizeMemo"
+          style="flex:1;padding:9px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Pretendard',sans-serif;outline:none;color-scheme:dark">
+        <button onclick="document.getElementById('addPrizeMemo').value=''" style="padding:6px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer">무제한</button>
+      </div>
       <!-- 직접입력 폴백 -->
       <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:6px">위 목록에 없으면 직접 입력:</div>
       <div style="display:flex;gap:8px">
@@ -395,18 +399,23 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         </div>
       </div>
       <div class="bulk-actions" style="margin-bottom:12px">
-        <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+        <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="width:80px;flex:none;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;">
         <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
       </div>
-      <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
-      <input type="text" id="giveStockExpiry" placeholder="📅 만료일 (예: 2026-07-31) — 미입력 시 무제한" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
+      <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;margin-top:6px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <label style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">📅 만료일</label>
+        <input type="date" id="giveStockExpiry"
+          style="flex:1;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;color-scheme:dark">
+        <button onclick="document.getElementById('giveStockExpiry').value=''" style="padding:6px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,0.5);font-size:10px;cursor:pointer;white-space:nowrap">무제한</button>
+      </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
         <div class="bulk-member-list" id="deductStockBulkList" style="max-height:180px"></div>
         <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0" id="deductStockSelected">선택: 0명</div>
       </div>
       <div class="bulk-actions">
-        <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;outline:none;">
+        <input type="number" id="deductStockAmount" placeholder="주식 수" min="1" max="1000" style="width:80px;flex:none;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;">
         <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="deductStock()">일괄 차감</button>
       </div>
       <input type="text" id="deductStockMemo" placeholder="📝 메모 (예: 경품 차감)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
@@ -432,16 +441,18 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <div class="bulk-member-list" id="leaveBulkList"></div>
       <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px" id="leaveSelected">선택된 멤버: 0명</div>
       <div class="bulk-actions">
-        <input type="number" id="leaveAmount" placeholder="일수 입력" min="1"
-          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-family:'Pretendard',sans-serif;outline:none">
+        <input type="number" id="leaveAmount" placeholder="일수" min="1"
+          style="width:70px;flex:none;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Pretendard',sans-serif;outline:none">
         <button class="btn-confirm" onclick="adjustLeave(1)">지급</button>
         <button class="btn-confirm" style="background:linear-gradient(135deg,#FC5C65,#fd9644)" onclick="adjustLeave(-1)">차감</button>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input type="text" id="leaveMemo" placeholder="📝 메모 (예: 2025-12월 소진)"
-          style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;font-family:'Pretendard',sans-serif;outline:none">
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input type="text" id="leaveMemo" placeholder="📝 메모"
+          style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;font-family:'Pretendard',sans-serif;outline:none">
+        <input type="date" id="leaveMemoExpiry"
+          style="flex:1;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;color-scheme:dark" title="만료일">
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 메모는 지급/차감 모두 저장됩니다</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">※ 만료일 선택 시 해당일 자정에 자동 소진</div>
     </div>
     <div class="section-title" style="margin-top:20px">📋 연차 내역 조회</div>
   </div>
@@ -731,6 +742,7 @@ function enterApp(){
   // 만료일 자동 소멸 체크
   setTimeout(()=>checkExpiredPrizes(),1500);
   setTimeout(()=>checkExpiredStock(),2000);
+  setTimeout(()=>checkExpiredLeave(),2500);
 }
 
 // ── 만료일 자동 소멸 ──
@@ -820,6 +832,38 @@ async function checkExpiredStock(){
     }
     if(changed>0)showToast(`⏰ 만료된 주식 ${changed}건 자동 소진됐습니다`);
   }catch(e){console.warn('checkExpiredStock error',e);}
+}
+
+// ── 연차 만료일 자동 소진 ──
+async function checkExpiredLeave(){
+  try{
+    const allLeaveLog=await fbGet('leaveLog');
+    if(!allLeaveLog)return;
+    const today=new Date();today.setHours(0,0,0,0);
+    const todayTs=today.getTime();
+    let changed=0;
+    for(const [mk,logs] of Object.entries(allLeaveLog)){
+      if(!logs)continue;
+      for(const [lid,l] of Object.entries(logs)){
+        if(!l||l.type!=='give'||l.deducted||!l.expiry)continue;
+        const m=String(l.expiry).match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+        if(!m)continue;
+        let year=parseInt(m[1]);if(year<100)year+=2000;
+        const expDate=new Date(year,parseInt(m[2])-1,parseInt(m[3])+1,0,0,0,0);
+        if(todayTs<expDate.getTime())continue;
+        // 만료 — 연차 차감
+        const current=await fbGet(`memberLeave/${mk}`)||0;
+        const deductAmt=Math.min(l.amount||0,current);
+        if(deductAmt>0){
+          await fbSet(`memberLeave/${mk}`,current-deductAmt);
+          await fbPush(`leaveLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`만료 자동소진(${l.expiry})`});
+        }
+        await fbSet(`leaveLog/${mk}/${lid}/deducted`,true);
+        changed++;
+      }
+    }
+    if(changed>0)showToast(`⏰ 만료된 연차 ${changed}건 자동 소진됐습니다`);
+  }catch(e){console.warn('checkExpiredLeave error',e);}
 }
 
 async function refreshHeaderPrizes(){
@@ -2139,13 +2183,15 @@ function closeDropdownDelay(dropdownId){setTimeout(()=>{const el=document.getEle
 async function adjustLeave(sign){
   const keys=[...bulkSelected.leave];const amount=parseInt(document.getElementById('leaveAmount').value);
   const memo=document.getElementById('leaveMemo')?document.getElementById('leaveMemo').value.trim():'';
+  const expiry=document.getElementById('leaveMemoExpiry')?document.getElementById('leaveMemoExpiry').value.trim():'';
+  const fullMemo=memo+(expiry?` (만료:${expiry})`:'');
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1){showToast('일수를 입력하세요');return;}
   let skipped=0;const today=getKSTDate();
 
   for(const key of keys){
     if(sign>0){
       // 지급: type:'give'
-      await fbPush(`leaveLog/${key}`,{type:'give',amount,date:today,memo:memo||'',time:Date.now()});
+      await fbPush(`leaveLog/${key}`,{type:'give',amount,date:today,memo:fullMemo||'',expiry:expiry||null,time:Date.now()});
       const current=await fbGet(`memberLeave/${key}`)||0;
       await fbSet(`memberLeave/${key}`,current+amount);
       if(allMembers[key])allMembers[key].leave=current+amount;
@@ -2157,7 +2203,7 @@ async function adjustLeave(sign){
       const totalLeave=manualLeave+prizeLeaveCount;
       if(totalLeave<amount){skipped++;continue;}
 
-      await fbPush(`leaveLog/${key}`,{type:'deduct',amount,date:today,memo:memo||'',time:Date.now()});
+      await fbPush(`leaveLog/${key}`,{type:'deduct',amount,date:today,memo:fullMemo||'',time:Date.now()});
       let remaining=amount;
 
       // 수동 연차에서 먼저 차감
@@ -2188,6 +2234,7 @@ async function adjustLeave(sign){
 
   document.getElementById('leaveAmount').value='';
   if(document.getElementById('leaveMemo'))document.getElementById('leaveMemo').value='';
+  if(document.getElementById('leaveMemoExpiry'))document.getElementById('leaveMemoExpiry').value='';
   document.getElementById('leaveSearch').value='';
   bulkSelected.leave.clear();renderBulkList('leave');
   showToast(`✅ ${keys.length-skipped}명 연차 ${amount}일 ${sign>0?'지급':'차감'} 완료${skipped>0?` (${skipped}명 연차 부족으로 건너뜀)`:''}`);
