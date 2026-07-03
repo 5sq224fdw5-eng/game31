@@ -730,6 +730,7 @@ function enterApp(){
   checkUpdateBanner();
   // 만료일 자동 소멸 체크
   setTimeout(()=>checkExpiredPrizes(),1500);
+  setTimeout(()=>checkExpiredStock(),2000);
 }
 
 // ── 만료일 자동 소멸 ──
@@ -786,6 +787,39 @@ async function checkExpiredPrizes(){
     }
     if(changed>0)showToast(`⏰ 만료된 경품 ${changed}개가 자동 소멸됐습니다`);
   }catch(e){console.warn('checkExpiredPrizes error',e);}
+}
+
+// ── 주식 만료일 자동 소진 ──
+async function checkExpiredStock(){
+  if(isSpinning){setTimeout(()=>checkExpiredStock(),3000);return;}
+  try{
+    const allStockLog=await fbGet('stockLog');
+    if(!allStockLog)return;
+    const members=(await fbGet('members'))||{};
+    const today=new Date();today.setHours(0,0,0,0);
+    const todayTs=today.getTime();
+    let changed=0;
+    for(const [mk,logs] of Object.entries(allStockLog)){
+      if(!logs)continue;
+      for(const [lid,l] of Object.entries(logs)){
+        if(!l||l.type!=='give'||l.deducted||!l.expiry)continue;
+        const m=String(l.expiry).match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+        if(!m)continue;
+        let year=parseInt(m[1]);if(year<100)year+=2000;
+        const expDate=new Date(year,parseInt(m[2])-1,parseInt(m[3])+1,0,0,0,0);
+        if(todayTs<expDate.getTime())continue;
+        const memberData=members[mk];if(!memberData)continue;
+        const current=await fbGet(`members/${mk}/stock`)||0;
+        const deductAmt=Math.min(l.amount||0,current);
+        if(deductAmt<=0){await fbSet(`stockLog/${mk}/${lid}/deducted`,true);continue;}
+        await fbSet(`members/${mk}/stock`,current-deductAmt);
+        await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`만료 자동소진(${l.expiry})`});
+        await fbSet(`stockLog/${mk}/${lid}/deducted`,true);
+        changed++;
+      }
+    }
+    if(changed>0)showToast(`⏰ 만료된 주식 ${changed}건 자동 소진됐습니다`);
+  }catch(e){console.warn('checkExpiredStock error',e);}
 }
 
 async function refreshHeaderPrizes(){
@@ -1517,7 +1551,7 @@ function renderPrizePicker(){
         <span style="font-size:22px">${p.emoji}</span>
         <div>
           <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
-                  ${(currentUser&&currentUser.role==='admin')?`<div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>`:''}
+          ${(currentUser&&currentUser.role==='admin')?`<div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>`:''}
         </div>
       </div>
       <button class="btn-confirm" onclick="givePickedPrize('${escHtml(p.emoji)}','${escHtml(p.name)}')"
@@ -2013,8 +2047,8 @@ async function giveStock(){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
     const giveMemo=document.getElementById('giveStockMemo')?.value.trim()||'';
-const giveExpiry=document.getElementById('giveStockExpiry')?.value.trim()||'';
-await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null});
+    const giveExpiry=document.getElementById('giveStockExpiry')?.value.trim()||'';
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
