@@ -872,7 +872,6 @@ function renderPrizeLegend(){
   const legend=document.getElementById('prizeLegend');if(!legend)return;
   const isAdmin=currentUser&&currentUser.role==='admin';
   legend.innerHTML=Object.values(allPrizes).map((p,i)=>`<div class="legend-item"><div class="legend-color" style="background:${SLICE_COLORS[i%SLICE_COLORS.length]}"></div><span style="font-size:18px">${p.emoji}</span><span class="legend-name">${escHtml(p.name)}</span>${isAdmin?`<span class="legend-prob">${p.prob}%</span>`:''}</div>`).join('');
-
 }
 
 function switchMode(mode){
@@ -1517,7 +1516,7 @@ function renderPrizePicker(){
         <span style="font-size:22px">${p.emoji}</span>
         <div>
           <div style="font-size:13px;font-weight:700">${escHtml(p.name)}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>
+                  ${(currentUser&&currentUser.role==='admin')?`<div style="font-size:10px;color:rgba(255,255,255,0.4)">${p.prob}% 확률</div>`:''}
         </div>
       </div>
       <button class="btn-confirm" onclick="givePickedPrize('${escHtml(p.emoji)}','${escHtml(p.name)}')"
