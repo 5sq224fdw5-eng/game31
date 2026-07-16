@@ -402,13 +402,17 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         <input type="number" id="giveStockAmount" placeholder="주식 수" min="1" max="1000" style="width:80px;flex:none;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;">
         <button class="btn-confirm" onclick="giveStock()">일괄 지급</button>
       </div>
-      <input type="text" id="giveStockMemo" placeholder="📝 메모 (예: 한달풀참)" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;margin-top:6px;">
       <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-        <label style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">📅 만료일</label>
-        <input type="date" id="giveStockExpiry"
-          style="flex:1;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;color-scheme:dark">
-        <button onclick="document.getElementById('giveStockExpiry').value=''" style="padding:6px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,0.5);font-size:10px;cursor:pointer;white-space:nowrap">무제한</button>
+        <label style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">📋 지급 사유</label>
+        <select id="giveStockReason" onchange="updateGiveStockExpiryPreview()" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none">
+          <option value="풀참">🎰 풀참</option>
+          <option value="초대">🤝 초대</option>
+          <option value="영업건">💼 영업건</option>
+          <option value="출근이벤트">🌅 출근이벤트</option>
+        </select>
       </div>
+      <div id="giveStockExpiryPreview" style="font-size:10px;color:rgba(255,215,0,0.75);margin:4px 0 0 2px"></div>
+      <input type="text" id="giveStockMemo" placeholder="📝 추가 메모 (선택)" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;margin-top:6px;">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
         <div id="deductStockSelected" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
@@ -825,7 +829,8 @@ async function checkExpiredStock(){
         const deductAmt=Math.min(l.amount||0,current);
         if(deductAmt<=0){await fbSet(`stockLog/${mk}/${lid}/deducted`,true);continue;}
         await fbSet(`members/${mk}/stock`,current-deductAmt);
-        await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`만료 자동소진(${l.expiry})`});
+        const _reasonPrefix = l.memo ? `${l.memo} · ` : '';
+        await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`${_reasonPrefix}만료 자동소멸(${l.expiry})`});
         await fbSet(`stockLog/${mk}/${lid}/deducted`,true);
         changed++;
       }
@@ -2038,6 +2043,7 @@ async function loadStockPage(){
     bulkSelected.giveStock.clear();bulkSelected.deductStock.clear();
     renderBulkList('giveStock');renderBulkList('deductStock');
     loadStockView();
+    updateGiveStockExpiryPreview();
   }else{
     // 멤버: 본인 주식 현황
     loadMemberStockView();
@@ -2129,19 +2135,38 @@ async function giveStock(){
   const freshMembers=await fbGet('members')||{};
   const today=getKSTDate();
   const doneNames=keys.map(k=>(freshMembers[k]&&freshMembers[k].name)||(allMembers[k]&&allMembers[k].name)||k);
+  const reason = document.getElementById('giveStockReason')?.value || '풀참';
+  const giveExpiry = computeExpiryByReason(reason);
+  const extraMemo = document.getElementById('giveStockMemo')?.value.trim()||'';
+  const giveMemo = extraMemo ? `${reason} · ${extraMemo}` : reason;
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     await fbSet(`members/${key}/stock`, current+amount);
-    const giveMemo=document.getElementById('giveStockMemo')?.value.trim()||'';
-    const giveExpiry=document.getElementById('giveStockExpiry')?.value.trim()||'';
     await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
   bulkSelected.giveStock.clear();renderBulkList('giveStock');
   stockViewCache=null;
-  showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료!`);
-  showBulkDonePopup(`💰 ${amount}주 지급 완료`, doneNames);
+  showToast(`✅ ${keys.length}명에게 ${amount}주 지급 완료! (${reason}${giveExpiry?', '+giveExpiry+' 소멸':', 무제한'})`);
+  showBulkDonePopup(`💰 ${amount}주 지급 완료 (${reason})`, doneNames);
+}
+
+// ── 지급 사유별 자동 만료일 계산: 풀참=7일, 초대=무제한, 그 외(영업건·출근이벤트 등)=1개월 ──
+function computeExpiryByReason(reason){
+  const base = new Date();
+  if(reason==='풀참'){ base.setDate(base.getDate()+7); }
+  else if(reason==='초대'){ return null; } // 무제한 (소멸 없음)
+  else { base.setMonth(base.getMonth()+1); } // 영업건·출근이벤트 등 그 외 전부 한 달
+  const y=base.getFullYear(), m=String(base.getMonth()+1).padStart(2,'0'), d=String(base.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function updateGiveStockExpiryPreview(){
+  const sel=document.getElementById('giveStockReason');
+  const prev=document.getElementById('giveStockExpiryPreview');
+  if(!sel||!prev) return;
+  const exp=computeExpiryByReason(sel.value);
+  prev.textContent = exp ? `📅 ${exp} 까지 사용 안 하면 자동 소멸` : '♾️ 무제한 (자동 소멸 없음)';
 }
 
 async function deductStock(){
