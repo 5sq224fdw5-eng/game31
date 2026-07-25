@@ -425,6 +425,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
       <input type="text" id="deductStockMemo" placeholder="📝 메모 (예: 경품 차감)" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:13px;outline:none;margin-top:6px;">
     </div>
     <div class="section-title" style="margin-top:20px">📋 멤버별 주식 현황</div>
+    <button onclick="recalcAllStockBalances()" style="width:100%;margin-bottom:8px;padding:9px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;cursor:pointer">🔄 전체 잔액 재계산 (내역 합계와 안 맞을 때)</button>
     <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
     <div id="stockViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
   </div>
@@ -805,6 +806,44 @@ async function checkExpiredPrizes(){
   }catch(e){console.warn('checkExpiredPrizes error',e);}
 }
 
+// ── 주식 배치 FIFO 소비: 만료기한 있는 주식(임박한 순) → 무기한 주식(오래 지급된 순)으로 차감 ──
+// stockLog의 'give' 항목마다 remaining(그 지급분에서 아직 안 쓴 수량)을 관리해서
+// 룰렛/차감이 "어떤 지급분에서" 빠져나가는지 추적한다. 이게 없으면 무기한 주식이 먼저 없어지고
+// 기한 있는 주식은 써보지도 못하고 만료되는 문제가 생김.
+async function consumeStockBatchesFIFO(key, needAmount){
+  try{
+    if(!needAmount || needAmount<=0) return;
+    const logsRaw = await fbGet(`stockLog/${key}`);
+    if(!logsRaw) return; // 지급 내역이 없으면(과거 데이터 등) 총합만 깎인 채로 둠 — 배치 추적 불가
+    const batches = Object.entries(logsRaw)
+      .filter(([id,l])=> l && l.type==='give')
+      .map(([id,l])=>{
+        // remaining 필드가 없는 과거 지급분은 deducted 여부로 남은 양을 추정 (호환용)
+        const remaining = (typeof l.remaining==='number') ? l.remaining : (l.deducted ? 0 : (l.amount||0));
+        return {id, l, remaining};
+      })
+      .filter(b=>b.remaining>0);
+    // 정렬: 만료기한 있는 것부터(임박한 날짜 순) → 무기한은 맨 뒤(오래 지급된 순)
+    batches.sort((a,b)=>{
+      const ea=a.l.expiry, eb=b.l.expiry;
+      if(ea && eb) return ea<eb?-1:(ea>eb?1:((a.l.time||0)-(b.l.time||0)));
+      if(ea && !eb) return -1;
+      if(!ea && eb) return 1;
+      return (a.l.time||0)-(b.l.time||0);
+    });
+    let remain = needAmount;
+    for(const b of batches){
+      if(remain<=0) break;
+      const use = Math.min(b.remaining, remain);
+      if(use<=0) continue;
+      const newRemaining = b.remaining - use;
+      await fbSet(`stockLog/${key}/${b.id}/remaining`, newRemaining);
+      if(newRemaining<=0) await fbSet(`stockLog/${key}/${b.id}/deducted`, true);
+      remain -= use;
+    }
+  }catch(e){ console.warn('consumeStockBatchesFIFO',e); }
+}
+
 // ── 주식 만료일 자동 소진 ──
 async function checkExpiredStock(){
   if(isSpinning){setTimeout(()=>checkExpiredStock(),3000);return;}
@@ -825,12 +864,18 @@ async function checkExpiredStock(){
         const expDate=new Date(year,parseInt(m[2])-1,parseInt(m[3])+1,0,0,0,0);
         if(todayTs<expDate.getTime())continue;
         const memberData=members[mk];if(!memberData)continue;
+        // ★ 원래 지급했던 amount 전체가 아니라, 룰렛 등으로 이미 쓴 만큼 뺀 remaining만 소멸시킴
+        const remaining = (typeof l.remaining==='number') ? l.remaining : (l.amount||0);
+        if(remaining<=0){ await fbSet(`stockLog/${mk}/${lid}/deducted`,true); continue; }
         const current=await fbGet(`members/${mk}/stock`)||0;
-        const deductAmt=Math.min(l.amount||0,current);
+        const deductAmt=Math.min(remaining,current);
         if(deductAmt<=0){await fbSet(`stockLog/${mk}/${lid}/deducted`,true);continue;}
-        await fbSet(`members/${mk}/stock`,current-deductAmt);
+        // ★ 원자적 증감 사용 — 읽고→계산해서 쓰는 방식은 그 사이 다른 지급/차감이 끼어들면
+        //   먼저 쓴 값이 덮어써져서 사라지는 문제가 있었음(상단 숫자와 내역이 안 맞던 원인)
+        await fbSet(`members/${mk}/stock`,{'.sv':{'increment':-deductAmt}});
         const _reasonPrefix = l.memo ? `${l.memo} · ` : '';
         await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`${_reasonPrefix}만료 자동소멸(${l.expiry})`});
+        await fbSet(`stockLog/${mk}/${lid}/remaining`,0);
         await fbSet(`stockLog/${mk}/${lid}/deducted`,true);
         changed++;
       }
@@ -997,7 +1042,8 @@ async function deductStockAndCheck(){
     if(!key||!member){showToast('로그인 정보 오류 — 🔄 새로고침 후 다시 로그인해 주세요');return false;}
     const stock=member?(member.stock||0):0;
     if(stock<costPerRoll){showToast('주식이 부족합니다!');return false;}
-    await fbSet(`members/${key}/stock`,stock-costPerRoll);
+    await fbSet(`members/${key}/stock`,{'.sv':{'increment':-costPerRoll}});
+    await consumeStockBatchesFIFO(key, costPerRoll);
     const today=getKSTDate();
     await fbPush(`stockLog/${key}`,{type:'deduct',amount:costPerRoll,date:today,time:Date.now(),memo:'경품 뽑기 사용'});
     showToast(`✅ ${stock}주 → ${stock-costPerRoll}주 차감완료`);
@@ -2083,7 +2129,7 @@ function renderStockView(q){
         <span class="leave-item-name">${escHtml(m.name)}</span>
         <span class="leave-item-total">💰 ${m.stock}주 <span id="${bodyId}_arrow" style="font-size:11px;opacity:.6;margin-left:4px">▾</span></span>
       </div>
-      <div id="${bodyId}" style="display:none">${inner}</div>
+      <div id="${bodyId}" style="display:none">${inner}<button onclick="recalcStockBalance('${m.key}','${escHtml(m.name).replace(/'/g,"\\'")}')" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;cursor:pointer">🔄 이 사람 잔액만 내역 기준으로 재계산</button></div>
     </div>`;
   }).join('');
 }
@@ -2091,6 +2137,42 @@ function renderStockView(q){
 function filterStockView(){
   const q=document.getElementById('stockViewSearch').value;
   if(stockViewCache)renderStockView(q);
+}
+
+// 내역(stockLog) 합계로 상단 보유주식을 다시 맞춤 — 동시 지급/차감이 겹쳐서 숫자가 안 맞을 때 씀
+function _computeStockFromLog(logs){
+  let total=0;
+  (logs||[]).forEach(l=>{ if(!l) return; total += (l.type==='deduct'?-1:1)*(l.amount||0); });
+  return Math.max(0, total);
+}
+async function recalcStockBalance(key, name){
+  try{
+    const logsRaw = await fbGet(`stockLog/${key}`);
+    const logs = logsRaw ? Object.values(logsRaw) : [];
+    const total = _computeStockFromLog(logs);
+    await fbSet(`members/${key}/stock`, total);
+    showToast(`✅ ${name} 잔액을 내역 기준 ${total}주로 맞췄어요`);
+    stockViewCache=null;
+    loadStockView();
+  }catch(e){ showToast('재계산 실패'); }
+}
+async function recalcAllStockBalances(){
+  if(!confirm('모든 멤버의 상단 보유주식을 내역(지급/차감 기록) 합계 기준으로 다시 맞출까요?\n내역과 실제로 차이가 있던 사람만 값이 바뀌어요.')) return;
+  try{
+    showToast('🔄 재계산 중...');
+    const [members, allStockLog] = await Promise.all([fbGet('members'), fbGet('stockLog')]);
+    if(!members){ showToast('멤버 없음'); return; }
+    let fixed=0;
+    for(const [key,m] of Object.entries(members)){
+      const logs = allStockLog && allStockLog[key] ? Object.values(allStockLog[key]) : [];
+      const total = _computeStockFromLog(logs);
+      const cur = m.stock||0;
+      if(total!==cur){ await fbSet(`members/${key}/stock`, total); fixed++; }
+    }
+    showToast(fixed>0?`✅ ${fixed}명 잔액 수정됨`:'✅ 이미 다 맞아요 (수정 없음)');
+    stockViewCache=null;
+    loadStockView();
+  }catch(e){ showToast('재계산 실패: '+(e.message||'')); }
 }
 
 async function loadMemberStockView(){
@@ -2140,9 +2222,8 @@ async function giveStock(){
   const extraMemo = document.getElementById('giveStockMemo')?.value.trim()||'';
   const giveMemo = extraMemo ? `${reason} · ${extraMemo}` : reason;
   for(const key of keys){
-    const current=(freshMembers[key]&&freshMembers[key].stock)||0;
-    await fbSet(`members/${key}/stock`, current+amount);
-    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null});
+    await fbSet(`members/${key}/stock`, {'.sv':{'increment':amount}});
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null,remaining:amount});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
@@ -2178,7 +2259,8 @@ async function deductStock(){
   for(const key of keys){
     const current=(freshMembers[key]&&freshMembers[key].stock)||0;
     if(amount>current){skipped++;continue;}
-    await fbSet(`members/${key}/stock`, current-amount);
+    await fbSet(`members/${key}/stock`, {'.sv':{'increment':-amount}});
+    await consumeStockBatchesFIFO(key, amount);
     const deductMemo=document.getElementById('deductStockMemo')?.value.trim()||'';
     await fbPush(`stockLog/${key}`,{type:'deduct',amount,date:today,time:Date.now(),memo:deductMemo});
     doneKeys.push(key);
