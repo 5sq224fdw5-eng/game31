@@ -546,8 +546,19 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <script>
 const DB_URL='https://gacha-31-default-rtdb.firebaseio.com';
 function getKSTDate(){const d=new Date();d.setHours(d.getHours()+9);return d.toISOString().slice(0,10);}
-async function fbGet(path){try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}}
-async function fbSet(path,data){try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
+// 읽기 캐시(다운로드 절감): 같은 경로 반복 읽기를 짧게(4초) 캐시. 쓰기 발생 시 즉시 비움 -> 항상 최신.
+const _gCache=new Map();
+const _G_CACHE_TTL=4000;
+function _gCacheClear(){ _gCache.clear(); }
+async function fbGet(path){
+  const now=Date.now();
+  const hit=_gCache.get(path);
+  if(hit && (now-hit.t)<_G_CACHE_TTL) return await hit.pr;
+  const pr=(async()=>{try{const r=await fetch(`${DB_URL}/${path}.json`);return await r.json();}catch(e){return null;}})();
+  _gCache.set(path,{t:now,pr});
+  return await pr;
+}
+async function fbSet(path,data){_gCacheClear();try{await fetch(`${DB_URL}/${path}.json`,{method:'PUT',body:JSON.stringify(data)});}catch(e){}}
 
 // ── 앱 버전 업데이트 배너 (홈화면 앱 캐시 문제 해결용) ──
 async function checkUpdateBanner(){
@@ -585,9 +596,10 @@ async function announceNewVersion(){
     showToast('📢 새 버전 알림 전송됨!');
   }catch(e){ showToast('전송 실패'); }
 }
-async function fbPush(path,data){try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
+async function fbPush(path,data){_gCacheClear();try{const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});return await r.json();}catch(e){return null;}}
 // 저장: 응답 ok면 성공으로 간주(본문 파싱 실패해도). 네트워크 예외일 때만 1회 재시도(중복 저장 방지).
 async function fbPushVerified(path,data){
+  _gCacheClear();
   try{
     const r=await fetch(`${DB_URL}/${path}.json`,{method:'POST',body:JSON.stringify(data)});
     if(r&&r.ok)return {ok:true};            // 저장 성공 (본문 파싱 안 해도 됨)
@@ -602,7 +614,7 @@ async function fbPushVerified(path,data){
   }
   return null;
 }
-async function fbDelete(path){try{await fetch(`${DB_URL}/${path}.json`,{method:'DELETE'});}catch(e){}}
+async function fbDelete(path){_gCacheClear();try{await fetch(`${DB_URL}/${path}.json`,{method:'DELETE'});}catch(e){}}
 
 // Firebase 배열이 객체로 반환될 때 배열로 정규화
 function toArray(val){
