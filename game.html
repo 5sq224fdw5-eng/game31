@@ -333,6 +333,21 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     </div>
     <button class="btn-primary" onclick="addMember()">+ 멤버 추가</button>
   </div>
+  <div class="card" style="margin-top:10px;border:1px solid rgba(255,107,157,0.35)">
+    <div style="font-size:13px;font-weight:800;color:#FF6B9D;margin-bottom:8px">⭐ 부계정 만들기</div>
+    <div class="input-group" style="margin-bottom:8px">
+      <label>부계정 닉네임 (★ 없이 입력)</label>
+      <input type="text" id="subAcctNick" placeholder="예: 쭈리">
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">그룹 선택 (여러 개 가능)</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer"><input type="checkbox" id="subGrp좋아요" style="width:18px;height:18px">👍 좋아요</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer"><input type="checkbox" id="subGrp댓글" style="width:18px;height:18px">💬 댓글</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer"><input type="checkbox" id="subGrp시크릿" style="width:18px;height:18px">🤫 시크릿</label>
+    </div>
+    <button class="btn-primary" onclick="createSubAccount()">⭐ 부계정 생성</button>
+    <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.5">오락실엔 <b>그룹★닉</b>(그룹별), 인트라넷엔 <b>★닉</b> 하나가 자동 등록돼요. 로그인은 <b>★닉</b>으로.</div>
+  </div>
   <input type="text" id="memberSearch" placeholder="🔍 멤버 이름 검색" oninput="renderMemberList()" style="width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;font-size:14px">
   <div id="memberList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
 </div>
@@ -381,6 +396,11 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <div class="page" id="pageStock">
   <!-- 관리자용 -->
   <div id="stockAdminView" style="display:none">
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="stockSubTabManageBtn" class="btn-confirm" style="flex:1;font-size:12px;padding:8px" onclick="switchStockTab('manage')">💰 지급·차감</button>
+      <button id="stockSubTabHistoryBtn" class="btn-confirm" style="flex:1;font-size:12px;padding:8px;opacity:0.4" onclick="switchStockTab('history')">📋 조회·내역</button>
+    </div>
+    <div id="stockTabManage">
     <div class="section-title">💰 주식 지급/차감</div>
     <div class="card">
       <!-- 그룹 필터 -->
@@ -428,6 +448,39 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
     <button onclick="recalcAllStockBalances()" style="width:100%;margin-bottom:8px;padding:9px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;cursor:pointer">🔄 전체 잔액 재계산 (내역 합계와 안 맞을 때)</button>
     <input class="leave-search-bar" id="stockViewSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="filterStockView()">
     <div id="stockViewList"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+    </div><!-- /stockTabManage -->
+    <div id="stockTabHistory" style="display:none">
+      <div class="section-title">📋 주식 조회 · 내역</div>
+      <div class="card">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <label style="font-size:11px;color:rgba(255,255,255,0.5)">📅 기간</label>
+          <input type="date" id="histFrom" style="flex:1;min-width:120px;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none">
+          <span style="color:rgba(255,255,255,0.4)">~</span>
+          <input type="date" id="histTo" style="flex:1;min-width:120px;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <label style="font-size:11px;color:rgba(255,255,255,0.5)">📋 사유</label>
+          <select id="histReason" style="flex:1;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none">
+            <option value="all">전체</option>
+            <option value="give">지급 전체</option>
+            <option value="풀참">🎰 풀참</option>
+            <option value="초대">🤝 초대</option>
+            <option value="영업건">💼 영업건</option>
+            <option value="출근이벤트">🌅 출근이벤트</option>
+            <option value="deduct">📉 차감</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button class="btn-confirm" style="flex:1;font-size:11px;padding:6px" onclick="setHistRangeQuick(7)">최근 7일</button>
+          <button class="btn-confirm" style="flex:1;font-size:11px;padding:6px" onclick="setHistRangeQuick(30)">최근 30일</button>
+          <button class="btn-confirm" style="flex:1;font-size:11px;padding:6px;background:rgba(255,255,255,0.08)" onclick="setHistRangeQuick(0)">전체기간</button>
+        </div>
+        <input class="bulk-search" id="histSearch" placeholder="🔍 이름 검색..." autocomplete="off" oninput="renderStockHistory()" style="margin-bottom:8px">
+        <button class="btn-confirm" style="width:100%" onclick="runStockQuery()">🔎 조회</button>
+      </div>
+      <div id="histSummary" style="font-size:12px;color:var(--gold);margin:10px 2px 6px;font-family:'Jua',cursive"></div>
+      <div id="stockHistoryList"></div>
+    </div>
   </div>
   <!-- 멤버용 -->
   <div id="stockMemberView" style="display:none">
@@ -1557,6 +1610,12 @@ async function loadMembers(){
   const members=await fbGet('members');allMembers=members||{};populateMemberSelect();populateGiveStockSelect();
   renderMemberList();
 }
+let _memberGrpOpen=null;
+function toggleMemberGroup(g){
+  if(_memberGrpOpen===null) _memberGrpOpen={};
+  _memberGrpOpen[g]=!_memberGrpOpen[g];
+  renderMemberList();
+}
 function renderMemberList(){
   const list=document.getElementById('memberList');if(!list)return;
   const members=allMembers||{};
@@ -1565,7 +1624,27 @@ function renderMemberList(){
   let entries=Object.entries(members).sort(([,a],[,b])=>a.name.localeCompare(b.name,'ko'));
   if(q) entries=entries.filter(([,m])=>(m.name||'').replace(/\s+/g,'').toLowerCase().includes(q));
   if(entries.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없습니다</div>';return;}
-  list.innerHTML=entries.map(([k,m])=>`<div class="member-item"><div class="member-avatar">${m.name.charAt(0)}</div><div class="member-info"><div class="member-name">${escHtml(m.name)}</div><div class="member-stock">💰 ${m.stock||0}주</div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="editMemberName('${k}','${m.name}')">수정</button><button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button></div></div>`).join('');
+  // 그룹별 분류
+  const byGroup={}; GROUP_ORDER.forEach(g=>byGroup[g]=[]);
+  entries.forEach(([k,m])=>{ byGroup[getNameGroup(m.name)].push([k,m]); });
+  if(_memberGrpOpen===null){ _memberGrpOpen={}; GROUP_ORDER.forEach(g=>_memberGrpOpen[g]=true); }
+  const searching=!!q;
+  const itemHtml=([k,m])=>`<div class="member-item"><div class="member-avatar">${m.name.charAt(0)}</div><div class="member-info"><div class="member-name">${escHtml(m.name)}</div><div class="member-stock">💰 ${m.stock||0}주</div></div><div class="member-actions"><button class="btn-sm btn-edit" onclick="editMemberName('${k}','${m.name}')">수정</button><button class="btn-sm btn-del" onclick="deleteMember('${k}')">삭제</button></div></div>`;
+  let html='';
+  GROUP_ORDER.forEach(g=>{
+    const arr=byGroup[g];
+    if(arr.length===0) return;
+    const open = searching ? true : (_memberGrpOpen[g]!==false);
+    const col = GROUP_COLOR[g]||'#888';
+    html+=`<div style="margin-bottom:8px">`+
+      `<div onclick="toggleMemberGroup('${g}')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;background:${col}22;border:1px solid ${col}66;border-radius:12px;cursor:pointer">`+
+        `<span style="font-weight:800;font-size:14px;color:#fff">${GROUP_EMOJI[g]} ${g} <span style="font-weight:600;color:rgba(255,255,255,0.55);font-size:12px">${arr.length}명</span></span>`+
+        `<span style="color:rgba(255,255,255,0.6);font-size:12px">${open?'▲':'▼'}</span>`+
+      `</div>`+
+      `<div style="display:${open?'block':'none'};padding-top:6px">${arr.map(itemHtml).join('')}</div>`+
+    `</div>`;
+  });
+  list.innerHTML=html;
 }
 
 async function addMember(){
@@ -1579,6 +1658,46 @@ async function addMember(){
   allMembers=latest;
   if(Object.values(latest).some(m=>norm(m.name)===target)){showToast('이미 존재하는 이름입니다');return;}
   await fbPush('members',{name,stock:0});document.getElementById('newMemberName').value='';showToast(`✅ ${name} 추가됨`);loadMembers();
+}
+
+// ⭐ 부계정 만들기: 오락실(그룹★닉, 그룹별) + 인트라넷(★닉 하나) 자동 등록
+async function createSubAccount(){
+  const nick = (document.getElementById('subAcctNick')?.value || '').trim();
+  if(!nick){ showToast('부계정 닉네임을 입력하세요'); return; }
+  if(nick.includes('★')){ showToast('★는 자동으로 붙어요 — 닉네임만 입력하세요'); return; }
+  const groups = [];
+  ['좋아요','댓글','시크릿'].forEach(g=>{ if(document.getElementById('subGrp'+g)?.checked) groups.push(g); });
+  if(groups.length===0){ showToast('그룹을 하나 이상 선택하세요'); return; }
+  const intranetName = '★' + nick;
+  if(!confirm(`부계정 만들기\n\n오락실:\n  ${groups.map(g=>g+'★'+nick).join('\n  ')}\n인트라넷 로그인:\n  ${intranetName}\n\n만들까요?`)) return;
+  try{
+    const norm = s => (s||'').replace(/\s+/g,'').normalize('NFC');
+    // 1) 오락실(루트 members) — 그룹별 생성 (중복 스킵)
+    const gmems = (await fbGet('members')) || {};
+    const existG = new Set(Object.values(gmems).map(m=>m&&norm(m.name)).filter(Boolean));
+    let made=0, skipped=0;
+    for(const g of groups){
+      const nm = g + '★' + nick;
+      if(existG.has(norm(nm))){ skipped++; continue; }
+      await fbPush('members', {name:nm, stock:0});
+      made++;
+    }
+    // 2) 인트라넷(/crew31/members) — ★닉 하나 (중복 스킵)
+    let intraMade = false;
+    const imems = (await (await fetch(`${DB_URL}/crew31/members.json`)).json()) || {};
+    const intraExists = Object.values(imems).some(m=>m && norm(m.name)===norm(intranetName));
+    if(!intraExists){
+      await fetch(`${DB_URL}/crew31/members.json`, {method:'POST', body:JSON.stringify({name:intranetName, role:'member'})});
+      intraMade = true;
+    }
+    // 초기화 + 완료
+    document.getElementById('subAcctNick').value='';
+    ['좋아요','댓글','시크릿'].forEach(g=>{ const c=document.getElementById('subGrp'+g); if(c)c.checked=false; });
+    showToast(`✅ 완료! 오락실 ${made}개 생성${skipped?` (${skipped}개 이미있음)`:''}, 인트라넷 ${intraMade?'등록':'이미있음'} — 로그인: ${intranetName}`);
+    if(typeof loadMembers==='function') loadMembers();
+  }catch(e){
+    showToast('❌ 실패: '+(e.message||''));
+  }
 }
 async function deleteMember(key){const m=allMembers[key];if(!m)return;if(!confirm(`'${m.name}' 멤버를 삭제하시겠습니까?`))return;await fbDelete(`members/${key}`);showToast('🗑️ 삭제됨');loadMembers();}
 async function editMemberName(key,currentName){
@@ -2223,6 +2342,100 @@ async function loadMemberStockView(){
   }
   container.innerHTML=html;
 }
+// ── 주식 조회·내역 (관리자) ──
+let _stockHistCache = null;
+let _stockHistAgg = [];
+function _histEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function _entryReason(e){
+  if(e.type==='deduct') return '차감';
+  if(e.reason) return e.reason;
+  const m=(e.memo||'').split(' · ')[0].trim();
+  return m || '지급';
+}
+function switchStockTab(which){
+  const mng=document.getElementById('stockTabManage');
+  const his=document.getElementById('stockTabHistory');
+  const mb=document.getElementById('stockSubTabManageBtn');
+  const hb=document.getElementById('stockSubTabHistoryBtn');
+  if(!mng||!his) return;
+  if(which==='history'){
+    mng.style.display='none'; his.style.display='block';
+    if(mb)mb.style.opacity='0.4'; if(hb)hb.style.opacity='1';
+    if(!_stockHistCache){ setHistRangeQuick(30); runStockQuery(); }
+  }else{
+    his.style.display='none'; mng.style.display='block';
+    if(hb)hb.style.opacity='0.4'; if(mb)mb.style.opacity='1';
+  }
+}
+function setHistRangeQuick(days){
+  const to=document.getElementById('histTo'); const from=document.getElementById('histFrom');
+  if(!to||!from) return;
+  if(days===0){ from.value=''; to.value=''; return; }
+  const t=new Date(); const fr=new Date(); fr.setDate(fr.getDate()-(days-1));
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  from.value=fmt(fr); to.value=fmt(t);
+}
+async function runStockQuery(){
+  const listEl=document.getElementById('stockHistoryList');
+  if(listEl) listEl.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  const [log,members]=await Promise.all([ fbGet('stockLog'), fbGet('members') ]);
+  _stockHistCache={ log:log||{}, members:members||{} };
+  renderStockHistory();
+}
+function renderStockHistory(){
+  const listEl=document.getElementById('stockHistoryList');
+  const sumEl=document.getElementById('histSummary');
+  if(!_stockHistCache){ if(listEl)listEl.innerHTML=''; return; }
+  const from=(document.getElementById('histFrom')?.value)||'';
+  const to=(document.getElementById('histTo')?.value)||'';
+  const reason=(document.getElementById('histReason')?.value)||'all';
+  const search=((document.getElementById('histSearch')?.value)||'').trim().toLowerCase();
+  const log=_stockHistCache.log, members=_stockHistCache.members;
+  const agg={}; let totGive=0, totDeduct=0, totCnt=0;
+  for(const key in log){
+    const entries=log[key]; if(!entries) continue;
+    const name=(members[key]&&members[key].name)||(typeof allMembers!=='undefined'&&allMembers[key]&&allMembers[key].name)||key;
+    for(const eid in entries){
+      const e=entries[eid]; if(!e||!e.type) continue;
+      const d=e.date||'';
+      if((from||to) && !d) continue;
+      if(from && d<from) continue;
+      if(to && d>to) continue;
+      if(reason==='give' && e.type!=='give') continue;
+      if(reason==='deduct' && e.type!=='deduct') continue;
+      if(reason!=='all' && reason!=='give' && reason!=='deduct'){
+        if(e.type!=='give' || _entryReason(e)!==reason) continue;
+      }
+      if(!agg[key]) agg[key]={key:key,name:name,give:0,deduct:0,net:0,entries:[]};
+      const amt=Number(e.amount)||0;
+      if(e.type==='give'){ agg[key].give+=amt; totGive+=amt; }
+      else { agg[key].deduct+=amt; totDeduct+=amt; }
+      const ec=Object.assign({},e); ec._reason=_entryReason(e); agg[key].entries.push(ec);
+      totCnt++;
+    }
+  }
+  let rows=Object.keys(agg).map(k=>agg[k]);
+  rows.forEach(r=>{ r.net=r.give-r.deduct; r.entries.sort((a,b)=>(b.time||0)-(a.time||0)); });
+  if(search) rows=rows.filter(r=>String(r.name).toLowerCase().indexOf(search)>=0);
+  rows.sort((a,b)=>b.net-a.net || String(a.name).localeCompare(b.name));
+  _stockHistAgg=rows;
+  if(sumEl){
+    const rangeTxt=(from||to)?`${from||'처음'} ~ ${to||'오늘'}`:'전체기간';
+    sumEl.innerHTML=`${_histEsc(rangeTxt)} · 지급 ${totGive}주 / 차감 ${totDeduct}주 · 기록 ${totCnt}건`;
+  }
+  if(!listEl) return;
+  if(rows.length===0){ listEl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;font-size:13px">해당 조건의 기록이 없어요</div>'; return; }
+  listEl.innerHTML=rows.map(r=>{
+    const netColor=r.net>0?'#2ecc71':(r.net<0?'#FC5C65':'rgba(255,255,255,0.7)');
+    const detail=r.entries.map(e=>{
+      const sign=e.type==='give'?'+':'-';
+      const col=e.type==='give'?'#2ecc71':'#FC5C65';
+      const memoTxt=e.memo?` · ${_histEsc(e.memo)}`:'';
+      return `<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,0.06);font-size:12px"><span style="color:rgba(255,255,255,0.55)">${_histEsc(e.date||'')} <span style="color:rgba(255,255,255,0.35)">${_histEsc(e._reason)}${memoTxt}</span></span><span style="color:${col};font-weight:700;white-space:nowrap">${sign}${Number(e.amount)||0}주</span></div>`;
+    }).join('');
+    return `<div class="card" style="padding:10px 12px;margin-bottom:6px"><div onclick="(function(el){var dd=el.parentElement.querySelector('.histDetail');dd.style.display=dd.style.display==='none'?'block':'none';})(this)" style="display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer"><span style="font-weight:700;color:white;font-size:13px">${_histEsc(r.name)}</span><span style="display:flex;gap:8px;align-items:center;font-size:12px"><span style="color:#2ecc71">+${r.give}</span><span style="color:#FC5C65">-${r.deduct}</span><span style="color:${netColor};font-weight:800">= ${r.net>0?'+':''}${r.net}주</span><span style="color:rgba(255,255,255,0.35)">▼</span></span></div><div class="histDetail" style="display:none;margin-top:6px">${detail||'<div style=\"font-size:12px;color:rgba(255,255,255,0.4);padding:6px 0\">상세 없음</div>'}</div></div>`;
+  }).join('');
+}
 async function giveStock(){
   const keys=[...bulkSelected.giveStock];const amount=parseInt(document.getElementById('giveStockAmount').value);
   if(keys.length===0){showToast('멤버를 선택하세요');return;}if(isNaN(amount)||amount<1||amount>100){showToast('1~100 사이의 숫자를 입력하세요');return;}
@@ -2235,7 +2448,7 @@ async function giveStock(){
   const giveMemo = extraMemo ? `${reason} · ${extraMemo}` : reason;
   for(const key of keys){
     await fbSet(`members/${key}/stock`, {'.sv':{'increment':amount}});
-    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,expiry:giveExpiry||null,remaining:amount});
+    await fbPush(`stockLog/${key}`,{type:'give',amount,date:today,time:Date.now(),memo:giveMemo,reason,expiry:giveExpiry||null,remaining:amount});
   }
   allMembers=(await fbGet('members'))||{};
   const gav=document.getElementById('giveStockAmount');if(gav)gav.value='';
