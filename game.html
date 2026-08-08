@@ -432,6 +432,24 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
         </select>
       </div>
       <div id="giveStockExpiryPreview" style="font-size:10px;color:rgba(255,215,0,0.75);margin:4px 0 0 2px"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <label style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">📅 만료일</label>
+        <input type="date" id="giveStockExpiryInput" style="flex:1;padding:7px 8px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;color-scheme:dark">
+        <button type="button" onclick="document.getElementById('giveStockExpiryInput').value=''" style="padding:6px 10px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;cursor:pointer">무제한</button>
+      </div>
+      <details style="margin-top:8px">
+        <summary style="font-size:11px;color:rgba(255,255,255,0.55);cursor:pointer">⚙️ 지급 사유 관리 (추가/삭제)</summary>
+        <div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+          <div id="reasonManagerList" style="margin-bottom:8px"></div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <input type="text" id="newReasonEmoji" placeholder="🎁" maxlength="4" style="width:44px;padding:7px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;text-align:center;outline:none">
+            <input type="text" id="newReasonLabel" placeholder="사유 이름 (예: 여름이벤트)" style="flex:1;min-width:120px;padding:7px 9px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:white;font-size:12px;outline:none">
+            <input type="number" id="newReasonDays" placeholder="만료일수" min="0" style="width:80px;padding:7px 9px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;color:white;font-size:12px;outline:none">
+            <button type="button" onclick="addStockReason()" style="padding:7px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,#6C35DE,#FF6B9D);color:white;font-size:12px;font-weight:800;cursor:pointer">추가</button>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:6px">만료일수 비우면 무제한. 예: 월풀참 30, 주풀참 7.</div>
+        </div>
+      </details>
       <input type="text" id="giveStockMemo" placeholder="📝 추가 메모 (선택)" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;color:white;font-size:12px;outline:none;margin-top:6px;">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:11px;color:#FC5C65;margin-bottom:4px;font-family:'Jua',cursive;">📉 차감 대상</div>
@@ -813,6 +831,7 @@ function enterApp(){
   setTimeout(()=>checkExpiredPrizes(),1500);
   setTimeout(()=>checkExpiredStock(),2000);
   setTimeout(()=>checkExpiredLeave(),2500);
+  loadStockReasons();
 }
 
 // ── 만료일 자동 소멸 ──
@@ -919,30 +938,45 @@ async function checkExpiredStock(){
     const today=new Date();today.setHours(0,0,0,0);
     const todayTs=today.getTime();
     let changed=0;
+    const isExpired=(expiry)=>{
+      if(!expiry)return false;
+      const m=String(expiry).match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+      if(!m)return false;
+      let year=parseInt(m[1]);if(year<100)year+=2000;
+      const expDate=new Date(year,parseInt(m[2])-1,parseInt(m[3])+1,0,0,0,0); // 만료일 다음날 00:00
+      return todayTs>=expDate.getTime();
+    };
     for(const [mk,logs] of Object.entries(allStockLog)){
       if(!logs)continue;
+      const memberData=members[mk];if(!memberData)continue;
+      // 만료된 지급분 vs 아직 유효한 지급분(만료 안 됨·미차감)의 남은 수량 합
+      let validRemaining=0;
+      const expiredGives=[];
       for(const [lid,l] of Object.entries(logs)){
-        if(!l||l.type!=='give'||l.deducted||!l.expiry)continue;
-        const m=String(l.expiry).match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
-        if(!m)continue;
-        let year=parseInt(m[1]);if(year<100)year+=2000;
-        const expDate=new Date(year,parseInt(m[2])-1,parseInt(m[3])+1,0,0,0,0);
-        if(todayTs<expDate.getTime())continue;
-        const memberData=members[mk];if(!memberData)continue;
-        // ★ 원래 지급했던 amount 전체가 아니라, 룰렛 등으로 이미 쓴 만큼 뺀 remaining만 소멸시킴
-        const remaining = (typeof l.remaining==='number') ? l.remaining : (l.amount||0);
-        if(remaining<=0){ await fbSet(`stockLog/${mk}/${lid}/deducted`,true); continue; }
-        const current=await fbGet(`members/${mk}/stock`)||0;
-        const deductAmt=Math.min(remaining,current);
-        if(deductAmt<=0){await fbSet(`stockLog/${mk}/${lid}/deducted`,true);continue;}
-        // ★ 원자적 증감 사용 — 읽고→계산해서 쓰는 방식은 그 사이 다른 지급/차감이 끼어들면
-        //   먼저 쓴 값이 덮어써져서 사라지는 문제가 있었음(상단 숫자와 내역이 안 맞던 원인)
-        await fbSet(`members/${mk}/stock`,{'.sv':{'increment':-deductAmt}});
-        const _reasonPrefix = l.memo ? `${l.memo} · ` : '';
-        await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`${_reasonPrefix}만료 자동소멸(${l.expiry})`});
+        if(!l||l.type!=='give'||l.deducted)continue;
+        const rem=(typeof l.remaining==='number')?l.remaining:(l.amount||0);
+        if(l.expiry && isExpired(l.expiry)){
+          expiredGives.push({lid,l,rem:Math.max(0,rem)});
+        }else{
+          validRemaining+=Math.max(0,rem);
+        }
+      }
+      if(expiredGives.length===0)continue;
+      let current=await fbGet(`members/${mk}/stock`)||0;
+      // ★ 핵심: 유효 지급분으로 설명되지 않는 잔액만 만료 대상.
+      //   이미 소진된 지급분(remaining이 안 줄어 남아있어도)은 여기서 0으로 계산돼 멀쩡한 주식을 안 건드림.
+      let expirable=Math.max(0, current - validRemaining);
+      for(const {lid,l,rem} of expiredGives){
+        const deductAmt=Math.min(rem, expirable, current);
+        if(deductAmt>0){
+          await fbSet(`members/${mk}/stock`,{'.sv':{'increment':-deductAmt}});
+          const _reasonPrefix = l.memo ? `${l.memo} · ` : '';
+          await fbPush(`stockLog/${mk}`,{type:'deduct',amount:deductAmt,date:getKSTDate(),time:Date.now(),memo:`${_reasonPrefix}만료 자동소멸(${l.expiry})`});
+          expirable-=deductAmt; current-=deductAmt; changed++;
+        }
+        // 어떤 경우든 이 지급분은 마감 처리(재차감 방지)
         await fbSet(`stockLog/${mk}/${lid}/remaining`,0);
         await fbSet(`stockLog/${mk}/${lid}/deducted`,true);
-        changed++;
       }
     }
     if(changed>0)showToast(`⏰ 만료된 주식 ${changed}건 자동 소진됐습니다`);
@@ -2443,7 +2477,8 @@ async function giveStock(){
   const today=getKSTDate();
   const doneNames=keys.map(k=>(freshMembers[k]&&freshMembers[k].name)||(allMembers[k]&&allMembers[k].name)||k);
   const reason = document.getElementById('giveStockReason')?.value || '풀참';
-  const giveExpiry = computeExpiryByReason(reason);
+  const _expInp = document.getElementById('giveStockExpiryInput');
+  const giveExpiry = (_expInp && _expInp.value) ? _expInp.value : null;  // 수동 조정값 우선(비우면 무제한)
   const extraMemo = document.getElementById('giveStockMemo')?.value.trim()||'';
   const giveMemo = extraMemo ? `${reason} · ${extraMemo}` : reason;
   for(const key of keys){
@@ -2458,21 +2493,131 @@ async function giveStock(){
   showBulkDonePopup(`💰 ${amount}주 지급 완료 (${reason})`, doneNames);
 }
 
-// ── 지급 사유별 자동 만료일 계산: 풀참=7일, 초대=무제한, 그 외(영업건·출근이벤트 등)=1개월 ──
+// ── 지급 사유 관리 (DB 기반: 관리자가 추가/삭제, 사유별 만료일수 설정) ──
+let _stockReasons = null;
+const _DEFAULT_REASONS = [
+  {emoji:'🎰', label:'월 풀참', days:30},
+  {emoji:'🎰', label:'주 풀참', days:7},
+  {emoji:'🤝', label:'초대', days:0},
+  {emoji:'💼', label:'영업건', days:30},
+  {emoji:'🌅', label:'출근이벤트', days:30},
+];
+function _reasonEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function loadStockReasons(){
+  const r = await fbGet('stockReasons');
+  let arr = Array.isArray(r) ? r : (r ? Object.values(r) : []);
+  arr = arr.filter(x=>x && x.label);
+  if(arr.length===0){ arr = _DEFAULT_REASONS.slice(); await fbSet('stockReasons', arr); }
+  _stockReasons = arr;
+  populateReasonDropdowns();
+  renderReasonManager();
+  return _stockReasons;
+}
+function populateReasonDropdowns(){
+  const list = _stockReasons || _DEFAULT_REASONS;
+  const give = document.getElementById('giveStockReason');
+  if(give){
+    const cur = give.value;
+    give.innerHTML = list.map(x=>`<option value="${_reasonEsc(x.label)}">${x.emoji||''} ${_reasonEsc(x.label)}</option>`).join('');
+    if(cur && list.some(x=>x.label===cur)) give.value = cur;
+  }
+  const hist = document.getElementById('histReason');
+  if(hist){
+    const cur = hist.value;
+    hist.innerHTML = `<option value="all">전체</option><option value="give">지급 전체</option>`
+      + list.map(x=>`<option value="${_reasonEsc(x.label)}">${x.emoji||''} ${_reasonEsc(x.label)}</option>`).join('')
+      + `<option value="deduct">📉 차감</option>`;
+    if(cur) hist.value = cur;
+  }
+  if(typeof updateGiveStockExpiryPreview==='function') updateGiveStockExpiryPreview();
+}
 function computeExpiryByReason(reason){
-  const base = new Date();
-  if(reason==='풀참'){ base.setDate(base.getDate()+7); }
-  else if(reason==='초대'){ return null; } // 무제한 (소멸 없음)
-  else { base.setMonth(base.getMonth()+1); } // 영업건·출근이벤트 등 그 외 전부 한 달
+  const list = _stockReasons || _DEFAULT_REASONS;
+  const found = list.find(x=>x.label===reason);
+  const days = found ? (Number(found.days)||0) : 30;   // 못 찾으면 기본 30일
+  if(!days || days<=0) return null;                     // 0/무설정 = 무제한
+  const base=new Date(); base.setDate(base.getDate()+days);
   const y=base.getFullYear(), m=String(base.getMonth()+1).padStart(2,'0'), d=String(base.getDate()).padStart(2,'0');
   return `${y}-${m}-${d}`;
 }
 function updateGiveStockExpiryPreview(){
   const sel=document.getElementById('giveStockReason');
-  const prev=document.getElementById('giveStockExpiryPreview');
-  if(!sel||!prev) return;
+  if(!sel) return;
   const exp=computeExpiryByReason(sel.value);
-  prev.textContent = exp ? `📅 ${exp} 까지 사용 안 하면 자동 소멸` : '♾️ 무제한 (자동 소멸 없음)';
+  const prev=document.getElementById('giveStockExpiryPreview');
+  if(prev) prev.textContent = exp ? `📅 기본 만료 ${exp} (아래에서 수정 가능)` : '♾️ 기본 무제한 (자동 소멸 없음)';
+  const inp=document.getElementById('giveStockExpiryInput');
+  if(inp) inp.value = exp || '';
+}
+let _editingReasonIdx = null;
+function renderReasonManager(){
+  const box=document.getElementById('reasonManagerList');
+  if(!box) return;
+  const list=_stockReasons||[];
+  if(list.length===0){ box.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.4);padding:6px">사유가 없습니다</div>'; return; }
+  box.innerHTML=list.map((x,i)=>{
+    if(i===_editingReasonIdx){
+      // 인라인 수정 폼
+      return `<div style="display:flex;gap:5px;flex-wrap:wrap;padding:7px 2px;border-top:1px solid rgba(255,255,255,0.06)">`
+        +`<input type="text" id="editReasonEmoji_${i}" value="${_reasonEsc(x.emoji||'')}" maxlength="4" style="width:40px;padding:6px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;color:white;font-size:13px;text-align:center;outline:none">`
+        +`<input type="text" id="editReasonLabel_${i}" value="${_reasonEsc(x.label||'')}" style="flex:1;min-width:100px;padding:6px 8px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;color:white;font-size:12px;outline:none">`
+        +`<input type="number" id="editReasonDays_${i}" value="${(Number(x.days)||0)>0?Number(x.days):''}" placeholder="만료일수" min="0" style="width:76px;padding:6px 8px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;color:white;font-size:12px;outline:none">`
+        +`<button type="button" onclick="saveReasonEdit(${i})" style="padding:6px 11px;border:none;border-radius:8px;background:#5DB88A;color:white;font-size:12px;font-weight:800;cursor:pointer">저장</button>`
+        +`<button type="button" onclick="cancelReasonEdit()" style="padding:6px 9px;border:none;border-radius:8px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;cursor:pointer">취소</button>`
+        +`</div>`;
+    }
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-top:1px solid rgba(255,255,255,0.06)">`
+      +`<span style="flex:1;font-size:13px;color:#fff">${x.emoji||''} ${_reasonEsc(x.label)}</span>`
+      +`<span style="font-size:11px;color:rgba(255,215,0,0.8)">${(Number(x.days)||0)>0?`만료 ${Number(x.days)}일`:'무제한'}</span>`
+      +`<button type="button" onclick="editStockReason(${i})" style="padding:4px 9px;border:none;border-radius:8px;background:rgba(255,215,0,0.15);color:#FFD700;font-size:12px;font-weight:700;cursor:pointer">수정</button>`
+      +`<button type="button" onclick="deleteStockReason(${i})" style="padding:4px 9px;border:none;border-radius:8px;background:rgba(252,92,101,0.15);color:#FC5C65;font-size:12px;font-weight:700;cursor:pointer">삭제</button>`
+      +`</div>`;
+  }).join('');
+}
+function editStockReason(idx){ _editingReasonIdx=idx; renderReasonManager(); }
+function cancelReasonEdit(){ _editingReasonIdx=null; renderReasonManager(); }
+async function saveReasonEdit(idx){
+  const list=_stockReasons||[];
+  if(!list[idx]) return;
+  const emoji=(document.getElementById('editReasonEmoji_'+idx)?.value||'').trim();
+  const label=(document.getElementById('editReasonLabel_'+idx)?.value||'').trim();
+  const daysRaw=(document.getElementById('editReasonDays_'+idx)?.value||'').trim();
+  if(!label){ showToast('사유 이름을 입력하세요'); return; }
+  if(list.some((x,i)=>i!==idx && x.label===label)){ showToast('같은 이름의 사유가 이미 있어요'); return; }
+  const days = daysRaw==='' ? 0 : Math.max(0, parseInt(daysRaw,10)||0);
+  const next=list.map((x,i)=> i===idx ? {emoji:emoji||'💰', label, days} : x);
+  await fbSet('stockReasons', next);
+  _stockReasons=next;
+  _editingReasonIdx=null;
+  populateReasonDropdowns(); renderReasonManager();
+  showToast(`✅ "${label}" 수정됨 (${days>0?days+'일 만료':'무제한'})`);
+}
+async function addStockReason(){
+  const emoji=(document.getElementById('newReasonEmoji')?.value||'').trim();
+  const label=(document.getElementById('newReasonLabel')?.value||'').trim();
+  const daysRaw=(document.getElementById('newReasonDays')?.value||'').trim();
+  if(!label){ showToast('사유 이름을 입력하세요'); return; }
+  const list=_stockReasons||[];
+  if(list.some(x=>x.label===label)){ showToast('이미 있는 사유예요'); return; }
+  const days = daysRaw==='' ? 0 : Math.max(0, parseInt(daysRaw,10)||0);
+  const next=[...list, {emoji:emoji||'💰', label, days}];
+  await fbSet('stockReasons', next);
+  _stockReasons=next;
+  const e=document.getElementById('newReasonEmoji'); if(e)e.value='';
+  const l=document.getElementById('newReasonLabel'); if(l)l.value='';
+  const d=document.getElementById('newReasonDays'); if(d)d.value='';
+  populateReasonDropdowns(); renderReasonManager();
+  showToast(`✅ "${label}" 추가됨 (${days>0?days+'일 만료':'무제한'})`);
+}
+async function deleteStockReason(idx){
+  const list=_stockReasons||[];
+  const item=list[idx]; if(!item) return;
+  if(!confirm(`"${item.label}" 사유를 삭제할까요?\n(이미 이 사유로 지급된 기록은 그대로 남아요)`)) return;
+  const next=list.filter((_,i)=>i!==idx);
+  await fbSet('stockReasons', next);
+  _stockReasons=next;
+  populateReasonDropdowns(); renderReasonManager();
+  showToast('🗑️ 삭제됨');
 }
 
 async function deductStock(){
