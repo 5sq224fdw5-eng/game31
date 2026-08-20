@@ -828,9 +828,13 @@ function enterApp(){
   loadNotice();showPage('gacha');
   checkUpdateBanner();
   // 만료일 자동 소멸 체크
-  setTimeout(()=>checkExpiredPrizes(),1500);
-  setTimeout(()=>checkExpiredStock(),2000);
-  setTimeout(()=>checkExpiredLeave(),2500);
+  // 만료 체크는 관리자(인사팀)가 앱 열 때만 실행 — 모든 참여자가 전체 stockLog/memberPrizes/members(363명)를
+  // 매번 통째로 읽던 것을 없앰(다운로드 요금 폭증 원인). 만료 처리는 관리자 접속 시 하루 단위로 충분히 처리됨.
+  if(currentUser && currentUser.role==='admin'){
+    setTimeout(()=>checkExpiredPrizes(),1500);
+    setTimeout(()=>checkExpiredStock(),2000);
+    setTimeout(()=>checkExpiredLeave(),2500);
+  }
   loadStockReasons();
 }
 
