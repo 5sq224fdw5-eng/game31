@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="ko">
 <head>
@@ -202,7 +202,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <div id="loginPage" class="login-wrap" style="background-color:#1a0a2e;position:relative;z-index:1;">
   <div class="login-logo">🎡</div>
   <div class="login-title">(주) 떠리원</div>
-  <div class="login-sub">사내 오락실</div>
+  <div class="login-sub">사내 오락실 <span style="font-size:10px;color:rgba(255,255,255,0.35);">v.요금최적화1012</span></div>
   <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="display:flex;align-items:center;gap:6px;background:rgba(255,127,110,0.12);border:1.5px solid rgba(255,127,110,0.3);color:#FF7F6E;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;margin-bottom:16px;">📋 인트라넷 바로가기</a>
   <div class="login-card">
     <div class="login-tabs">
@@ -1068,8 +1068,14 @@ async function refreshHeaderPrizes(){
   let prizes=await fbGet(`memberPrizes/${currentUser.key}`);
   prizes=toArray(prizes);
   if(prizes.length===0&&!isSpinning){
-    const history=await fbGet('history');
-    if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name&&h.type!=='deduct'&&h.type!=='manual_give').map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
+    // ★ 요금 핵심 ★ 보유 경품이 0일 때 '전체 history' 복구 스캔은 유저당 딱 1번만.
+    //   (안 그러면 경품 0인 사람이 접속할 때마다 전체 당첨기록을 통째로 다운로드 → history가 커질수록 요금 폭증)
+    const _inited = await fbGet(`prizeInit/${currentUser.key}`);
+    if(!_inited){
+      const history=await fbGet('history');
+      if(history){const myItems=Object.values(history).filter(h=>h.name===currentUser.name&&h.type!=='deduct'&&h.type!=='manual_give').map(h=>({emoji:h.emoji,name:h.prize,time:h.time||0}));if(myItems.length>0){await fbSet(`memberPrizes/${currentUser.key}`,myItems);prizes=myItems;}}
+      await fbSet(`prizeInit/${currentUser.key}`,true);  // 이후론 전체 history 안 읽음
+    }
   }
   const manualLeave=await fbGet(`memberLeave/${currentUser.key}`)||0;
   const counts={};
@@ -1416,14 +1422,14 @@ async function loadHistory(){
     });
     if(leaveLog)Object.values(leaveLog).forEach(l=>{
       const dts=parseYMDtoTs(l.date||'');
-      ev.push({t:l.time||(dts||0),cat:'연차',key:'연차',give:l.type!=='deduct',amt:Math.abs(l.amount||1),unit:'일',label:'🏖️ 연차',memo:l.memo||'',date:l.date||''});
+      ev.push({t:l.time||(dts||0),cat:'연차',key:'연차',give:l.type!=='deduct',amt:Math.abs(l.amount||1),unit:'일',label:'🏖️ 연차',memo:l.memo||'',date:(l.date?fmtYMDtoMD(l.date):''),dateOnly:!l.time});
     });
     toArray(prizesRaw).forEach(p=>{
       const ky='경품:'+p.name;
       ev.push({t:p.time||0,cat:'경품',key:ky,give:true,amt:1,unit:'개',label:`${p.emoji||'🎁'} ${p.name}`,memo:p.memo||'',date:fmtMD(p.time)});
       if(p.deducted){
         const dts=parseYMDtoTs(p.deductDate||p.usedDate||'');
-        ev.push({t:(dts!=null?dts+86399000:(p.time||0)+1),cat:'경품',key:ky,give:false,amt:1,unit:'개',label:`${p.emoji||'🎁'} ${p.name}`,memo:p.deductReason||'사용',date:fmtYMDtoMD(p.deductDate||p.usedDate||'')});
+        ev.push({t:(dts!=null?dts+86399000:(p.time||0)+1),cat:'경품',key:ky,give:false,amt:1,unit:'개',label:`${p.emoji||'🎁'} ${p.name}`,memo:p.deductReason||'사용',date:fmtYMDtoMD(p.deductDate||p.usedDate||''),dateOnly:true});
       }
     });
     // 오래된→최신 순으로 잔액 누적
@@ -1476,7 +1482,7 @@ function renderUnified(f){
     const bodyId='uni_'+gi;
     const rows=items.map(e=>{
       const sign=e.give?'+':'-';const col=e.give?'#26DE81':'#FC5C65';
-      const when=e.t?new Date(e.t).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):(e.date||'');
+      const when=e.dateOnly?(e.date||''):(e.t?new Date(e.t).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):(e.date||''));
       return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 2px;border-top:1px solid rgba(255,255,255,0.07);">
         <div style="min-width:0;flex:1;">
           <div><span style="color:${col};font-weight:800;font-size:13px;">${sign}${e.amt}${e.unit}</span></div>
