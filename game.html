@@ -202,7 +202,7 @@ background-attachment: fixed; color: #fff; min-height: 100vh; min-height: -webki
 <div id="loginPage" class="login-wrap" style="background-color:#1a0a2e;position:relative;z-index:1;">
   <div class="login-logo">🎡</div>
   <div class="login-title">(주) 떠리원</div>
-  <div class="login-sub">사내 오락실 <span style="font-size:10px;color:rgba(255,255,255,0.35);">v.요금최적화1012</span></div>
+  <div class="login-sub">사내 오락실 <span style="font-size:10px;color:rgba(255,255,255,0.35);">v.닉복구1014</span></div>
   <a href="https://5sq224fdw5-eng.github.io/crew31/crew31.html" target="_blank" style="display:flex;align-items:center;gap:6px;background:rgba(255,127,110,0.12);border:1.5px solid rgba(255,127,110,0.3);color:#FF7F6E;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;margin-bottom:16px;">📋 인트라넷 바로가기</a>
   <div class="login-card">
     <div class="login-tabs">
@@ -1959,12 +1959,18 @@ async function migrateMemberName(key, oldNick, newNick, memberNewFull){
   await migratePrefix('');          // 루트(옛 데이터 호환)
   await migratePrefix('crew31/');   // ★ 인트라넷 (실제 투표·출석·링크·연차사용) — 이게 빠져서 안 따라오던 것
 
-  // 2) 인트라넷 로그인 명단(crew31/members): 옛 닉 → 새 닉, 중복 새닉 로그인 제거
+  // 2) 인트라넷 로그인 명단(crew31/members): 옛 닉 → 새 닉
   const cm=await fbGet('crew31/members')||{};
   let oldKey2=null, dupKey2=null;
   for(const k in cm){ const nm=(cm[k]&&cm[k].name)||''; if(nm===oldNick)oldKey2=k; else if(nm===newNick)dupKey2=k; }
-  if(oldKey2) await fbSet(`crew31/members/${oldKey2}/name`, newNick);
-  if(dupKey2 && dupKey2!==oldKey2) await _del(`crew31/members/${dupKey2}`);
+  if(oldKey2){
+    await fbSet(`crew31/members/${oldKey2}/name`, newNick);
+    if(dupKey2 && dupKey2!==oldKey2) await _del(`crew31/members/${dupKey2}`);
+  } else if(!dupKey2){
+    // ★버그수정★ old도 new도 없으면 → new 로그인 레코드를 새로 생성(안 그러면 인트라넷 로그인 불가)
+    await fbPush('crew31/members',{name:newNick,role:'member'});
+  }
+  // oldKey2 없고 dupKey2 있으면: 이미 new가 로그인 레코드 → 절대 삭제 안 함
 }
 
 async function loadPrizes(){
